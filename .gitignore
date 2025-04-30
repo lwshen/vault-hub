@@ -1,0 +1,31 @@
+# macOS
+*.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.dropbox
+.dropbox.attr
+
+## Golang
+bin/
+pkg/
+*.test
+*.prof
+
+.env
+.env.local
+.env.*.local
+*.cache
+*.lock
+*.pid
