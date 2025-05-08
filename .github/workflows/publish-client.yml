@@ -1,0 +1,45 @@
+name: Build and Publish Client
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-push-typescript-axios:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@lwshen"
+
+      - name: Set env
+        run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
+
+      - name: Generate Typescript Axios Client Library
+        uses: openapi-generators/openapitools-generator-action@v1
+        with:
+          generator: typescript-axios
+          openapi-file: docs/swagger.yaml
+          generator-tag: v6.5.0
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
+
+      - name: Publish Typescript Axios Client Library
+        run: |
+          cd typescript-axios-client
+          echo ${{ env.TAG }}
+          cat package.json
+          npm install
+          npm run build
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
