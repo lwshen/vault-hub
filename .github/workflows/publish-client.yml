@@ -29,8 +29,8 @@ jobs:
         uses: openapi-generators/openapitools-generator-action@v1
         with:
           generator: typescript-axios
-          openapi-file: docs/swagger.yaml
-          generator-tag: v6.5.0
+          openapi-file: api/api.yaml
+          generator-tag: v7.13.0
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
 
       - name: Publish Typescript Axios Client Library

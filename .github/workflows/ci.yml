@@ -89,7 +89,7 @@ jobs:
         with:
           generator: typescript-axios
           openapi-file: api/api.yaml
-          generator-tag: v6.5.0
+          generator-tag: v7.13.0
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
 
       - name: Build Typescript Axios Client Library
