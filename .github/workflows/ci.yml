@@ -34,7 +34,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.62.2
+          version: v2.1.6
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -71,7 +71,7 @@ jobs:
       - name: Build backend
         run: go build -v ./...
 
-  build-swagger:
+  build-openapi-client:
     runs-on: ubuntu-latest
     permissions:
       contents: read
