@@ -27,12 +27,8 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
 
-      - name: Generate Swagger docs
-        run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
-
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.1.6
 
@@ -59,7 +55,7 @@ jobs:
 
       - name: Check frontend format
         working-directory: ./web
-        run: pnpm check
+        run: pnpm typecheck && pnpm lint
 
       - name: Build frontend
         working-directory: ./web
