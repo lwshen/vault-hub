@@ -75,6 +75,14 @@ jobs:
           GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 cmd/main.go
           GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 cmd/main.go
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vault-hub-server
+          path: |
+            bin/
+            web/dist
+
   build-openapi-client:
     runs-on: ubuntu-latest
     permissions:
@@ -107,3 +115,9 @@ jobs:
           cat package.json
           npm install
           npm run build
+
+      - name: Upload openapi client artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-client
+          path: typescript-axios-client/
