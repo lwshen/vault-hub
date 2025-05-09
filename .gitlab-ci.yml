@@ -56,7 +56,7 @@ build:
     - go test -v ./...
     
     # Build backend
-    - go build -v ./...
+    - go build -v bin/vault-hub-server cmd/main.go
   artifacts:
     paths:
       - bin/
@@ -66,9 +66,9 @@ build-openapi-client:
   stage: build
   image: node:${NODE_VERSION}
   before_script:
-    # Configure npm registry authentication
-    - npm config set @lwshen:registry https://npm.pkg.github.com/
-    - echo "//npm.pkg.github.com/:_authToken=${CI_JOB_TOKEN}" > ~/.npmrc
+    # Install Java (required for OpenAPI Generator)
+    - apt-get update
+    - apt-get install -y default-jre
   script:
     # Set environment variables
     - export TAG=0.$(date +'%Y%m%d.%H%M%S')
