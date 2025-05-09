@@ -1,0 +1,91 @@
+stages:
+  - build
+
+variables:
+  GO_VERSION: "1.24"
+  NODE_VERSION: "22"
+
+build:
+  stage: build
+  image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .go-cache/
+      - web/node_modules/
+  before_script:
+    # Set up Go caching
+    - mkdir -p .go-cache
+    - export GOPATH="$CI_PROJECT_DIR/.go-cache"
+    - export GOCACHE="$CI_PROJECT_DIR/.go-cache"
+    
+    # Install Go dependencies
+    - go mod download
+    - go mod verify
+    
+    # Install golangci-lint
+    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.1.6
+    - export PATH=$PATH:$(go env GOPATH)/bin
+    
+    # Install Node.js
+    - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    - apt-get install -y nodejs
+    
+    # Install pnpm
+    - npm install -g pnpm
+    
+    # Configure npm registry authentication
+    - npm config set @lwshen:registry https://npm.pkg.github.com/
+    - echo "//npm.pkg.github.com/:_authToken=${CI_JOB_TOKEN}" > ~/.npmrc
+  script:
+    # Run golangci-lint
+    - golangci-lint run
+    
+    # Install frontend dependencies
+    - cd ./web
+    - NODE_AUTH_TOKEN=${CI_JOB_TOKEN} pnpm install
+    
+    # Check frontend format
+    - pnpm typecheck && pnpm lint
+    
+    # Build frontend
+    - pnpm build
+    - cd ..
+    
+    # Run tests
+    - go test -v ./...
+    
+    # Build backend
+    - go build -v ./...
+  artifacts:
+    paths:
+      - bin/
+      - web/dist/
+
+build-openapi-client:
+  stage: build
+  image: node:${NODE_VERSION}
+  before_script:
+    # Configure npm registry authentication
+    - npm config set @lwshen:registry https://npm.pkg.github.com/
+    - echo "//npm.pkg.github.com/:_authToken=${CI_JOB_TOKEN}" > ~/.npmrc
+  script:
+    # Set environment variables
+    - export TAG=0.$(date +'%Y%m%d.%H%M%S')
+    
+    # Install OpenAPI generator
+    - npm install -g @openapitools/openapi-generator-cli
+    - openapi-generator-cli version-manager set 7.13.0
+    
+    # Generate TypeScript Axios client
+    - openapi-generator-cli generate -i api/api.yaml -g typescript-axios -o typescript-axios-client --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${TAG} --git-user-id lwshen --git-repo-id vault-hub
+    
+    # Build TypeScript Axios client
+    - cd typescript-axios-client
+    - echo $TAG
+    - cat package.json
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - typescript-axios-client/
