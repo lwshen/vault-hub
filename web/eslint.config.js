@@ -15,6 +15,7 @@ export default tseslint.config(
       eslintReact.configs["recommended-typescript"],
     ],
     files: ["**/*.{ts,tsx}"],
+    ignores: ['src/components/ui/**/*'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
