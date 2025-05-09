@@ -37,14 +37,14 @@ build:
 
     # Configure npm registry authentication
     - npm config set @lwshen:registry https://npm.pkg.github.com/
-    - echo "//npm.pkg.github.com/:_authToken=${CI_JOB_TOKEN}" > ~/.npmrc
+    - echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOEKN}" > ~/.npmrc
   script:
     # Run golangci-lint
     - golangci-lint run
 
     # Install frontend dependencies
     - cd ./web
-    - NODE_AUTH_TOKEN=${CI_JOB_TOKEN} pnpm install
+    - pnpm install
 
     # Check frontend format
     - pnpm typecheck && pnpm lint
