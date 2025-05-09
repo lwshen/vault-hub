@@ -84,7 +84,7 @@ build-openapi-client:
     - export TAG=0.$(date +'%Y%m%d.%H%M%S')
 
     # Generate TypeScript Axios client
-    - openapi-generator-cli generate -i api/api.yaml -g typescript-axios -o typescript-axios-client --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${TAG} --git-user-id lwshen --git-repo-id vault-hub
+    - /usr/local/bin/docker-entrypoint.sh generate -i api/api.yaml -g typescript-axios -o typescript-axios-client --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${TAG} --git-user-id lwshen --git-repo-id vault-hub
 
     # Build TypeScript Axios client
     - cd typescript-axios-client
