@@ -1,0 +1,16 @@
+name: Mirroring
+
+on: [push, delete]
+
+jobs:
+  to_gitlab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: keninkujovic/gitlab-sync@2.0.0
+        with:
+          gitlab_url: https://git.slw.app/${{ secrets.GITLAB_USERNAME }}/vault-hub.git
+          username: ${{ secrets.GITLAB_USERNAME }}
+          gitlab_pat: ${{ secrets.GITLAB_ACCESS_TOKEN }}
