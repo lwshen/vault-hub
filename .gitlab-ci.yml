@@ -56,7 +56,7 @@ build:
     - go test -v ./...
     
     # Build backend
-    - go build -v bin/vault-hub-server cmd/main.go
+    - go build -o bin/vault-hub-server cmd/main.go
   artifacts:
     paths:
       - bin/
