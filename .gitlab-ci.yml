@@ -4,7 +4,7 @@ stages:
 variables:
   GO_VERSION: "1.24"
   NODE_VERSION: "22"
-  JAVA_VERSION: "21"
+  OPENAPI_GENERATOR_VERSION: "7.13.0"
 
 build:
   stage: build
@@ -34,10 +34,6 @@ build:
 
     # Install pnpm
     - npm install -g pnpm
-
-    # Configure npm registry authentication
-    - npm config set @lwshen:registry https://npm.pkg.github.com/
-    - echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOEKN}" > ~/.npmrc
   script:
     # Run golangci-lint
     - golangci-lint run
@@ -74,7 +70,7 @@ build:
 
 build-openapi-client:
   stage: build
-  image: openapitools/openapi-generator-cli:v7.13.0
+  image: openapitools/openapi-generator-cli:v${OPENAPI_GENERATOR_VERSION}
   before_script:
     # Install Node.js
     - curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
