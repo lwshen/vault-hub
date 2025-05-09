@@ -74,7 +74,7 @@ build:
 
 build-openapi-client:
   stage: build
-  image: eclipse-temurin:${JAVA_VERSION}-jdk
+  image: openapitools/openapi-generator-cli:v7.13.0
   before_script:
     # Install Node.js
     - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
@@ -82,10 +82,6 @@ build-openapi-client:
   script:
     # Set environment variables
     - export TAG=0.$(date +'%Y%m%d.%H%M%S')
-
-    # Install OpenAPI generator
-    - npm install -g @openapitools/openapi-generator-cli
-    - openapi-generator-cli version-manager set 7.13.0
 
     # Generate TypeScript Axios client
     - openapi-generator-cli generate -i api/api.yaml -g typescript-axios -o typescript-axios-client --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${TAG} --git-user-id lwshen --git-repo-id vault-hub
