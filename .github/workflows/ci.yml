@@ -50,8 +50,6 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./web
         run: pnpm install
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check frontend format
         working-directory: ./web
