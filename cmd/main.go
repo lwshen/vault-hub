@@ -14,5 +14,14 @@ func main() {
 
 	api.RegisterHandlers(app, server)
 
+	app.Static("/", "./web/dist")
+
+	app.Get("/*", func(c *fiber.Ctx) error {
+		if err := c.SendFile("./web/dist/index.html"); err != nil {
+			return c.SendStatus(fiber.StatusInternalServerError)
+		}
+		return nil
+	})
+
 	log.Fatal(app.Listen(":3000"))
 }

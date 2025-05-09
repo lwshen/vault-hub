@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.1.6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: "./web/package.json"
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "./web/pnpm-lock.yaml"
+          registry-url: https://npm.pkg.github.com
+          scope: "@lwshen"
+
+      - name: Install frontend dependencies
+        working-directory: ./web
+        run: pnpm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check frontend format
+        working-directory: ./web
+        run: pnpm typecheck && pnpm lint
+
+      - name: Build frontend
+        working-directory: ./web
+        run: pnpm build
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Build backend
+        run: go build -v ./...
+
+  build-openapi-client:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
+      - name: Set env
+        run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
+
+      - name: Generate Typescript Axios Client Library
+        uses: openapi-generators/openapitools-generator-action@v1
+        with:
+          generator: typescript-axios
+          openapi-file: api/api.yaml
+          generator-tag: v7.13.0
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
+
+      - name: Build Typescript Axios Client Library
+        run: |
+          cd typescript-axios-client
+          echo ${{ env.TAG }}
+          cat package.json
+          npm install
+          npm run build
