@@ -1,0 +1,93 @@
+stages:
+  - build
+
+variables:
+  GO_VERSION: "1.24"
+  NODE_VERSION: "22"
+  OPENAPI_GENERATOR_VERSION: "7.13.0"
+
+build:
+  stage: build
+  image: golang:${GO_VERSION}
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .go-cache/
+      - web/node_modules/
+  before_script:
+    # Set up Go caching
+    - mkdir -p .go-cache
+    - export GOPATH="$CI_PROJECT_DIR/.go-cache"
+    - export GOCACHE="$CI_PROJECT_DIR/.go-cache"
+
+    # Install Go dependencies
+    - go mod download
+    - go mod verify
+
+    # Install golangci-lint
+    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.1.6
+    - export PATH=$PATH:$(go env GOPATH)/bin
+
+    # Install Node.js
+    - curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+    - apt-get install -y nodejs
+
+    # Install pnpm
+    - npm install -g pnpm
+  script:
+    # Run golangci-lint
+    - golangci-lint run
+
+    # Install frontend dependencies
+    - cd ./web
+    - pnpm install
+
+    # Check frontend format
+    - pnpm typecheck && pnpm lint
+
+    # Build frontend
+    - pnpm build
+    - cd ..
+
+    # Run tests
+    - go test -v ./...
+
+    # Build backend
+    # Linux builds
+    - GOOS=linux GOARCH=amd64 go build --o bin/vault-hub-server-linux-amd64 cmd/main.go
+    - GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-server-linux-arm64 cmd/main.go
+
+    # Windows builds
+    - GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-server-windows-amd64.exe cmd/main.go
+
+    # macOS builds
+    - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 cmd/main.go
+    - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 cmd/main.go
+  artifacts:
+    paths:
+      - bin/
+      - web/dist/
+
+build-openapi-client:
+  stage: build
+  image: openapitools/openapi-generator-cli:v${OPENAPI_GENERATOR_VERSION}
+  before_script:
+    # Install Node.js
+    - curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+    - apt-get install -y nodejs
+  script:
+    # Set environment variables
+    - export TAG=0.$(date +'%Y%m%d.%H%M%S')
+
+    # Generate TypeScript Axios client
+    - /usr/local/bin/docker-entrypoint.sh generate -i api/api.yaml -g typescript-axios -o typescript-axios-client --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${TAG} --git-user-id lwshen --git-repo-id vault-hub
+
+    # Build TypeScript Axios client
+    - cd typescript-axios-client
+    - echo $TAG
+    - cat package.json
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - typescript-axios-client/
