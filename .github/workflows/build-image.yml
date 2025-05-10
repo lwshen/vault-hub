@@ -26,7 +26,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/lwshen/ai-proxy
+          images: ghcr.io/lwshen/vault-hub
           tags: |
             type=raw,value=latest
             type=ref,event=tag
