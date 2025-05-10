@@ -6,6 +6,7 @@ web/yarn-debug.log*
 web/yarn-error.log*
 web/pnpm-debug.log*
 web/lerna-debug.log*
+web/dist
 .git
 .github
 *.md
