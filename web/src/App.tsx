@@ -1,9 +1,19 @@
-import './App.css';
+import { Route, Switch } from "wouter";
+import Home from "./components/home";
 
 function App() {
   return (
     <>
-      <h1 className='font-bold'>Vite + React</h1>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/about">
+          <div>About</div>
+        </Route>
+        <Route path="/users/:name">
+          {(params) => <>Hello, {params.name}!</>}
+        </Route>
+        <Route>404: No such page!</Route>
+      </Switch>
     </>
   );
 }
