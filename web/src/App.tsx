@@ -1,6 +1,6 @@
-import { Route, Switch } from "wouter";
-import HeroSection from "@/components/hero/hero-section";
-import Header from "@/components/layout/header";
+import { Route, Switch } from 'wouter';
+import HeroSection from '@/components/hero/hero-section';
+import Header from '@/components/layout/header';
 
 function App() {
   return (

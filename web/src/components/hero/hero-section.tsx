@@ -1,18 +1,18 @@
-"use client"
+'use client';
 
 import { useEffect } from 'react';
-import { motion } from "framer-motion"
+import { motion } from 'framer-motion';
 import WebFont from 'webfontloader';
 import HeroGeometric from './hero-geometric';
 
 export default function HeroSection({
-  badge = "VaultHub",
-  title1 = "Secure Your",
-  title2 = "Configuration",
+  badge = 'VaultHub',
+  title1 = 'Secure Your',
+  title2 = 'Configuration',
 }: {
-  badge?: string
-  title1?: string
-  title2?: string
+  badge?: string;
+  title1?: string;
+  title2?: string;
 }) {
   useEffect(() => {
     WebFont.load({
@@ -33,7 +33,7 @@ export default function HeroSection({
         ease: [0.25, 0.4, 0.25, 1],
       },
     }),
-  }
+  };
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303] pt-16">
@@ -136,7 +136,7 @@ export default function HeroSection({
             className="mt-10 md:mt-14 max-w-2xl mx-auto"
           >
             <p className="text-base sm:text-lg md:text-xl text-white/70 leading-relaxed font-light">
-              Keep your <span className="text-emerald-400 font-medium">API keys</span> and{" "}
+              Keep your <span className="text-emerald-400 font-medium">API keys</span> and{' '}
               <span className="text-blue-400 font-medium">secrets</span> safe and easy to manage
             </p>
           </motion.div>
@@ -145,5 +145,5 @@ export default function HeroSection({
 
       <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/80 pointer-events-none" />
     </div>
-  )
+  );
 }

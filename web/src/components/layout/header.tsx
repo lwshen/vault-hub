@@ -1,41 +1,41 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Link, useLocation } from "wouter"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react';
+import { Link, useLocation } from 'wouter';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Menu, X, ChevronDown, User, LogOut, Settings } from "lucide-react"
+} from '@/components/ui/dropdown-menu';
+import { Menu, X, ChevronDown, User, LogOut, Settings } from 'lucide-react';
 
 // This would be replaced with actual auth logic in a real app
 const useAuth = () => {
   // Mock authentication state - in a real app, this would come from your auth provider
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const user = isAuthenticated ? { name: "Demo User", email: "user@example.com" } : null
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const user = isAuthenticated ? { name: 'Demo User', email: 'user@example.com' } : null;
 
-  const login = () => setIsAuthenticated(true)
-  const logout = () => setIsAuthenticated(false)
+  const login = () => setIsAuthenticated(true);
+  const logout = () => setIsAuthenticated(false);
 
-  return { isAuthenticated, user, login, logout }
-}
+  return { isAuthenticated, user, login, logout };
+};
 
 export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [pathname, _] = useLocation()
-  const { isAuthenticated, user, login, logout } = useAuth()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pathname, _] = useLocation();
+  const { isAuthenticated, user, login, logout } = useAuth();
 
   const navigation = [
-    { name: "Home", href: "/" },
-    { name: "Features", href: "/features" },
-    { name: "Pricing", href: "/pricing" },
-    { name: "Documentation", href: "/docs" },
-  ]
+    { name: 'Home', href: '/' },
+    { name: 'Features', href: '/features' },
+    { name: 'Pricing', href: '/pricing' },
+    { name: 'Documentation', href: '/docs' },
+  ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-lg border-b border-white/[0.08]">
@@ -72,8 +72,8 @@ export default function Header() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "text-sm font-medium transition-colors",
-                  pathname === item.href ? "text-white" : "text-white/60 hover:text-white",
+                  'text-sm font-medium transition-colors',
+                  pathname === item.href ? 'text-white' : 'text-white/60 hover:text-white',
                 )}
               >
                 {item.name}
@@ -145,10 +145,10 @@ export default function Header() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "block px-3 py-2 rounded-md text-base font-medium",
+                  'block px-3 py-2 rounded-md text-base font-medium',
                   pathname === item.href
-                    ? "text-white bg-white/[0.08]"
-                    : "text-white/60 hover:text-white hover:bg-white/[0.04]",
+                    ? 'text-white bg-white/[0.08]'
+                    : 'text-white/60 hover:text-white hover:bg-white/[0.04]',
                 )}
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -195,5 +195,5 @@ export default function Header() {
         </div>
       )}
     </header>
-  )
+  );
 }
