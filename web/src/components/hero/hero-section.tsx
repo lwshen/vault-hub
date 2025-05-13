@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import WebFont from 'webfontloader';
 import HeroGeometric from './hero-geometric';
-
+import './hero-section.css';
 export default function HeroSection({
   badge = 'VaultHub',
   title1 = 'Secure Your',
@@ -14,14 +12,6 @@ export default function HeroSection({
   title1?: string;
   title2?: string;
 }) {
-  useEffect(() => {
-    WebFont.load({
-      google: {
-        families: ['Pacifico:400'] // 可指定字体粗细
-      }
-    });
-  }, []);
-
   const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: (i: number) => ({
@@ -120,8 +110,7 @@ export default function HeroSection({
               <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80">{title1}</span>
               <br />
               <span
-                className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-white/90 to-blue-300"
-                style={{ fontFamily: 'Pacifico' }}
+                className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-white/90 to-blue-300 pacifico-font"
               >
                 {title2}
               </span>

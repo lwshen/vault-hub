@@ -1,0 +1,11 @@
+@font-face {
+  font-family: 'Pacifico';
+  src: url('/fonts/Pacifico-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.pacifico-font {
+  font-family: 'Pacifico', cursive;
+}
