@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Menu, X, ChevronDown, User, LogOut, Settings } from 'lucide-react';
+import { ModeToggle } from '@/components/theme-mode-toggle';
 
 // This would be replaced with actual auth logic in a real app
 const useAuth = () => {
