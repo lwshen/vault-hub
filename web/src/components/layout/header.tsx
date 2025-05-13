@@ -27,7 +27,7 @@ const useAuth = () => {
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [pathname, _] = useLocation();
+  const [pathname] = useLocation();
   const { isAuthenticated, user, login, logout } = useAuth();
 
   const navigation = [
@@ -165,15 +165,19 @@ export default function Header() {
                     <div className="text-sm text-white/60">{user?.email}</div>
                   </div>
                   <div className="mt-3 space-y-1">
-                    <button className="block w-full text-left px-3 py-2 text-base font-medium text-white/60 hover:text-white hover:bg-white/[0.04] rounded-md">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-white/60 hover:text-white hover:bg-white/[0.04]"
+                    >
                       Settings
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
                       onClick={logout}
-                      className="block w-full text-left px-3 py-2 text-base font-medium text-white/60 hover:text-white hover:bg-white/[0.04] rounded-md"
+                      className="w-full justify-start text-white/60 hover:text-white hover:bg-white/[0.04]"
                     >
                       Log out
-                    </button>
+                    </Button>
                   </div>
                 </>
               ) : (
