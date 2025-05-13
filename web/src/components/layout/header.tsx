@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Menu, X, ChevronDown, User, LogOut, Settings } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-mode-toggle';
 
 // This would be replaced with actual auth logic in a real app
 const useAuth = () => {
@@ -83,6 +84,9 @@ export default function Header() {
 
           {/* Auth Buttons or User Menu */}
           <div className="hidden md:flex items-center gap-4">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -122,8 +126,9 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          {/* Mobile menu button and theme toggle */}
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
             <button
               type="button"
               className="text-white/80 hover:text-white"
