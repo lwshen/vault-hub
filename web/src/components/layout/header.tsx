@@ -39,7 +39,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-lg border-b border-white/[0.08]">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -62,7 +62,7 @@ export default function Header() {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </div>
-              <span className="text-lg font-semibold text-white">VaultHub</span>
+              <span className="text-lg font-semibold text-foreground">VaultHub</span>
             </Link>
           </div>
 
@@ -74,7 +74,9 @@ export default function Header() {
                 href={item.href}
                 className={cn(
                   'text-sm font-medium transition-colors',
-                  pathname === item.href ? 'text-white' : 'text-white/60 hover:text-white',
+                  pathname === item.href
+                    ? 'text-foreground'
+                    : 'text-foreground/60 hover:text-foreground',
                 )}
               >
                 {item.name}
@@ -90,21 +92,21 @@ export default function Header() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 text-white/80 hover:text-white">
+                  <Button variant="ghost" className="flex items-center gap-2 text-foreground/80 hover:text-foreground">
                     <User size={16} />
                     <span>{user?.name}</span>
                     <ChevronDown size={14} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border-white/10">
-                  <div className="px-2 py-1.5 text-sm text-white/60">{user?.email}</div>
-                  <DropdownMenuSeparator className="bg-white/10" />
-                  <DropdownMenuItem className="text-white/80 hover:text-white focus:text-white cursor-pointer">
+                <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
+                  <div className="px-2 py-1.5 text-sm text-popover-foreground/80">{user?.email}</div>
+                  <DropdownMenuSeparator className="bg-border" />
+                  <DropdownMenuItem className="text-popover-foreground hover:text-popover-foreground focus:text-popover-foreground cursor-pointer focus:bg-accent">
                     <Settings size={16} className="mr-2" />
                     <span>Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="text-white/80 hover:text-white focus:text-white cursor-pointer"
+                    className="text-popover-foreground hover:text-popover-foreground focus:text-popover-foreground cursor-pointer focus:bg-accent"
                     onClick={logout}
                   >
                     <LogOut size={16} className="mr-2" />
@@ -116,12 +118,12 @@ export default function Header() {
               <>
                 <Button
                   variant="ghost"
-                  className="text-white/80 hover:text-white"
+                  className="text-foreground/80 hover:text-foreground"
                   onClick={login} // For demo purposes
                 >
                   Log in
                 </Button>
-                <Button className="bg-emerald-600 hover:bg-emerald-500 text-white">Register</Button>
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Register</Button>
               </>
             )}
           </div>
@@ -131,7 +133,7 @@ export default function Header() {
             <ThemeToggle />
             <button
               type="button"
-              className="text-white/80 hover:text-white"
+              className="text-foreground/80 hover:text-foreground"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <span className="sr-only">Open main menu</span>
@@ -143,7 +145,7 @@ export default function Header() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-black/95 border-t border-white/[0.08]">
+        <div className="md:hidden bg-background/95 border-t border-border">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navigation.map((item) => (
               <Link
@@ -152,8 +154,8 @@ export default function Header() {
                 className={cn(
                   'block px-3 py-2 rounded-md text-base font-medium',
                   pathname === item.href
-                    ? 'text-white bg-white/[0.08]'
-                    : 'text-white/60 hover:text-white hover:bg-white/[0.04]',
+                    ? 'text-foreground bg-accent'
+                    : 'text-foreground/60 hover:text-foreground hover:bg-accent/50',
                 )}
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -162,24 +164,24 @@ export default function Header() {
             ))}
 
             {/* Mobile auth buttons */}
-            <div className="pt-4 pb-3 border-t border-white/[0.08]">
+            <div className="pt-4 pb-3 border-t border-border">
               {isAuthenticated ? (
                 <>
-                  <div className="px-3 py-2 text-white">
+                  <div className="px-3 py-2 text-foreground">
                     <div className="text-base font-medium">{user?.name}</div>
-                    <div className="text-sm text-white/60">{user?.email}</div>
+                    <div className="text-sm text-foreground/60">{user?.email}</div>
                   </div>
                   <div className="mt-3 space-y-1">
                     <Button
                       variant="ghost"
-                      className="w-full justify-start text-white/60 hover:text-white hover:bg-white/[0.04]"
+                      className="w-full justify-start text-foreground/60 hover:text-foreground hover:bg-accent/50"
                     >
                       Settings
                     </Button>
                     <Button
                       variant="ghost"
                       onClick={logout}
-                      className="w-full justify-start text-white/60 hover:text-white hover:bg-white/[0.04]"
+                      className="w-full justify-start text-foreground/60 hover:text-foreground hover:bg-accent/50"
                     >
                       Log out
                     </Button>
@@ -189,12 +191,12 @@ export default function Header() {
                 <div className="px-3 space-y-2">
                   <Button
                     variant="ghost"
-                    className="w-full justify-center text-white/80 hover:text-white hover:bg-white/10"
+                    className="w-full justify-center text-foreground/80 hover:text-foreground hover:bg-accent"
                     onClick={login} // For demo purposes
                   >
                     Log in
                   </Button>
-                  <Button className="w-full justify-center bg-emerald-600 hover:bg-emerald-500 text-white">
+                  <Button className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground">
                     Register
                   </Button>
                 </div>

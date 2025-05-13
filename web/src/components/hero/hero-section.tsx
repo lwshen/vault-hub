@@ -26,8 +26,8 @@ export default function HeroSection({
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303] pt-16">
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/[0.05] via-transparent to-blue-500/[0.05] blur-3xl" />
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-background pt-16">
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/[0.05] via-transparent to-blue-500/[0.05] blur-3xl dark:from-emerald-500/[0.05] dark:to-blue-500/[0.05]" />
 
       <div className="absolute inset-0 overflow-hidden">
         <HeroGeometric
@@ -83,7 +83,7 @@ export default function HeroSection({
             variants={fadeUpVariants}
             initial="hidden"
             animate="visible"
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] mb-8 md:mb-12"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border mb-8 md:mb-12"
           >
             <div className="flex items-center justify-center w-5 h-5 bg-emerald-500/20 rounded-full">
               <svg
@@ -102,15 +102,15 @@ export default function HeroSection({
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </div>
-            <span className="text-sm text-white/60 tracking-wide">{badge}</span>
+            <span className="text-sm text-muted-foreground tracking-wide">{badge}</span>
           </motion.div>
 
           <motion.div custom={1} variants={fadeUpVariants} initial="hidden" animate="visible">
             <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 tracking-tight">
-              <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/80">{title1}</span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/80 dark:from-white dark:to-white/80">{title1}</span>
               <br />
               <span
-                className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-white/90 to-blue-300 pacifico-font"
+                className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 via-primary to-blue-500 dark:from-emerald-300 dark:via-white/90 dark:to-blue-300 pacifico-font"
               >
                 {title2}
               </span>
@@ -124,15 +124,15 @@ export default function HeroSection({
             animate="visible"
             className="mt-10 md:mt-14 max-w-2xl mx-auto"
           >
-            <p className="text-base sm:text-lg md:text-xl text-white/70 leading-relaxed font-light">
-              Keep your <span className="text-emerald-400 font-medium">API keys</span> and{' '}
-              <span className="text-blue-400 font-medium">secrets</span> safe and easy to manage
+            <p className="text-base sm:text-lg md:text-xl text-foreground/70 leading-relaxed font-light">
+              Keep your <span className="text-emerald-500 font-medium">API keys</span> and{' '}
+              <span className="text-blue-500 font-medium">secrets</span> safe and easy to manage
             </p>
           </motion.div>
         </div>
       </div>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/80 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/80 pointer-events-none" />
     </div>
   );
 }
