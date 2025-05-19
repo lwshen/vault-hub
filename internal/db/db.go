@@ -35,7 +35,10 @@ func Open(logger *slog.Logger) error {
 		return err
 	}
 
-	sqlDB.Ping()
+	err = sqlDB.Ping()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

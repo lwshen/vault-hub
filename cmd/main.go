@@ -15,7 +15,11 @@ import (
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	db.Open(logger)
+	err := db.Open(logger)
+	if err != nil {
+		logger.Error("Failed to open database", "error", err)
+		os.Exit(1)
+	}
 
 	server := api.NewServer()
 
