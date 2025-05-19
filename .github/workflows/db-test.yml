@@ -2,8 +2,6 @@ name: Database Connection Tests
 
 env:
   GO_VERSION: "1.24"
-  MYSQL_VERSION: "8.0"
-  POSTGRES_VERSION: "17"
 
 on:
   push:
@@ -36,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:${{ env.MYSQL_VERSION }}
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: testdb
@@ -66,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:${{ env.POSTGRES_VERSION }}
+        image: postgres:17
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
