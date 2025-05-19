@@ -24,11 +24,11 @@ func Open(logger *slog.Logger) error {
 
 	switch config.DatabaseType {
 	case config.DatabaseTypeSQLite:
-		d, err = OpenSQLite(gormConfig)
+		d, err = openSQLite(gormConfig)
 	case config.DatabaseTypeMySQL:
-		d, err = OpenMySQL(gormConfig)
+		d, err = openMySQL(gormConfig)
 	case config.DatabaseTypePostgres:
-		d, err = OpenPostgres(gormConfig)
+		d, err = openPostgres(gormConfig)
 	default:
 		err = fmt.Errorf("unsupported database type: %s", config.DatabaseType)
 	}
@@ -52,7 +52,7 @@ func Open(logger *slog.Logger) error {
 	return nil
 }
 
-func OpenSQLite(gormConfig *gorm.Config) (*gorm.DB, error) {
+func openSQLite(gormConfig *gorm.Config) (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open(config.DatabaseUrl), gormConfig)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func OpenSQLite(gormConfig *gorm.Config) (*gorm.DB, error) {
 	return db, nil
 }
 
-func OpenMySQL(gormConfig *gorm.Config) (*gorm.DB, error) {
+func openMySQL(gormConfig *gorm.Config) (*gorm.DB, error) {
 	db, err := gorm.Open(mysql.Open(config.DatabaseUrl), gormConfig)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func OpenMySQL(gormConfig *gorm.Config) (*gorm.DB, error) {
 	return db, nil
 }
 
-func OpenPostgres(gormConfig *gorm.Config) (*gorm.DB, error) {
+func openPostgres(gormConfig *gorm.Config) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(config.DatabaseUrl), gormConfig)
 	if err != nil {
 		return nil, err
