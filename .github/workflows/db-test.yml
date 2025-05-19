@@ -1,5 +1,10 @@
 name: Database Connection Tests
 
+env:
+  GO_VERSION: "1.24"
+  MYSQL_VERSION: "8.0"
+  POSTGRES_VERSION: "17"
+
 on:
   push:
     branches: [main]
@@ -15,7 +20,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: ${{ env.GO_VERSION }}
           cache: true
 
       - name: Install dependencies
@@ -31,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:${{ env.MYSQL_VERSION }}
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: testdb
@@ -45,7 +50,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: ${{ env.GO_VERSION }}
           cache: true
 
       - name: Install dependencies
@@ -61,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:17
+        image: postgres:${{ env.POSTGRES_VERSION }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -76,7 +81,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: ${{ env.GO_VERSION }}
           cache: true
 
       - name: Install dependencies
