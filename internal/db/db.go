@@ -30,13 +30,7 @@ func Open(logger *slog.Logger) error {
 		return fmt.Errorf("database not initialized")
 	}
 
-	sqlDB, err := DB.DB()
-	if err != nil {
-		return err
-	}
-
-	err = sqlDB.Ping()
-	if err != nil {
+	if err := checkConnection(); err != nil {
 		return err
 	}
 
@@ -50,4 +44,13 @@ func OpenSQLite(gormConfig *gorm.Config) (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+func checkConnection() error {
+	sqlDB, err := DB.DB()
+	if err != nil {
+		return err
+	}
+
+	return sqlDB.Ping()
 }
