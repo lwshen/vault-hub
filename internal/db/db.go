@@ -19,29 +19,30 @@ func Open(logger *slog.Logger) error {
 		Logger: slogGorm.New(slogGorm.WithHandler(logger.Handler())),
 	}
 
+	var d *gorm.DB
+	var err error
+
 	switch config.DatabaseType {
 	case config.DatabaseTypeSQLite:
-		db, err := OpenSQLite(gormConfig)
-		if err != nil {
-			return err
-		}
-		DB = db
+		d, err = OpenSQLite(gormConfig)
 	case config.DatabaseTypeMySQL:
-		db, err := OpenMySQL(gormConfig)
-		if err != nil {
-			return err
-		}
-		DB = db
+		d, err = OpenMySQL(gormConfig)
 	case config.DatabaseTypePostgres:
-		db, err := OpenPostgres(gormConfig)
-		if err != nil {
-			return err
-		}
-		DB = db
+		d, err = OpenPostgres(gormConfig)
+	default:
+		err = fmt.Errorf("unsupported database type: %s", config.DatabaseType)
 	}
 
+	if err != nil {
+		return err
+	}
+	DB = d
+
 	if DB == nil {
-		return fmt.Errorf("database not initialized")
+		// This case should ideally not be reached if the Open<Type> functions
+		// and the default case correctly handle errors and return values.
+		// However, it's a safeguard.
+		return fmt.Errorf("database not initialized despite no explicit error")
 	}
 
 	if err := checkConnection(); err != nil {
