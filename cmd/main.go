@@ -2,15 +2,30 @@ package main
 
 import (
 	"log"
+	"log/slog"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/api"
+	"github.com/lwshen/vault-hub/internal/config"
+	"github.com/lwshen/vault-hub/internal/db"
+	slogfiber "github.com/samber/slog-fiber"
 )
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	err := db.Open(logger)
+	if err != nil {
+		logger.Error("Failed to open database", "error", err)
+		os.Exit(1)
+	}
+
 	server := api.NewServer()
 
 	app := fiber.New()
+
+	app.Use(slogfiber.New(logger))
 
 	api.RegisterHandlers(app, server)
 
@@ -23,5 +38,5 @@ func main() {
 		return nil
 	})
 
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":" + config.AppPort))
 }
