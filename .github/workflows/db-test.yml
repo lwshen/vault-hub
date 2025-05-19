@@ -7,7 +7,27 @@ on:
     branches: [main]
 
 jobs:
-  test-db-connections:
+  test-sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Test SQLite Connection
+        run: |
+          export DATABASE_TYPE=sqlite
+          export DATABASE_URL=file::memory:?cache=shared
+          go test -v ./internal/db -run TestDatabaseConnection
+
+  test-mysql:
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -19,6 +39,27 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24"
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Test MySQL Connection
+        run: |
+          export DATABASE_TYPE=mysql
+          export DATABASE_URL="root:root@tcp(localhost:3306)/testdb?charset=utf8mb4&parseTime=True&loc=Local"
+          go test -v ./internal/db -run TestDatabaseConnection
+
+  test-postgres:
+    runs-on: ubuntu-latest
+    services:
       postgres:
         image: postgres:17
         env:
@@ -40,18 +81,6 @@ jobs:
 
       - name: Install dependencies
         run: go mod download
-
-      - name: Test SQLite Connection
-        run: |
-          export DATABASE_TYPE=sqlite
-          export DATABASE_URL=file::memory:?cache=shared
-          go test -v ./internal/db -run TestDatabaseConnection
-
-      - name: Test MySQL Connection
-        run: |
-          export DATABASE_TYPE=mysql
-          export DATABASE_URL="root:root@tcp(localhost:3306)/testdb?charset=utf8mb4&parseTime=True&loc=Local"
-          go test -v ./internal/db -run TestDatabaseConnection
 
       - name: Test PostgreSQL Connection
         run: |
