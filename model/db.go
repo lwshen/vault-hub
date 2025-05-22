@@ -1,4 +1,4 @@
-package db
+package model
 
 import (
 	"fmt"
@@ -49,6 +49,10 @@ func Open(logger *slog.Logger) error {
 		return err
 	}
 
+	if err := migrate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -84,4 +88,8 @@ func checkConnection() error {
 	}
 
 	return sqlDB.Ping()
+}
+
+func migrate() error {
+	return DB.AutoMigrate(&User{})
 }
