@@ -9,9 +9,9 @@ import (
 
 type User struct {
 	gorm.Model
-	Email    string  `gorm:"type:text;unique"`
+	Email    string  `gorm:"size:255;uniqueIndex"`
 	Password *string `gorm:"type:text"`
-	Name     *string `gorm:"type:text"`
+	Name     *string `gorm:"size:255"`
 	Avatar   *string `gorm:"type:text"`
 }
 
