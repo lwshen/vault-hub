@@ -38,7 +38,11 @@ func Logout(c *fiber.Ctx) error {
 
 func LoginOidc(c *fiber.Ctx) error {
 	baseUrl := c.BaseURL()
-	url := auth.AuthCodeURL(c, baseUrl)
+	url, err := auth.AuthCodeURL(c, baseUrl)
+	if err != nil {
+		slog.Error("Failed to get OIDC URL", "error", err)
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
 	slog.Debug("Login with OIDC", "url", url)
 	return c.Redirect(url)
 }

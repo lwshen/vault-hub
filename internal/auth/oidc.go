@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -25,7 +26,11 @@ func init() {
 	enabled := config.OidcEnabled
 	slog.Info("OIDC", "enabled", enabled)
 	if enabled {
-		SetupOIDC()
+		err := SetupOIDC()
+		if err != nil {
+			slog.Error("Failed to setup OIDC", "error", err)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -51,11 +56,14 @@ func SetupOIDC() error {
 	return nil
 }
 
-func AuthCodeURL(ctx *fiber.Ctx, baseUrl string) string {
+func AuthCodeURL(ctx *fiber.Ctx, baseUrl string) (string, error) {
 	state := generateState()
-	storeInSession(ctx, "oauth", state)
+	err := storeInSession(ctx, "oauth", state)
+	if err != nil {
+		return "", err
+	}
 	oauthConfig.RedirectURL = baseUrl + "/api/auth/callback/oidc"
-	return oauthConfig.AuthCodeURL(state)
+	return oauthConfig.AuthCodeURL(state), nil
 }
 
 func Verify(ctx context.Context, code string) (*oauth2.Token, error) {
