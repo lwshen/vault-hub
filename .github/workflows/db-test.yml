@@ -28,7 +28,7 @@ jobs:
         run: |
           export DATABASE_TYPE=sqlite
           export DATABASE_URL=file::memory:?cache=shared
-          go test -v ./internal/db -run TestDatabaseConnection
+          go test -v ./internal/model -run TestDatabaseConnection
 
   test-mysql:
     runs-on: ubuntu-latest
@@ -58,7 +58,7 @@ jobs:
         run: |
           export DATABASE_TYPE=mysql
           export DATABASE_URL="root:root@tcp(localhost:3306)/testdb?charset=utf8mb4&parseTime=True&loc=Local"
-          go test -v ./internal/db -run TestDatabaseConnection
+          go test -v ./internal/model -run TestDatabaseConnection
 
   test-postgres:
     runs-on: ubuntu-latest
@@ -89,4 +89,4 @@ jobs:
         run: |
           export DATABASE_TYPE=postgres
           export DATABASE_URL="postgres://postgres:postgres@localhost/testdb"
-          go test -v ./internal/db -run TestDatabaseConnection
+          go test -v ./internal/model -run TestDatabaseConnection
