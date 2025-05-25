@@ -26,7 +26,7 @@ export default function HeroSection({
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-background pt-16">
+    <div className="relative h-full w-full flex items-center justify-center overflow-hidden bg-background">
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/[0.05] via-transparent to-blue-500/[0.05] blur-3xl dark:from-emerald-500/[0.05] dark:to-blue-500/[0.05]" />
 
       <div className="absolute inset-0 overflow-hidden">
