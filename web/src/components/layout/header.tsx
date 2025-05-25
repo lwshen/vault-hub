@@ -206,13 +206,13 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     className="w-full justify-center text-foreground/80 hover:text-foreground hover:bg-accent"
-                    onClick={login} // For demo purposes
+                    onClick={() => { login(); setMobileMenuOpen(false); }} // For demo purposes
                   >
                     Log in
                   </Button>
                   <Button 
                     className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={signup}
+                    onClick={() => { signup(); setMobileMenuOpen(false); }}
                   >
                     Register
                   </Button>
