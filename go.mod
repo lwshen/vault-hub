@@ -9,6 +9,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
+	github.com/oapi-codegen/runtime v1.1.1
 	github.com/orandin/slog-gorm v1.4.0
 	github.com/samber/slog-fiber v1.18.0
 	golang.org/x/oauth2 v0.30.0

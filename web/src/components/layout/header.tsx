@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Menu, X, ChevronDown, User, LogOut, Settings } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-mode-toggle';
+import { PATH } from '@/const/path';
 
 // This would be replaced with actual auth logic in a real app
 const useAuth = () => {
@@ -20,19 +21,24 @@ const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const user = isAuthenticated ? { name: 'Demo User', email: 'user@example.com' } : null;
 
+  const [, navigate] = useLocation();
+
   // const login = () => setIsAuthenticated(true);
   const login = () => {
-    window.location.href = '/api/auth/login/oidc';
+    navigate(PATH.LOGIN);
+  };
+  const signup = () => {
+    navigate(PATH.SIGNUP);
   };
   const logout = () => setIsAuthenticated(false);
 
-  return { isAuthenticated, user, login, logout };
+  return { isAuthenticated, user, login, signup, logout };
 };
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pathname] = useLocation();
-  const { isAuthenticated, user, login, logout } = useAuth();
+  const { isAuthenticated, user, login, signup, logout } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -42,7 +48,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+    <header className="sticky top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -126,7 +132,12 @@ export default function Header() {
                 >
                   Log in
                 </Button>
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Register</Button>
+                <Button 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={signup}
+                >
+                  Register
+                </Button>
               </>
             )}
           </div>
@@ -195,11 +206,20 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     className="w-full justify-center text-foreground/80 hover:text-foreground hover:bg-accent"
-                    onClick={login} // For demo purposes
+                    onClick={() => {
+                      login();
+                      setMobileMenuOpen(false); 
+                    }}
                   >
                     Log in
                   </Button>
-                  <Button className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Button 
+                    className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
+                    onClick={() => {
+                      signup();
+                      setMobileMenuOpen(false); 
+                    }}
+                  >
                     Register
                   </Button>
                 </div>
