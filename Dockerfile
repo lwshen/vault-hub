@@ -12,7 +12,6 @@ COPY web ./
 RUN corepack enable
 
 RUN if [ -n "$GITHUB_TOKEN" ]; then \
-        echo "@lwshen:registry=https://npm.pkg.github.com" > .npmrc && \
         echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \
     fi && \
     pnpm install --frozen-lockfile
