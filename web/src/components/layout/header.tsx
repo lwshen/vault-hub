@@ -13,32 +13,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Menu, X, ChevronDown, User, LogOut, Settings } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-mode-toggle';
+import useAuth from '@/hooks/use-auth';
 import { PATH } from '@/const/path';
-
-// This would be replaced with actual auth logic in a real app
-const useAuth = () => {
-  // Mock authentication state - in a real app, this would come from your auth provider
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const user = isAuthenticated ? { name: 'Demo User', email: 'user@example.com' } : null;
-
-  const [, navigate] = useLocation();
-
-  // const login = () => setIsAuthenticated(true);
-  const login = () => {
-    navigate(PATH.LOGIN);
-  };
-  const signup = () => {
-    navigate(PATH.SIGNUP);
-  };
-  const logout = () => setIsAuthenticated(false);
-
-  return { isAuthenticated, user, login, signup, logout };
-};
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [pathname] = useLocation();
-  const { isAuthenticated, user, login, signup, logout } = useAuth();
+  const [pathname, navigate] = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -46,6 +27,16 @@ export default function Header() {
     { name: 'Pricing', href: '/pricing' },
     { name: 'Documentation', href: '/docs' },
   ];
+
+  const handleLogin = () => {
+    navigate(PATH.LOGIN);
+    setMobileMenuOpen(false);
+  };
+
+  const handleSignup = () => {
+    navigate(PATH.SIGNUP);
+    setMobileMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -128,13 +119,13 @@ export default function Header() {
                 <Button
                   variant="ghost"
                   className="text-foreground/80 hover:text-foreground"
-                  onClick={login} // For demo purposes
+                  onClick={handleLogin}
                 >
                   Log in
                 </Button>
                 <Button 
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  onClick={signup}
+                  onClick={handleSignup}
                 >
                   Register
                 </Button>
@@ -206,19 +197,13 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     className="w-full justify-center text-foreground/80 hover:text-foreground hover:bg-accent"
-                    onClick={() => {
-                      login();
-                      setMobileMenuOpen(false); 
-                    }}
+                    onClick={handleLogin}
                   >
                     Log in
                   </Button>
                   <Button 
                     className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={() => {
-                      signup();
-                      setMobileMenuOpen(false); 
-                    }}
+                    onClick={handleLogin}
                   >
                     Register
                   </Button>
