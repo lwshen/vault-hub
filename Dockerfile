@@ -3,15 +3,15 @@ ARG GO_VERSION=1.24
 
 FROM node:${NODE_VERSION}-alpine AS frontend-builder
 
-ARG GITHUB_TOKEN
-
 WORKDIR /app
 
 COPY web ./
 
 RUN corepack enable
 
-RUN if [ -n "$GITHUB_TOKEN" ]; then \
+RUN --mount=type=secret,id=github_token \
+    if [ -f /run/secrets/github_token ]; then \
+        GITHUB_TOKEN=$(cat /run/secrets/github_token) && \
         echo "@lwshen:registry=https://npm.pkg.github.com" > .npmrc && \
         echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \
     fi && \

@@ -37,6 +37,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Create GitHub token secret file
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" > /tmp/github_token
+          chmod 600 /tmp/github_token
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -48,5 +53,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          secrets: |
+            github_token=/tmp/github_token
+
+      - name: Clean up secret file
+        if: always()
+        run: |
+          rm -f /tmp/github_token
