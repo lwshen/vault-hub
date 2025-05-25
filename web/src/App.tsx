@@ -1,6 +1,7 @@
 import { Route, Switch } from 'wouter';
 import HeroSection from '@/components/hero/hero-section';
 import Header from '@/components/layout/header';
+import Login from '@/pages/auth/login';
 
 function App() {
   return (
@@ -24,6 +25,9 @@ function App() {
         </Route>
         <Route path="/users/:name">
           {(params) => <>Hello, {params.name}!</>}
+        </Route>
+        <Route path="/login">
+          <Login />
         </Route>
         <Route>404: No such page!</Route>
       </Switch>
