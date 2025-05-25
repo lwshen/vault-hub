@@ -9,6 +9,12 @@ COPY web ./
 
 RUN corepack enable
 
+# 使用 build secret 来设置 npm 认证
+RUN --mount=type=secret,id=github_token \
+    if [ -f /run/secrets/github_token ]; then \
+        echo "//npm.pkg.github.com/:_authToken=$(cat /run/secrets/github_token)" >> .npmrc; \
+    fi
+
 RUN pnpm install --frozen-lockfile
 
 RUN pnpm build
