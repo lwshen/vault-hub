@@ -5,36 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/internal/auth"
-	"github.com/lwshen/vault-hub/model"
 )
-
-func Signup(c *fiber.Ctx) error {
-	var input model.CreateUserParams
-	if err := c.BodyParser(&input); err != nil {
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-	if errors := input.Validate(); len(errors) > 0 {
-		return c.JSON(errors)
-	}
-
-	return nil
-}
-
-func Login(c *fiber.Ctx) error {
-	type LoginInput struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-	var input LoginInput
-	if err := c.BodyParser(&input); err != nil {
-		return c.SendStatus(fiber.StatusUnauthorized)
-	}
-	return nil
-}
-
-func Logout(c *fiber.Ctx) error {
-	return nil
-}
 
 func LoginOidc(c *fiber.Ctx) error {
 	baseUrl := c.BaseURL()
