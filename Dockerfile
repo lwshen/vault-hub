@@ -11,9 +11,13 @@ RUN corepack enable
 
 RUN --mount=type=secret,id=github_token \
     if [ -f /run/secrets/github_token ]; then \
-        GITHUB_TOKEN=$(cat /run/secrets/github_token) && \
+        GITHUB_TOKEN=$(cat /run/secrets/github_token | tr -d '\n\r') && \
+        echo "Setting up GitHub Package Registry authentication..." && \
         echo "@lwshen:registry=https://npm.pkg.github.com" > .npmrc && \
-        echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc; \
+        echo "//npm.pkg.github.com/:_authToken=$GITHUB_TOKEN" >> .npmrc && \
+        echo "GitHub token configured successfully"; \
+    else \
+        echo "No GitHub token found, proceeding without private registry access"; \
     fi && \
     pnpm install --frozen-lockfile
 
