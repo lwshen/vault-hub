@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Menu, X, ChevronDown, User, LogOut, Settings } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-mode-toggle';
+import { PATH } from '@/const/path';
 
 // This would be replaced with actual auth logic in a real app
 const useAuth = () => {
@@ -24,17 +25,20 @@ const useAuth = () => {
 
   // const login = () => setIsAuthenticated(true);
   const login = () => {
-    navigate('/login');
+    navigate(PATH.LOGIN);
+  };
+  const signup = () => {
+    navigate(PATH.SIGNUP);
   };
   const logout = () => setIsAuthenticated(false);
 
-  return { isAuthenticated, user, login, logout };
+  return { isAuthenticated, user, login, signup, logout };
 };
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pathname] = useLocation();
-  const { isAuthenticated, user, login, logout } = useAuth();
+  const { isAuthenticated, user, login, signup, logout } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -128,7 +132,12 @@ export default function Header() {
                 >
                   Log in
                 </Button>
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Register</Button>
+                <Button 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={signup}
+                >
+                  Register
+                </Button>
               </>
             )}
           </div>
@@ -201,7 +210,10 @@ export default function Header() {
                   >
                     Log in
                   </Button>
-                  <Button className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Button 
+                    className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
+                    onClick={signup}
+                  >
                     Register
                   </Button>
                 </div>

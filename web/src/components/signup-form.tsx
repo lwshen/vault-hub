@@ -11,30 +11,39 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FaOpenid, FaGoogle, FaApple } from 'react-icons/fa';
 import { useLocation } from 'wouter';
+import { PATH } from '@/const/path';
 
-export function LoginForm({
+export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
   const [, navigate] = useLocation();
 
-  const navigateToSignup = () => {
-    navigate('/signup');
+  const navigateToLogin = () => {
+    navigate(PATH.LOGIN);
   };
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
+          <CardTitle className="text-xl">Create an account</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your information below to create your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form>
             <div className="grid gap-6">
               <div className="grid gap-6">
+                <div className="grid gap-3">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    required
+                  />
+                </div>
                 <div className="grid gap-3">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -44,19 +53,15 @@ export function LoginForm({
                   />
                 </div>
                 <div className="grid gap-3">
-                  <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                    <a
-                      href="#"
-                      className="ml-auto text-sm underline-offset-4 hover:underline"
-                    >
-                      Forgot your password?
-                    </a>
-                  </div>
+                  <Label htmlFor="password">Password</Label>
                   <Input id="password" type="password" required />
                 </div>
+                <div className="grid gap-3">
+                  <Label htmlFor="confirm-password">Confirm password</Label>
+                  <Input id="confirm-password" type="password" required />
+                </div>
                 <Button type="submit" className="w-full">
-                  Login
+                  Create account
                 </Button>
               </div>
               <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
@@ -68,21 +73,21 @@ export function LoginForm({
               <div className="flex flex-col gap-4">
                 <Button variant="outline" className="w-full">
                   <FaApple />
-                  Login with Apple
+                  Sign up with Apple
                 </Button>
                 <Button variant="outline" className="w-full">
                   <FaGoogle />
-                  Login with Google
+                  Sign up with Google
                 </Button>
                 <Button variant="outline" className="w-full">
                   <FaOpenid />
-                  Login with OIDC
+                  Sign up with OIDC
                 </Button>
               </div>
               <div className="text-center text-sm">
-                Don&apos;t have an account?{' '}
-                <Button variant="link" onClick={navigateToSignup}>
-                  Sign up
+                Already have an account?{' '}
+                <Button variant="link" onClick={navigateToLogin}>
+                  Sign in
                 </Button>
               </div>
             </div>
@@ -91,4 +96,4 @@ export function LoginForm({
       </Card>
     </div>
   );
-}
+} 
