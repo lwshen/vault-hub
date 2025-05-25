@@ -9,7 +9,7 @@ function App() {
   return (
     <div className="h-screen flex flex-col">
       <Header />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-auto">
         <Switch>
           <Route path={PATH.HOME}>
             <HeroSection />
