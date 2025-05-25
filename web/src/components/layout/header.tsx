@@ -20,7 +20,7 @@ const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const user = isAuthenticated ? { name: 'Demo User', email: 'user@example.com' } : null;
 
-  const [_, navigate] = useLocation();
+  const [, navigate] = useLocation();
 
   // const login = () => setIsAuthenticated(true);
   const login = () => {
