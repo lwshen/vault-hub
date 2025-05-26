@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@lwshen/vault-hub-ts-axios-client':
-        specifier: 0.20250525.143813
-        version: 0.20250525.143813
+        specifier: 0.20250526.132212
+        version: 0.20250526.132212
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.14
         version: 2.1.14(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -464,8 +464,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@lwshen/vault-hub-ts-axios-client@0.20250525.143813':
-    resolution: {integrity: sha512-/4cptu+dltet3ZMElyS0TyAdYe3Toj/+T6ntHISsyHnPwrDIV0PEj4dbRtf3pfQPpeAsci861SccfhTfdCNnvg==, tarball: https://npm.pkg.github.com/download/@lwshen/vault-hub-ts-axios-client/0.20250525.143813/fa6974fbadd41ca304dd5aeb38404794930ffe89}
+  '@lwshen/vault-hub-ts-axios-client@0.20250526.132212':
+    resolution: {integrity: sha512-Me9/jUu2fTc+uRG6r1k+3WRavbvbQ1IUcF5MTkEAmaIhqbjGuI1UORDxVaTmDXZwDR1WDqTftiZSVqjloRuVow==}
 
   '@modelcontextprotocol/sdk@1.11.0':
     resolution: {integrity: sha512-k/1pb70eD638anoi0e8wUGAlbMJXyvdV4p62Ko+EZ7eBe1xMx8Uhak1R5DgfoofsK5IBBnRwsYGTaLZl+6/+RQ==}
@@ -2689,7 +2689,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@lwshen/vault-hub-ts-axios-client@0.20250525.143813':
+  '@lwshen/vault-hub-ts-axios-client@0.20250526.132212':
     dependencies:
       axios: 1.9.0
     transitivePeerDependencies:

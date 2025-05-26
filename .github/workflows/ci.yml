@@ -44,14 +44,10 @@ jobs:
           node-version: "22"
           cache: "pnpm"
           cache-dependency-path: "./web/pnpm-lock.yaml"
-          registry-url: https://npm.pkg.github.com
-          scope: "@lwshen"
 
       - name: Install frontend dependencies
         working-directory: ./web
         run: pnpm install
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check frontend format
         working-directory: ./web
