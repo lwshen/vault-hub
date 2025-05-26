@@ -5,17 +5,18 @@ variables:
   GO_VERSION: "1.24"
   NODE_VERSION: "22"
   OPENAPI_GENERATOR_VERSION: "7.13.0"
+  BASE_IMAGE: "shenlw/vault-hub-base:latest"
 
 build:
   stage: build
-  image: golang:${GO_VERSION}
+  image: ${BASE_IMAGE}  # Use base image
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
       - .go-cache/
       - web/node_modules/
   before_script:
-    # Set up Go caching
+    # Set up Go cache (tools are already installed in base image)
     - mkdir -p .go-cache
     - export GOPATH="$CI_PROJECT_DIR/.go-cache"
     - export GOCACHE="$CI_PROJECT_DIR/.go-cache"
@@ -24,23 +25,16 @@ build:
     - go mod download
     - go mod verify
 
-    # Install golangci-lint
-    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.1.6
-    - export PATH=$PATH:$(go env GOPATH)/bin
-
-    # Install Node.js
-    - curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-    - apt-get install -y nodejs
-
-    # Install pnpm
-    - npm install -g pnpm
+    # Note: The following tools are already installed in the base image, no need to reinstall
+    # - golangci-lint
+    # - Node.js
+    # - pnpm
   script:
-    # Run golangci-lint
     - golangci-lint run
 
     # Install frontend dependencies
     - cd ./web
-    # Configure npm authentication for GitHub Packages in web directory
+    # Configure npm authentication
     - echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> $HOME/.npmrc
     - echo "@lwshen:registry=https://npm.pkg.github.com" >> $HOME/.npmrc
     - pnpm install
@@ -57,7 +51,7 @@ build:
 
     # Build backend
     # Linux builds
-    - GOOS=linux GOARCH=amd64 go build --o bin/vault-hub-server-linux-amd64 cmd/main.go
+    - GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-server-linux-amd64 cmd/main.go
     - GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-server-linux-arm64 cmd/main.go
 
     # Windows builds
