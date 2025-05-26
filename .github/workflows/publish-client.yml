@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node
+      - name: Set up Node for GitHub Packages
         uses: actions/setup-node@v4
         with:
           node-version: "22.x"
@@ -33,7 +33,7 @@ jobs:
           generator-tag: v7.13.0
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
 
-      - name: Publish Typescript Axios Client Library
+      - name: Publish to GitHub Packages
         run: |
           cd typescript-axios-client
           echo ${{ env.TAG }}
@@ -43,3 +43,16 @@ jobs:
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node for npm registry
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish to npm registry
+        run: |
+          cd typescript-axios-client
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
