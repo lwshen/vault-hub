@@ -1,0 +1,48 @@
+FROM golang:1.24
+
+ENV NODE_VERSION=22
+ENV GOLANGCI_LINT_VERSION=v2.1.6
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update package list and install basic dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
+    && apt-get install -y nodejs
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Install golangci-lint
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
+    sh -s -- -b /usr/local/bin ${GOLANGCI_LINT_VERSION}
+
+# Set up Go environment
+ENV GOPATH=/go
+ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+
+# Create workspace directory
+WORKDIR /workspace
+
+# Verify installations
+RUN go version && \
+    node --version && \
+    npm --version && \
+    pnpm --version && \
+    golangci-lint --version
+
+# Clean up
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Set default command
+CMD ["/bin/bash"] 
