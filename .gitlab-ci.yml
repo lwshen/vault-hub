@@ -31,9 +31,6 @@ build:
 
     # Install frontend dependencies
     - cd ./web
-    # Configure npm authentication
-    - echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> $HOME/.npmrc
-    - echo "@lwshen:registry=https://npm.pkg.github.com" >> $HOME/.npmrc
     - pnpm install
 
     # Check frontend format
