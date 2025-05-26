@@ -46,9 +46,6 @@ jobs:
 
   build-and-publish-npm:
     runs-on: ubuntu-latest
-    needs: build-and-publish-github
-    permissions:
-      contents: read
 
     steps:
       - uses: actions/checkout@v4
