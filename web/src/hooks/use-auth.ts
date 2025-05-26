@@ -1,4 +1,4 @@
-import api from '@/apis/api';
+import { authApi } from '@/apis/api';
 import { useState } from 'react';
 
 const useAuth = () => {
@@ -8,13 +8,13 @@ const useAuth = () => {
   
   // const login = () => setIsAuthenticated(true);
   const login = (email: string, password: string) => {
-    api.apiAuthLoginPost({
+    authApi.login({
       email,
       password
     });
   };
   const signup = (email: string, password: string, name: string) => {
-    api.apiAuthSignupPost({
+    authApi.signup({
       email,
       password,
       name

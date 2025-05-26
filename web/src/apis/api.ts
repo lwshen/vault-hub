@@ -1,5 +1,5 @@
-import { DefaultApi } from '@lwshen/vault-hub-ts-axios-client';
+import { AuthApi } from '@lwshen/vault-hub-ts-axios-client';
 
-const api = new DefaultApi();
+const authApi = new AuthApi();
 
-export default api;
+export { authApi };
