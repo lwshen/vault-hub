@@ -14,3 +14,4 @@ jobs:
           gitlab_url: https://git.slw.app/${{ secrets.GITLAB_USERNAME }}/vault-hub.git
           username: ${{ secrets.GITLAB_USERNAME }}
           gitlab_pat: ${{ secrets.GITLAB_ACCESS_TOKEN }}
+          force_push: true
