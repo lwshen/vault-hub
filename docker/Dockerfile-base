@@ -2,6 +2,7 @@ FROM golang:1.24
 
 ENV NODE_VERSION=22
 ENV GOLANGCI_LINT_VERSION=v2.1.6
+ENV OPENAPI_GENERATOR_VERSION=7.13.0
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Update package list and install basic dependencies
@@ -13,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     gnupg \
     lsb-release \
+    openjdk-17-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js
@@ -26,6 +28,12 @@ RUN npm install -g pnpm
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
     sh -s -- -b /usr/local/bin ${GOLANGCI_LINT_VERSION}
 
+# Install OpenAPI Generator CLI
+RUN wget https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/${OPENAPI_GENERATOR_VERSION}/openapi-generator-cli-${OPENAPI_GENERATOR_VERSION}.jar \
+    -O /usr/local/bin/openapi-generator-cli.jar && \
+    echo '#!/bin/bash\njava -jar /usr/local/bin/openapi-generator-cli.jar "$@"' > /usr/local/bin/openapi-generator && \
+    chmod +x /usr/local/bin/openapi-generator
+
 # Set up Go environment
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
@@ -38,7 +46,8 @@ RUN go version && \
     node --version && \
     npm --version && \
     pnpm --version && \
-    golangci-lint --version
+    golangci-lint --version && \
+    openapi-generator version
 
 # Clean up
 RUN apt-get clean && \

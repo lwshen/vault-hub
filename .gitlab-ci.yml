@@ -2,14 +2,11 @@ stages:
   - build
 
 variables:
-  GO_VERSION: "1.24"
-  NODE_VERSION: "22"
-  OPENAPI_GENERATOR_VERSION: "7.13.0"
   BASE_IMAGE: "shenlw/vault-hub-base:latest"
 
 build:
   stage: build
-  image: ${BASE_IMAGE}  # Use base image
+  image: ${BASE_IMAGE}
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -63,11 +60,7 @@ build:
 
 build-openapi-client:
   stage: build
-  image: openapitools/openapi-generator-cli:v${OPENAPI_GENERATOR_VERSION}
-  before_script:
-    # Install Node.js
-    - curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-    - apt-get install -y nodejs
+  image: ${BASE_IMAGE}
   script:
     # Set environment variables
     - export TAG=0.$(date +'%Y%m%d.%H%M%S')
