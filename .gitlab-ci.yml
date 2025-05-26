@@ -66,10 +66,6 @@ build:
     # macOS builds
     - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 cmd/main.go
     - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 cmd/main.go
-  artifacts:
-    paths:
-      - bin/
-      - web/dist/
 
 build-openapi-client:
   stage: build
@@ -91,6 +87,3 @@ build-openapi-client:
     - cat package.json
     - npm install
     - npm run build
-  artifacts:
-    paths:
-      - typescript-axios-client/
