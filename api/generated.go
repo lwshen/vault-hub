@@ -31,26 +31,26 @@ type SignupRequest struct {
 	Password string              `json:"password"`
 }
 
-// PostApiAuthLoginJSONRequestBody defines body for PostApiAuthLogin for application/json ContentType.
-type PostApiAuthLoginJSONRequestBody = LoginRequest
+// LoginJSONRequestBody defines body for Login for application/json ContentType.
+type LoginJSONRequestBody = LoginRequest
 
-// PostApiAuthSignupJSONRequestBody defines body for PostApiAuthSignup for application/json ContentType.
-type PostApiAuthSignupJSONRequestBody = SignupRequest
+// SignupJSONRequestBody defines body for Signup for application/json ContentType.
+type SignupJSONRequestBody = SignupRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
 	// (POST /api/auth/login)
-	PostApiAuthLogin(c *fiber.Ctx) error
+	Login(c *fiber.Ctx) error
 
 	// (GET /api/auth/logout)
-	GetApiAuthLogout(c *fiber.Ctx) error
+	Logout(c *fiber.Ctx) error
 
 	// (POST /api/auth/signup)
-	PostApiAuthSignup(c *fiber.Ctx) error
+	Signup(c *fiber.Ctx) error
 
 	// (GET /api/health)
-	GetApiHealth(c *fiber.Ctx) error
+	Health(c *fiber.Ctx) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -60,28 +60,28 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc fiber.Handler
 
-// PostApiAuthLogin operation middleware
-func (siw *ServerInterfaceWrapper) PostApiAuthLogin(c *fiber.Ctx) error {
+// Login operation middleware
+func (siw *ServerInterfaceWrapper) Login(c *fiber.Ctx) error {
 
-	return siw.Handler.PostApiAuthLogin(c)
+	return siw.Handler.Login(c)
 }
 
-// GetApiAuthLogout operation middleware
-func (siw *ServerInterfaceWrapper) GetApiAuthLogout(c *fiber.Ctx) error {
+// Logout operation middleware
+func (siw *ServerInterfaceWrapper) Logout(c *fiber.Ctx) error {
 
-	return siw.Handler.GetApiAuthLogout(c)
+	return siw.Handler.Logout(c)
 }
 
-// PostApiAuthSignup operation middleware
-func (siw *ServerInterfaceWrapper) PostApiAuthSignup(c *fiber.Ctx) error {
+// Signup operation middleware
+func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
 
-	return siw.Handler.PostApiAuthSignup(c)
+	return siw.Handler.Signup(c)
 }
 
-// GetApiHealth operation middleware
-func (siw *ServerInterfaceWrapper) GetApiHealth(c *fiber.Ctx) error {
+// Health operation middleware
+func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
 
-	return siw.Handler.GetApiHealth(c)
+	return siw.Handler.Health(c)
 }
 
 // FiberServerOptions provides options for the Fiber server.
@@ -105,49 +105,73 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 		router.Use(fiber.Handler(m))
 	}
 
-	router.Post(options.BaseURL+"/api/auth/login", wrapper.PostApiAuthLogin)
+	router.Post(options.BaseURL+"/api/auth/login", wrapper.Login)
 
-	router.Get(options.BaseURL+"/api/auth/logout", wrapper.GetApiAuthLogout)
+	router.Get(options.BaseURL+"/api/auth/logout", wrapper.Logout)
 
-	router.Post(options.BaseURL+"/api/auth/signup", wrapper.PostApiAuthSignup)
+	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
 
-	router.Get(options.BaseURL+"/api/health", wrapper.GetApiHealth)
+	router.Get(options.BaseURL+"/api/health", wrapper.Health)
 
 }
 
-type PostApiAuthLoginRequestObject struct {
-	Body *PostApiAuthLoginJSONRequestBody
+type LoginRequestObject struct {
+	Body *LoginJSONRequestBody
 }
 
-type PostApiAuthLoginResponseObject interface {
-	VisitPostApiAuthLoginResponse(ctx *fiber.Ctx) error
+type LoginResponseObject interface {
+	VisitLoginResponse(ctx *fiber.Ctx) error
 }
 
-type GetApiAuthLogoutRequestObject struct {
+type Login200Response struct {
 }
 
-type GetApiAuthLogoutResponseObject interface {
-	VisitGetApiAuthLogoutResponse(ctx *fiber.Ctx) error
+func (response Login200Response) VisitLoginResponse(ctx *fiber.Ctx) error {
+	ctx.Status(200)
+	return nil
 }
 
-type PostApiAuthSignupRequestObject struct {
-	Body *PostApiAuthSignupJSONRequestBody
+type LogoutRequestObject struct {
 }
 
-type PostApiAuthSignupResponseObject interface {
-	VisitPostApiAuthSignupResponse(ctx *fiber.Ctx) error
+type LogoutResponseObject interface {
+	VisitLogoutResponse(ctx *fiber.Ctx) error
 }
 
-type GetApiHealthRequestObject struct {
+type Logout200Response struct {
 }
 
-type GetApiHealthResponseObject interface {
-	VisitGetApiHealthResponse(ctx *fiber.Ctx) error
+func (response Logout200Response) VisitLogoutResponse(ctx *fiber.Ctx) error {
+	ctx.Status(200)
+	return nil
 }
 
-type GetApiHealth200JSONResponse HealthCheckResponse
+type SignupRequestObject struct {
+	Body *SignupJSONRequestBody
+}
 
-func (response GetApiHealth200JSONResponse) VisitGetApiHealthResponse(ctx *fiber.Ctx) error {
+type SignupResponseObject interface {
+	VisitSignupResponse(ctx *fiber.Ctx) error
+}
+
+type Signup200Response struct {
+}
+
+func (response Signup200Response) VisitSignupResponse(ctx *fiber.Ctx) error {
+	ctx.Status(200)
+	return nil
+}
+
+type HealthRequestObject struct {
+}
+
+type HealthResponseObject interface {
+	VisitHealthResponse(ctx *fiber.Ctx) error
+}
+
+type Health200JSONResponse HealthCheckResponse
+
+func (response Health200JSONResponse) VisitHealthResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -158,16 +182,16 @@ func (response GetApiHealth200JSONResponse) VisitGetApiHealthResponse(ctx *fiber
 type StrictServerInterface interface {
 
 	// (POST /api/auth/login)
-	PostApiAuthLogin(ctx context.Context, request PostApiAuthLoginRequestObject) (PostApiAuthLoginResponseObject, error)
+	Login(ctx context.Context, request LoginRequestObject) (LoginResponseObject, error)
 
 	// (GET /api/auth/logout)
-	GetApiAuthLogout(ctx context.Context, request GetApiAuthLogoutRequestObject) (GetApiAuthLogoutResponseObject, error)
+	Logout(ctx context.Context, request LogoutRequestObject) (LogoutResponseObject, error)
 
 	// (POST /api/auth/signup)
-	PostApiAuthSignup(ctx context.Context, request PostApiAuthSignupRequestObject) (PostApiAuthSignupResponseObject, error)
+	Signup(ctx context.Context, request SignupRequestObject) (SignupResponseObject, error)
 
 	// (GET /api/health)
-	GetApiHealth(ctx context.Context, request GetApiHealthRequestObject) (GetApiHealthResponseObject, error)
+	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *fiber.Ctx, args interface{}) (interface{}, error)
@@ -183,29 +207,29 @@ type strictHandler struct {
 	middlewares []StrictMiddlewareFunc
 }
 
-// PostApiAuthLogin operation middleware
-func (sh *strictHandler) PostApiAuthLogin(ctx *fiber.Ctx) error {
-	var request PostApiAuthLoginRequestObject
+// Login operation middleware
+func (sh *strictHandler) Login(ctx *fiber.Ctx) error {
+	var request LoginRequestObject
 
-	var body PostApiAuthLoginJSONRequestBody
+	var body LoginJSONRequestBody
 	if err := ctx.BodyParser(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.PostApiAuthLogin(ctx.UserContext(), request.(PostApiAuthLoginRequestObject))
+		return sh.ssi.Login(ctx.UserContext(), request.(LoginRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostApiAuthLogin")
+		handler = middleware(handler, "Login")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(PostApiAuthLoginResponseObject); ok {
-		if err := validResponse.VisitPostApiAuthLoginResponse(ctx); err != nil {
+	} else if validResponse, ok := response.(LoginResponseObject); ok {
+		if err := validResponse.VisitLoginResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
@@ -214,23 +238,23 @@ func (sh *strictHandler) PostApiAuthLogin(ctx *fiber.Ctx) error {
 	return nil
 }
 
-// GetApiAuthLogout operation middleware
-func (sh *strictHandler) GetApiAuthLogout(ctx *fiber.Ctx) error {
-	var request GetApiAuthLogoutRequestObject
+// Logout operation middleware
+func (sh *strictHandler) Logout(ctx *fiber.Ctx) error {
+	var request LogoutRequestObject
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetApiAuthLogout(ctx.UserContext(), request.(GetApiAuthLogoutRequestObject))
+		return sh.ssi.Logout(ctx.UserContext(), request.(LogoutRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetApiAuthLogout")
+		handler = middleware(handler, "Logout")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(GetApiAuthLogoutResponseObject); ok {
-		if err := validResponse.VisitGetApiAuthLogoutResponse(ctx); err != nil {
+	} else if validResponse, ok := response.(LogoutResponseObject); ok {
+		if err := validResponse.VisitLogoutResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
@@ -239,29 +263,29 @@ func (sh *strictHandler) GetApiAuthLogout(ctx *fiber.Ctx) error {
 	return nil
 }
 
-// PostApiAuthSignup operation middleware
-func (sh *strictHandler) PostApiAuthSignup(ctx *fiber.Ctx) error {
-	var request PostApiAuthSignupRequestObject
+// Signup operation middleware
+func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
+	var request SignupRequestObject
 
-	var body PostApiAuthSignupJSONRequestBody
+	var body SignupJSONRequestBody
 	if err := ctx.BodyParser(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.PostApiAuthSignup(ctx.UserContext(), request.(PostApiAuthSignupRequestObject))
+		return sh.ssi.Signup(ctx.UserContext(), request.(SignupRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "PostApiAuthSignup")
+		handler = middleware(handler, "Signup")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(PostApiAuthSignupResponseObject); ok {
-		if err := validResponse.VisitPostApiAuthSignupResponse(ctx); err != nil {
+	} else if validResponse, ok := response.(SignupResponseObject); ok {
+		if err := validResponse.VisitSignupResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
@@ -270,23 +294,23 @@ func (sh *strictHandler) PostApiAuthSignup(ctx *fiber.Ctx) error {
 	return nil
 }
 
-// GetApiHealth operation middleware
-func (sh *strictHandler) GetApiHealth(ctx *fiber.Ctx) error {
-	var request GetApiHealthRequestObject
+// Health operation middleware
+func (sh *strictHandler) Health(ctx *fiber.Ctx) error {
+	var request HealthRequestObject
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetApiHealth(ctx.UserContext(), request.(GetApiHealthRequestObject))
+		return sh.ssi.Health(ctx.UserContext(), request.(HealthRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetApiHealth")
+		handler = middleware(handler, "Health")
 	}
 
 	response, err := handler(ctx, request)
 
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(GetApiHealthResponseObject); ok {
-		if err := validResponse.VisitGetApiHealthResponse(ctx); err != nil {
+	} else if validResponse, ok := response.(HealthResponseObject); ok {
+		if err := validResponse.VisitHealthResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
