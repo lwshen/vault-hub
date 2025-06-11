@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@lwshen/vault-hub-ts-axios-client':
-        specifier: 0.20250526.135706
-        version: 0.20250526.135706
+        specifier: 0.20250611.64112
+        version: 0.20250611.64112
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.14
         version: 2.1.15(@types/react-dom@19.1.6(@types/react@19.1.7))(@types/react@19.1.7)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -473,8 +473,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@lwshen/vault-hub-ts-axios-client@0.20250526.135706':
-    resolution: {integrity: sha512-Tn2iRXmVJp+GfJ0YEsxSBXhVOHXzP3JETJCJZNqFTK4xm612cSIHy0lz3rNVQK6tGgjofXSSxcPuXrjLYCa8Qg==}
+  '@lwshen/vault-hub-ts-axios-client@0.20250611.64112':
+    resolution: {integrity: sha512-0NSlgHWEDoRQxQQzqJdNEKuz2CWtzkjI8JwPRcSRabLW6hFhMmXm/mY37gYMku6LSsLR14TELPnandWntdnx/A==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1477,8 +1477,8 @@ packages:
       debug:
         optional: true
 
-  form-data@4.0.2:
-    resolution: {integrity: sha512-hGfm/slu0ZabnNt4oaRZ6uREyfCj6P4fT/n6A1rGV+Z0VdGXjfOhVUpkn6qVQONHGIFwmveGXyDs75+nr6FM8w==}
+  form-data@4.0.3:
+    resolution: {integrity: sha512-qsITQPfmvMOSAdeyZ+12I1c+CKSstAFAwu+97zrnWAbIr5u8wfsExUzCesVLC8NgHuRUqNN4Zy6UPWUTRGslcA==}
     engines: {node: '>= 6'}
 
   framer-motion@12.16.0:
@@ -2491,7 +2491,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@lwshen/vault-hub-ts-axios-client@0.20250526.135706':
+  '@lwshen/vault-hub-ts-axios-client@0.20250611.64112':
     dependencies:
       axios: 1.9.0
     transitivePeerDependencies:
@@ -3172,7 +3172,7 @@ snapshots:
   axios@1.9.0:
     dependencies:
       follow-redirects: 1.15.9
-      form-data: 4.0.2
+      form-data: 4.0.3
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
@@ -3568,11 +3568,12 @@ snapshots:
 
   follow-redirects@1.15.9: {}
 
-  form-data@4.0.2:
+  form-data@4.0.3:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       es-set-tostringtag: 2.1.0
+      hasown: 2.0.2
       mime-types: 2.1.35
 
   framer-motion@12.16.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
