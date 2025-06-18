@@ -20,8 +20,6 @@ jobs:
         uses: qodo-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_KEY: ${{ secrets.OPEN_ROUTER_KEY }}
-          OPENAI_API_BASE: "https://openrouter.ai/api/v1"
-          config.model: "google/gemini-2.5-flash-preview-05-20"
-          config.custom_model_max_tokens: 1047576
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          config.model: gpt-4.1-mini
           github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "review_requested", "synchronize"]'
