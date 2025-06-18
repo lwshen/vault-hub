@@ -1,11 +1,13 @@
 package api
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
 func (Server) Login(c *fiber.Ctx) error {
 	var input LoginRequest
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
@@ -16,7 +18,7 @@ func (Server) Login(c *fiber.Ctx) error {
 func (Server) Signup(c *fiber.Ctx) error {
 	var input SignupRequest
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}

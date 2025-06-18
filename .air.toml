@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 [build]
   bin = "./tmp/main"
   pre_cmd = ["cd web && pnpm build"]
-  cmd = "go build -o ./tmp/main ./cmd/main.go"
+  cmd = "CGO_ENABLED=1 go build -o ./tmp/main ./cmd/main.go"
   delay = 1500
   exclude_dir = ["assets", "tmp", "vendor", "web/dist", "web/node_modules"]
   exclude_file = []
