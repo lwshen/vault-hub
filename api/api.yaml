@@ -28,6 +28,7 @@ paths:
               $ref: "#/components/schemas/LoginRequest"
       responses:
         '200':
+          description: Login successfully
           content:
             application/json:
               schema:
@@ -46,6 +47,7 @@ paths:
               $ref: "#/components/schemas/SignupRequest"
       responses:
         '200':
+          description: Sign up successfully
           content:
             application/json:
               schema:
