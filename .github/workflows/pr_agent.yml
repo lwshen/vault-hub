@@ -22,5 +22,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_KEY: ${{ secrets.OPEN_ROUTER_KEY }}
           OPENAI_API_BASE: "https://openrouter.ai/api/v1"
-          OPENAI_MODEL_NAME: google/gemini-2.5-flash-preview-05-20
+          config.model: "google/gemini-2.5-flash-preview-05-20"
           github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "review_requested", "synchronize"]'
