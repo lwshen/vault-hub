@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/lwshen/vault-hub/internal/auth"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -87,4 +88,8 @@ func hashPassword(password string) (string, error) {
 func (u *User) ComparePassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(*u.Password), []byte(password))
 	return err == nil
+}
+
+func (u *User) GenerateToken() (string, error) {
+	return auth.GenerateToken(u.ID)
 }

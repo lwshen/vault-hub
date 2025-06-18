@@ -56,7 +56,16 @@ func (Server) Signup(c *fiber.Ctx) error {
 
 	slog.Info("User created", "email", user.Email, "name", user.Name)
 
-	return nil
+	token, err := user.GenerateToken()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"token": token,
+	})
 }
 
 func (Server) Logout(c *fiber.Ctx) error {
