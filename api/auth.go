@@ -1,6 +1,10 @@
 package api
 
 import (
+	"log/slog"
+
+	"github.com/lwshen/vault-hub/model"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,6 +26,35 @@ func (Server) Signup(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
+
+	email, err := input.Email.MarshalJSON()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	createUserParams := model.CreateUserParams{
+		Email:    string(email),
+		Password: input.Password,
+		Name:     input.Name,
+	}
+
+	errors := createUserParams.Validate()
+	if len(errors) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": errors,
+		})
+	}
+
+	user, err := createUserParams.Create()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	slog.Info("User created", "email", user.Email, "name", user.Name)
 
 	return nil
 }
