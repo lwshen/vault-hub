@@ -11,12 +11,39 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FaOpenid, FaGoogle, FaApple } from 'react-icons/fa';
 import { useLocation } from 'wouter';
+import useAuth from '@/hooks/use-auth';
+import { useState } from 'react';
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
   const [, navigate] = useLocation();
+  const { login } = useAuth();
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await login(form.email, form.password);
+      // TODO: handle successful login (e.g., redirect)
+    } catch {
+      setError('Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const navigateToSignup = () => {
     navigate('/signup');
@@ -32,15 +59,18 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={handleSubmit}>
             <div className="grid gap-6">
               <div className="grid gap-6">
                 <div className="grid gap-3">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     required
+                    value={form.email}
+                    onChange={handleChange}
                   />
                 </div>
                 <div className="grid gap-3">
@@ -53,10 +83,11 @@ export function LoginForm({
                       Forgot your password?
                     </a>
                   </div>
-                  <Input id="password" type="password" required />
+                  <Input id="password" name="password" type="password" required value={form.password} onChange={handleChange} />
                 </div>
-                <Button type="submit" className="w-full">
-                  Login
+                {error && <div className="text-red-500 text-sm">{error}</div>}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Logging in...' : 'Login'}
                 </Button>
               </div>
               <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">

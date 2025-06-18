@@ -7,14 +7,14 @@ const useAuth = () => {
   const user = isAuthenticated ? { name: 'Demo User', email: 'user@example.com' } : null;
   
   // const login = () => setIsAuthenticated(true);
-  const login = (email: string, password: string) => {
-    authApi.login({
+  const login = async (email: string, password: string) => {
+    await authApi.login({
       email,
       password
     });
   };
-  const signup = (email: string, password: string, name: string) => {
-    authApi.signup({
+  const signup = async (email: string, password: string, name: string) => {
+    await authApi.signup({
       email,
       password,
       name

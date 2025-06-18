@@ -24,11 +24,21 @@ type LoginRequest struct {
 	Password string              `json:"password"`
 }
 
+// LoginResponse defines model for LoginResponse.
+type LoginResponse struct {
+	Token string `json:"token"`
+}
+
 // SignupRequest defines model for SignupRequest.
 type SignupRequest struct {
 	Email    openapi_types.Email `json:"email"`
 	Name     string              `json:"name"`
 	Password string              `json:"password"`
+}
+
+// SignupResponse defines model for SignupResponse.
+type SignupResponse struct {
+	Token string `json:"token"`
 }
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
@@ -123,12 +133,13 @@ type LoginResponseObject interface {
 	VisitLoginResponse(ctx *fiber.Ctx) error
 }
 
-type Login200Response struct {
-}
+type Login200JSONResponse LoginResponse
 
-func (response Login200Response) VisitLoginResponse(ctx *fiber.Ctx) error {
+func (response Login200JSONResponse) VisitLoginResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
-	return nil
+
+	return ctx.JSON(&response)
 }
 
 type LogoutRequestObject struct {
@@ -154,12 +165,13 @@ type SignupResponseObject interface {
 	VisitSignupResponse(ctx *fiber.Ctx) error
 }
 
-type Signup200Response struct {
-}
+type Signup200JSONResponse SignupResponse
 
-func (response Signup200Response) VisitSignupResponse(ctx *fiber.Ctx) error {
+func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
-	return nil
+
+	return ctx.JSON(&response)
 }
 
 type HealthRequestObject struct {

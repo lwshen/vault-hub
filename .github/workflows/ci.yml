@@ -58,7 +58,9 @@ jobs:
         run: pnpm build
 
       - name: Run tests
-        run: go test -v ./...
+        run: |
+          export JWT_SECRET=secret
+          go test -v ./...
 
       - name: Build backend
         run: |

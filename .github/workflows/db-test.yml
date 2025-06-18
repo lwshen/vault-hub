@@ -26,6 +26,7 @@ jobs:
 
       - name: Test SQLite Connection
         run: |
+          export JWT_SECRET=secret
           export DATABASE_TYPE=sqlite
           export DATABASE_URL=file::memory:?cache=shared
           go test -v ./model -run TestDatabaseConnection
@@ -56,6 +57,7 @@ jobs:
 
       - name: Test MySQL Connection
         run: |
+          export JWT_SECRET=secret
           export DATABASE_TYPE=mysql
           export DATABASE_URL="root:root@tcp(localhost:3306)/testdb?charset=utf8mb4&parseTime=True&loc=Local"
           go test -v ./model -run TestDatabaseConnection
@@ -87,6 +89,7 @@ jobs:
 
       - name: Test PostgreSQL Connection
         run: |
+          export JWT_SECRET=secret
           export DATABASE_TYPE=postgres
           export DATABASE_URL="postgres://postgres:postgres@localhost/testdb"
           go test -v ./model -run TestDatabaseConnection
