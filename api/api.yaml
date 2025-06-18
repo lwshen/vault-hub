@@ -28,7 +28,10 @@ paths:
               $ref: "#/components/schemas/LoginRequest"
       responses:
         '200':
-          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
   /api/auth/signup:
     post:
       description: Sign up a new user
@@ -43,7 +46,10 @@ paths:
               $ref: "#/components/schemas/SignupRequest"
       responses:
         '200':
-          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
   /api/auth/logout:
     get:
       description: Logout
@@ -79,6 +85,14 @@ components:
         password:
           type: string
 
+    LoginResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+
     SignupRequest:
       type: object
       required:
@@ -92,4 +106,12 @@ components:
         password:
           type: string
         name:
+          type: string
+
+    SignupResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
           type: string

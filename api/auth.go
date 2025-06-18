@@ -16,7 +16,11 @@ func (Server) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	return nil
+	resp := LoginResponse{
+		Token: "mock-token",
+	}
+
+	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
 func (Server) Signup(c *fiber.Ctx) error {
@@ -63,9 +67,11 @@ func (Server) Signup(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"token": token,
-	})
+	resp := SignupResponse{
+		Token: token,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
 func (Server) Logout(c *fiber.Ctx) error {
