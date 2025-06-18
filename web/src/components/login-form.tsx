@@ -28,7 +28,7 @@ export function LoginForm({
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.id]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,6 +66,7 @@ export function LoginForm({
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     required
                     value={form.email}
@@ -82,7 +83,7 @@ export function LoginForm({
                       Forgot your password?
                     </a>
                   </div>
-                  <Input id="password" type="password" required value={form.password} onChange={handleChange} />
+                  <Input id="password" name="password" type="password" required value={form.password} onChange={handleChange} />
                 </div>
                 {error && <div className="text-red-500 text-sm">{error}</div>}
                 <Button type="submit" className="w-full" disabled={loading}>

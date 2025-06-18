@@ -32,7 +32,7 @@ export function SignupForm({
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.id]: e.target.value });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,6 +74,7 @@ export function SignupForm({
                   <Label htmlFor="name">Name</Label>
                   <Input
                     id="name"
+                    name="name"
                     type="text"
                     required
                     value={form.name}
@@ -84,6 +85,7 @@ export function SignupForm({
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     required
                     value={form.email}
@@ -92,11 +94,11 @@ export function SignupForm({
                 </div>
                 <div className="grid gap-3">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" required value={form.password} onChange={handleChange} />
+                  <Input id="password" name="password" type="password" required value={form.password} onChange={handleChange} />
                 </div>
                 <div className="grid gap-3">
                   <Label htmlFor="confirm-password">Confirm password</Label>
-                  <Input id="confirmPassword" type="password" required value={form.confirmPassword} onChange={handleChange} />
+                  <Input id="confirm-password" name="confirmPassword" type="password" required value={form.confirmPassword} onChange={handleChange} />
                 </div>
                 {error && <div className="text-red-500 text-sm text-center">{error}</div>}
                 <Button type="submit" className="w-full" disabled={loading}>
