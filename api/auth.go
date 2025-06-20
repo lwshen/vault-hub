@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/lwshen/vault-hub/model"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,8 +17,37 @@ func (Server) Login(c *fiber.Ctx) error {
 		})
 	}
 
+	email, err := getEmail(input.Email)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	user := model.User{
+		Email: email,
+	}
+	if err := user.GetByEmail(); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid email or password",
+		})
+	}
+
+	if !user.ComparePassword(input.Password) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid email or password",
+		})
+	}
+
+	token, err := user.GenerateToken()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
 	resp := LoginResponse{
-		Token: "mock-token",
+		Token: token,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)
@@ -31,7 +61,7 @@ func (Server) Signup(c *fiber.Ctx) error {
 		})
 	}
 
-	email, err := input.Email.MarshalJSON()
+	email, err := getEmail(input.Email)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
@@ -76,4 +106,12 @@ func (Server) Signup(c *fiber.Ctx) error {
 
 func (Server) Logout(c *fiber.Ctx) error {
 	return nil
+}
+
+func getEmail(email openapi_types.Email) (string, error) {
+	emailBytes, err := email.MarshalJSON()
+	if err != nil {
+		return "", err
+	}
+	return string(emailBytes), nil
 }
