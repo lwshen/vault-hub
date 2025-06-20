@@ -9,19 +9,15 @@ const useAuth = () => {
   // const login = () => setIsAuthenticated(true);
   const login = async (email: string, password: string) => {
     await authApi.login({
-      loginRequest: {
-        email,
-        password,
-      },
+      email,
+      password,
     });
   };
   const signup = async (email: string, password: string, name: string) => {
     await authApi.signup({
-      signupRequest: {
-        email,
-        password,
-        name
-      }
+      email,
+      password,
+      name,
     });
   };
   const logout = () => setIsAuthenticated(false);
