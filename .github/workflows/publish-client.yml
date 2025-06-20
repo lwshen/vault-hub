@@ -31,7 +31,7 @@ jobs:
           generator: typescript-fetch
           openapi-file: api/api.yaml
           generator-tag: v7.13.0
-          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ env.TAG }} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
 
       - name: Publish to GitHub Packages
         run: |
@@ -65,7 +65,7 @@ jobs:
           generator: typescript-fetch
           openapi-file: api/api.yaml
           generator-tag: v7.13.0
-          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=useSingleRequestParameter=false --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
 
       - name: Build package
         run: |
