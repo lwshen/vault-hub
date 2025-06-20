@@ -25,17 +25,17 @@ jobs:
       - name: Set env
         run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
 
-      - name: Generate Typescript Axios Client Library
+      - name: Generate Typescript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
-          generator: typescript-axios
+          generator: typescript-fetch
           openapi-file: api/api.yaml
           generator-tag: v7.13.0
-          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
 
       - name: Publish to GitHub Packages
         run: |
-          cd typescript-axios-client
+          cd typescript-fetch-client
           echo ${{ env.TAG }}
           cat package.json
           npm install
@@ -59,23 +59,23 @@ jobs:
       - name: Set env
         run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
 
-      - name: Generate Typescript Axios Client Library
+      - name: Generate Typescript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
-          generator: typescript-axios
+          generator: typescript-fetch
           openapi-file: api/api.yaml
           generator-tag: v7.13.0
-          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
 
       - name: Build package
         run: |
-          cd typescript-axios-client
+          cd typescript-fetch-client
           npm install
           npm run build
 
       - name: Publish to npm registry
         run: |
-          cd typescript-axios-client
+          cd typescript-fetch-client
           npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
