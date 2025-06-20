@@ -7,6 +7,18 @@ interface ApiError extends Error {
   statusText: string;
 }
 
+let isNavigatingToLogin = false;
+function debounceNavigateToLogin() {
+  if (!isNavigatingToLogin) {
+    isNavigatingToLogin = true;
+    navigate(PATH.LOGIN);
+    // Optionally, reset the flag after a short delay if needed:
+    setTimeout(() => {
+      isNavigatingToLogin = false; 
+    }, 1000);
+  }
+}
+
 const config = new Configuration({
   basePath: '',
   middleware: [
@@ -34,7 +46,7 @@ const config = new Configuration({
           const error = new Error(errorMessage) as ApiError;
           switch (response.status) {
             case 401:
-              navigate(PATH.LOGIN);
+              debounceNavigateToLogin();
               break;
             default:
           }
