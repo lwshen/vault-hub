@@ -38,8 +38,8 @@ export function LoginForm({
     try {
       await login(form.email, form.password);
       // TODO: handle successful login (e.g., redirect)
-    } catch {
-      setError('Login failed. Please check your credentials.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);
     }

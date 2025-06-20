@@ -17,6 +17,14 @@ type User struct {
 	Avatar   *string `gorm:"type:text"`
 }
 
+func (u *User) GetByEmail() error {
+	err := DB.Where("email = ?", u.Email).First(&u).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type CreateUserParams struct {
 	Email    string
 	Password string
@@ -39,6 +47,7 @@ func (params *CreateUserParams) Create() (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	user := User{
 		Email:    params.Email,
 		Password: &hashedPassword,
