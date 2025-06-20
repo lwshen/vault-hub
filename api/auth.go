@@ -2,6 +2,7 @@ package api
 
 import (
 	"log/slog"
+	"strings"
 
 	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -76,8 +77,12 @@ func (Server) Signup(c *fiber.Ctx) error {
 
 	errors := createUserParams.Validate()
 	if len(errors) > 0 {
+		var errorMsgs []string
+		for _, msg := range errors {
+			errorMsgs = append(errorMsgs, msg)
+		}
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": errors,
+			"error": strings.Join(errorMsgs, "; "),
 		})
 	}
 
@@ -109,9 +114,5 @@ func (Server) Logout(c *fiber.Ctx) error {
 }
 
 func getEmail(email openapi_types.Email) (string, error) {
-	emailBytes, err := email.MarshalJSON()
-	if err != nil {
-		return "", err
-	}
-	return string(emailBytes), nil
+	return string(email), nil
 }
