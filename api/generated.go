@@ -12,6 +12,13 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// GetUserResponse defines model for GetUserResponse.
+type GetUserResponse struct {
+	Avatar *string             `json:"avatar,omitempty"`
+	Email  openapi_types.Email `json:"email"`
+	Name   *string             `json:"name,omitempty"`
+}
+
 // HealthCheckResponse defines model for HealthCheckResponse.
 type HealthCheckResponse struct {
 	Status    *string    `json:"status,omitempty"`
@@ -61,6 +68,9 @@ type ServerInterface interface {
 
 	// (GET /api/health)
 	Health(c *fiber.Ctx) error
+
+	// (GET /api/user)
+	GetCurrentUser(c *fiber.Ctx) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -94,6 +104,12 @@ func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
 	return siw.Handler.Health(c)
 }
 
+// GetCurrentUser operation middleware
+func (siw *ServerInterfaceWrapper) GetCurrentUser(c *fiber.Ctx) error {
+
+	return siw.Handler.GetCurrentUser(c)
+}
+
 // FiberServerOptions provides options for the Fiber server.
 type FiberServerOptions struct {
 	BaseURL     string
@@ -122,6 +138,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
 
 	router.Get(options.BaseURL+"/api/health", wrapper.Health)
+
+	router.Get(options.BaseURL+"/api/user", wrapper.GetCurrentUser)
 
 }
 
@@ -190,6 +208,22 @@ func (response Health200JSONResponse) VisitHealthResponse(ctx *fiber.Ctx) error 
 	return ctx.JSON(&response)
 }
 
+type GetCurrentUserRequestObject struct {
+}
+
+type GetCurrentUserResponseObject interface {
+	VisitGetCurrentUserResponse(ctx *fiber.Ctx) error
+}
+
+type GetCurrentUser200JSONResponse GetUserResponse
+
+func (response GetCurrentUser200JSONResponse) VisitGetCurrentUserResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
@@ -204,6 +238,9 @@ type StrictServerInterface interface {
 
 	// (GET /api/health)
 	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
+
+	// (GET /api/user)
+	GetCurrentUser(ctx context.Context, request GetCurrentUserRequestObject) (GetCurrentUserResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *fiber.Ctx, args interface{}) (interface{}, error)
@@ -323,6 +360,31 @@ func (sh *strictHandler) Health(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(HealthResponseObject); ok {
 		if err := validResponse.VisitHealthResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetCurrentUser operation middleware
+func (sh *strictHandler) GetCurrentUser(ctx *fiber.Ctx) error {
+	var request GetCurrentUserRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCurrentUser(ctx.UserContext(), request.(GetCurrentUserRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCurrentUser")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetCurrentUserResponseObject); ok {
+		if err := validResponse.VisitGetCurrentUserResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
