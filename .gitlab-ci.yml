@@ -62,11 +62,11 @@ build-openapi-client:
     # Set environment variables
     - export TAG=0.$(date +'%Y%m%d.%H%M%S')
 
-    # Generate TypeScript Axios client
-    - openapi-generator generate -i api/api.yaml -g typescript-axios -o typescript-axios-client --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${TAG} --git-user-id lwshen --git-repo-id vault-hub
+    # Generate TypeScript Fetch client
+    - openapi-generator generate -i api/api.yaml -g typescript-fetch -o typescript-fetch-client --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${TAG} --git-user-id lwshen --git-repo-id vault-hub
 
-    # Build TypeScript Axios client
-    - cd typescript-axios-client
+    # Build TypeScript Fetch client
+    - cd typescript-fetch-client
     - echo $TAG
     - cat package.json
     - npm install
