@@ -6,10 +6,10 @@ const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const user = isAuthenticated ? { name: 'Demo User', email: 'user@example.com' } : null;
 
-  function setToken(token: string) {
+  const setToken = (token: string) => {
     localStorage.setItem('token', token);
     setIsAuthenticated(true);
-  }
+  };
 
   const login = async (email: string, password: string) => {
     const resp = await authApi.login({
