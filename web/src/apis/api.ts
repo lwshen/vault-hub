@@ -23,6 +23,15 @@ const config = new Configuration({
   basePath: '',
   middleware: [
     {
+      pre: async (context) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          context.init.headers = {
+            ...context.init.headers,
+            Authorization: `Bearer ${token}`,
+          };
+        }
+      },
       post: async (context: ResponseContext) => {
         const { response } = context;
 

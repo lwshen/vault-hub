@@ -61,6 +61,19 @@ paths:
       responses:
         '200':
           description: OK
+  /api/user:
+    get:
+      description: Get current user by credential
+      tags:
+        - User
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: User Info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserResponse'
 
 components:
   schemas:
@@ -116,4 +129,17 @@ components:
         - token
       properties:
         token:
+          type: string
+
+    GetUserResponse:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        avatar:
           type: string
