@@ -19,7 +19,7 @@ import { PATH } from '@/const/path';
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pathname, navigate] = useLocation();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -89,24 +89,31 @@ export default function Header() {
             {/* Theme Toggle */}
             <ThemeToggle />
 
-            {isAuthenticated ? (
+            {isLoading ? (
+              <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
+            ) : isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 text-foreground/80 hover:text-foreground">
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 text-foreground/80 hover:text-foreground"
+                  >
                     <User size={16} />
                     <span>{user?.name}</span>
                     <ChevronDown size={14} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
-                  <div className="px-2 py-1.5 text-sm text-popover-foreground/80">{user?.email}</div>
+                  <div className="px-2 py-1.5 text-sm text-popover-foreground/80">
+                    {user?.email}
+                  </div>
                   <DropdownMenuSeparator className="bg-border" />
-                  <DropdownMenuItem className="text-popover-foreground hover:text-popover-foreground focus:text-popover-foreground cursor-pointer focus:bg-accent">
+                  <DropdownMenuItem className="cursor-pointer focus:bg-accent">
                     <Settings size={16} className="mr-2" />
                     <span>Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="text-popover-foreground hover:text-popover-foreground focus:text-popover-foreground cursor-pointer focus:bg-accent"
+                    className="cursor-pointer focus:bg-accent"
                     onClick={logout}
                   >
                     <LogOut size={16} className="mr-2" />
@@ -123,7 +130,7 @@ export default function Header() {
                 >
                   Log in
                 </Button>
-                <Button 
+                <Button
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
                   onClick={handleSignup}
                 >
