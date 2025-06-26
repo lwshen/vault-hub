@@ -7,10 +7,11 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
+	app.Use(jwtMiddleware)
+
 	server := openapi.NewServer()
 	openapi.RegisterHandlers(app, server)
 
-	app.Use(jwtMiddleware)
 	api := app.Group("/api")
 
 	// Auth

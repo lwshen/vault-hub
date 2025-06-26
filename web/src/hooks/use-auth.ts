@@ -1,14 +1,17 @@
-import { authApi } from '@/apis/api';
-import { useState } from 'react';
+import { authApi, userApi } from '@/apis/api';
+import type { GetUserResponse } from '@lwshen/vault-hub-ts-fetch-client';
+import { useMemo, useState } from 'react';
 
 const useAuth = () => {
-  // Mock authentication state - in a real app, this would come from your auth provider
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const user = isAuthenticated ? { name: 'Demo User', email: 'user@example.com' } : null;
+  const [user, setUser] = useState<GetUserResponse | null>(null);
+  const isAuthenticated = useMemo(() => !!user, [user]);
 
-  const setToken = (token: string) => {
+  const setToken = async (token: string) => {
     localStorage.setItem('token', token);
-    setIsAuthenticated(true);
+    console.log('isAuthenticated', isAuthenticated);
+    const user = await userApi.getCurrentUser();
+    setUser(user);
+    console.log('isAuthenticated', isAuthenticated);
   };
 
   const login = async (email: string, password: string) => {
@@ -32,9 +35,9 @@ const useAuth = () => {
   };
   const logout = () => {
     localStorage.removeItem('token');
-    setIsAuthenticated(false);
+    setUser(null);
   };
-  
+
   return { isAuthenticated, user, login, signup, logout };
 };
 
