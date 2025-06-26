@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
@@ -13,38 +14,28 @@ import (
 func (Server) Login(c *fiber.Ctx) error {
 	var input LoginRequest
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	email, err := getEmail(input.Email)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	user := model.User{
 		Email: email,
 	}
 	if err := user.GetByEmail(); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid email or password",
-		})
+		return handler.SendError(c, fiber.StatusBadRequest, "Invalid email or password")
 	}
 
 	if !user.ComparePassword(input.Password) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid email or password",
-		})
+		return handler.SendError(c, fiber.StatusBadRequest, "Invalid email or password")
 	}
 
 	token, err := user.GenerateToken()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	resp := LoginResponse{
@@ -57,16 +48,12 @@ func (Server) Login(c *fiber.Ctx) error {
 func (Server) Signup(c *fiber.Ctx) error {
 	var input SignupRequest
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	email, err := getEmail(input.Email)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	createUserParams := model.CreateUserParams{
@@ -81,25 +68,19 @@ func (Server) Signup(c *fiber.Ctx) error {
 		for _, msg := range errors {
 			errorMsgs = append(errorMsgs, msg)
 		}
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": strings.Join(errorMsgs, "; "),
-		})
+		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMsgs, "; "))
 	}
 
 	user, err := createUserParams.Create()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	slog.Info("User created", "email", user.Email, "name", user.Name)
 
 	token, err := user.GenerateToken()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	resp := SignupResponse{

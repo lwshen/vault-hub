@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/internal/config"
 	"github.com/lwshen/vault-hub/model"
 )
@@ -17,7 +18,7 @@ func jwtMiddleware(c *fiber.Ctx) error {
 
 	tokenParts := strings.Split(authHeader, " ")
 	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid authorization header"})
+		return handler.SendError(c, fiber.StatusUnauthorized, "invalid authorization header")
 	}
 
 	tokenString := tokenParts[1]
@@ -27,22 +28,22 @@ func jwtMiddleware(c *fiber.Ctx) error {
 	})
 
 	if err != nil || !token.Valid {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token"})
+		return handler.SendError(c, fiber.StatusUnauthorized, "invalid token")
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid token claims"})
+		return handler.SendError(c, fiber.StatusUnauthorized, "invalid token claims")
 	}
 
 	userID, ok := claims["sub"].(float64)
 	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid user ID in token"})
+		return handler.SendError(c, fiber.StatusUnauthorized, "invalid user ID in token")
 	}
 
 	var user model.User
 	if err := model.DB.First(&user, uint(userID)).Error; err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "user not found"})
+		return handler.SendError(c, fiber.StatusUnauthorized, "user not found")
 	}
 
 	user.Password = nil
