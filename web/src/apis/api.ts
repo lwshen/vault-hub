@@ -43,7 +43,7 @@ const config = new Configuration({
             if (errorBody) {
               try {
                 const errorJson = JSON.parse(errorBody);
-                errorMessage = errorJson.message || errorJson.error || errorMessage;
+                errorMessage = errorJson.error?.message || errorJson.message || errorJson.error || errorMessage;
               } catch {
                 errorMessage = errorBody || errorMessage;
               }
