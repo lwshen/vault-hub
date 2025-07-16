@@ -74,6 +74,109 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetUserResponse'
+  /api/configurations:
+    get:
+      description: Get all configurations for the current user
+      tags:
+        - Configuration
+      operationId: getConfigurations
+      parameters:
+        - name: category
+          in: query
+          description: Filter by category
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Configuration'
+    post:
+      description: Create a new configuration
+      tags:
+        - Configuration
+      operationId: createConfiguration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConfigurationRequest"
+      responses:
+        '201':
+          description: Configuration created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+  /api/configurations/{id}:
+    get:
+      description: Get a specific configuration by ID
+      tags:
+        - Configuration
+      operationId: getConfiguration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Configuration ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Configuration details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+    put:
+      description: Update a configuration
+      tags:
+        - Configuration
+      operationId: updateConfiguration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Configuration ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateConfigurationRequest"
+      responses:
+        '200':
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+    delete:
+      description: Delete a configuration
+      tags:
+        - Configuration
+      operationId: deleteConfiguration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Configuration ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Configuration deleted successfully
 
 components:
   schemas:
@@ -143,3 +246,91 @@ components:
           type: string
         avatar:
           type: string
+
+    Configuration:
+      type: object
+      required:
+        - id
+        - unique_id
+        - name
+        - value
+      properties:
+        id:
+          type: integer
+          format: int64
+        unique_id:
+          type: string
+          description: Unique identifier for the config
+        user_id:
+          type: integer
+          format: int64
+          description: ID of the user who owns this configuration
+        name:
+          type: string
+          description: Human-readable name
+        value:
+          type: string
+          description: Encrypted value
+        description:
+          type: string
+          description: Human-readable description
+        category:
+          type: string
+          description: Category/type of config
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateConfigurationRequest:
+      type: object
+      required:
+        - unique_id
+        - name
+        - value
+      properties:
+        unique_id:
+          type: string
+          description: Unique identifier for the config
+          minLength: 1
+          maxLength: 255
+        name:
+          type: string
+          description: Human-readable name
+          minLength: 1
+          maxLength: 255
+        value:
+          type: string
+          description: Value to be encrypted and stored
+          minLength: 1
+        description:
+          type: string
+          description: Human-readable description
+          maxLength: 500
+        category:
+          type: string
+          description: Category/type of config
+          maxLength: 100
+
+    UpdateConfigurationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Human-readable name
+          minLength: 1
+          maxLength: 255
+        value:
+          type: string
+          description: Value to be encrypted and stored
+          minLength: 1
+        description:
+          type: string
+          description: Human-readable description
+          maxLength: 500
+        category:
+          type: string
+          description: Category/type of config
+          maxLength: 100

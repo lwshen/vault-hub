@@ -6,11 +6,55 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Configuration defines model for Configuration.
+type Configuration struct {
+	// Category Category/type of config
+	Category  *string    `json:"category,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+	Id          int64   `json:"id"`
+
+	// Name Human-readable name
+	Name string `json:"name"`
+
+	// UniqueId Unique identifier for the config
+	UniqueId  string     `json:"unique_id"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+
+	// UserId ID of the user who owns this configuration
+	UserId *int64 `json:"user_id,omitempty"`
+
+	// Value Encrypted value
+	Value string `json:"value"`
+}
+
+// CreateConfigurationRequest defines model for CreateConfigurationRequest.
+type CreateConfigurationRequest struct {
+	// Category Category/type of config
+	Category *string `json:"category,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+
+	// Name Human-readable name
+	Name string `json:"name"`
+
+	// UniqueId Unique identifier for the config
+	UniqueId string `json:"unique_id"`
+
+	// Value Value to be encrypted and stored
+	Value string `json:"value"`
+}
 
 // GetUserResponse defines model for GetUserResponse.
 type GetUserResponse struct {
@@ -48,11 +92,38 @@ type SignupResponse struct {
 	Token string `json:"token"`
 }
 
+// UpdateConfigurationRequest defines model for UpdateConfigurationRequest.
+type UpdateConfigurationRequest struct {
+	// Category Category/type of config
+	Category *string `json:"category,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+
+	// Name Human-readable name
+	Name *string `json:"name,omitempty"`
+
+	// Value Value to be encrypted and stored
+	Value *string `json:"value,omitempty"`
+}
+
+// GetConfigurationsParams defines parameters for GetConfigurations.
+type GetConfigurationsParams struct {
+	// Category Filter by category
+	Category *string `form:"category,omitempty" json:"category,omitempty"`
+}
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
 
 // SignupJSONRequestBody defines body for Signup for application/json ContentType.
 type SignupJSONRequestBody = SignupRequest
+
+// CreateConfigurationJSONRequestBody defines body for CreateConfiguration for application/json ContentType.
+type CreateConfigurationJSONRequestBody = CreateConfigurationRequest
+
+// UpdateConfigurationJSONRequestBody defines body for UpdateConfiguration for application/json ContentType.
+type UpdateConfigurationJSONRequestBody = UpdateConfigurationRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -65,6 +136,21 @@ type ServerInterface interface {
 
 	// (POST /api/auth/signup)
 	Signup(c *fiber.Ctx) error
+
+	// (GET /api/configurations)
+	GetConfigurations(c *fiber.Ctx, params GetConfigurationsParams) error
+
+	// (POST /api/configurations)
+	CreateConfiguration(c *fiber.Ctx) error
+
+	// (DELETE /api/configurations/{id})
+	DeleteConfiguration(c *fiber.Ctx, id int64) error
+
+	// (GET /api/configurations/{id})
+	GetConfiguration(c *fiber.Ctx, id int64) error
+
+	// (PUT /api/configurations/{id})
+	UpdateConfiguration(c *fiber.Ctx, id int64) error
 
 	// (GET /api/health)
 	Health(c *fiber.Ctx) error
@@ -96,6 +182,84 @@ func (siw *ServerInterfaceWrapper) Logout(c *fiber.Ctx) error {
 func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
 
 	return siw.Handler.Signup(c)
+}
+
+// GetConfigurations operation middleware
+func (siw *ServerInterfaceWrapper) GetConfigurations(c *fiber.Ctx) error {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetConfigurationsParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "category" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "category", query, &params.Category)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter category: %w", err).Error())
+	}
+
+	return siw.Handler.GetConfigurations(c, params)
+}
+
+// CreateConfiguration operation middleware
+func (siw *ServerInterfaceWrapper) CreateConfiguration(c *fiber.Ctx) error {
+
+	return siw.Handler.CreateConfiguration(c)
+}
+
+// DeleteConfiguration operation middleware
+func (siw *ServerInterfaceWrapper) DeleteConfiguration(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	return siw.Handler.DeleteConfiguration(c, id)
+}
+
+// GetConfiguration operation middleware
+func (siw *ServerInterfaceWrapper) GetConfiguration(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	return siw.Handler.GetConfiguration(c, id)
+}
+
+// UpdateConfiguration operation middleware
+func (siw *ServerInterfaceWrapper) UpdateConfiguration(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	return siw.Handler.UpdateConfiguration(c, id)
 }
 
 // Health operation middleware
@@ -136,6 +300,16 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/api/auth/logout", wrapper.Logout)
 
 	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
+
+	router.Get(options.BaseURL+"/api/configurations", wrapper.GetConfigurations)
+
+	router.Post(options.BaseURL+"/api/configurations", wrapper.CreateConfiguration)
+
+	router.Delete(options.BaseURL+"/api/configurations/:id", wrapper.DeleteConfiguration)
+
+	router.Get(options.BaseURL+"/api/configurations/:id", wrapper.GetConfiguration)
+
+	router.Put(options.BaseURL+"/api/configurations/:id", wrapper.UpdateConfiguration)
 
 	router.Get(options.BaseURL+"/api/health", wrapper.Health)
 
@@ -192,6 +366,91 @@ func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error 
 	return ctx.JSON(&response)
 }
 
+type GetConfigurationsRequestObject struct {
+	Params GetConfigurationsParams
+}
+
+type GetConfigurationsResponseObject interface {
+	VisitGetConfigurationsResponse(ctx *fiber.Ctx) error
+}
+
+type GetConfigurations200JSONResponse []Configuration
+
+func (response GetConfigurations200JSONResponse) VisitGetConfigurationsResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type CreateConfigurationRequestObject struct {
+	Body *CreateConfigurationJSONRequestBody
+}
+
+type CreateConfigurationResponseObject interface {
+	VisitCreateConfigurationResponse(ctx *fiber.Ctx) error
+}
+
+type CreateConfiguration201JSONResponse Configuration
+
+func (response CreateConfiguration201JSONResponse) VisitCreateConfigurationResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(201)
+
+	return ctx.JSON(&response)
+}
+
+type DeleteConfigurationRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type DeleteConfigurationResponseObject interface {
+	VisitDeleteConfigurationResponse(ctx *fiber.Ctx) error
+}
+
+type DeleteConfiguration204Response struct {
+}
+
+func (response DeleteConfiguration204Response) VisitDeleteConfigurationResponse(ctx *fiber.Ctx) error {
+	ctx.Status(204)
+	return nil
+}
+
+type GetConfigurationRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type GetConfigurationResponseObject interface {
+	VisitGetConfigurationResponse(ctx *fiber.Ctx) error
+}
+
+type GetConfiguration200JSONResponse Configuration
+
+func (response GetConfiguration200JSONResponse) VisitGetConfigurationResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type UpdateConfigurationRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *UpdateConfigurationJSONRequestBody
+}
+
+type UpdateConfigurationResponseObject interface {
+	VisitUpdateConfigurationResponse(ctx *fiber.Ctx) error
+}
+
+type UpdateConfiguration200JSONResponse Configuration
+
+func (response UpdateConfiguration200JSONResponse) VisitUpdateConfigurationResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 type HealthRequestObject struct {
 }
 
@@ -235,6 +494,21 @@ type StrictServerInterface interface {
 
 	// (POST /api/auth/signup)
 	Signup(ctx context.Context, request SignupRequestObject) (SignupResponseObject, error)
+
+	// (GET /api/configurations)
+	GetConfigurations(ctx context.Context, request GetConfigurationsRequestObject) (GetConfigurationsResponseObject, error)
+
+	// (POST /api/configurations)
+	CreateConfiguration(ctx context.Context, request CreateConfigurationRequestObject) (CreateConfigurationResponseObject, error)
+
+	// (DELETE /api/configurations/{id})
+	DeleteConfiguration(ctx context.Context, request DeleteConfigurationRequestObject) (DeleteConfigurationResponseObject, error)
+
+	// (GET /api/configurations/{id})
+	GetConfiguration(ctx context.Context, request GetConfigurationRequestObject) (GetConfigurationResponseObject, error)
+
+	// (PUT /api/configurations/{id})
+	UpdateConfiguration(ctx context.Context, request UpdateConfigurationRequestObject) (UpdateConfigurationResponseObject, error)
 
 	// (GET /api/health)
 	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
@@ -335,6 +609,151 @@ func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(SignupResponseObject); ok {
 		if err := validResponse.VisitSignupResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetConfigurations operation middleware
+func (sh *strictHandler) GetConfigurations(ctx *fiber.Ctx, params GetConfigurationsParams) error {
+	var request GetConfigurationsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetConfigurations(ctx.UserContext(), request.(GetConfigurationsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetConfigurations")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetConfigurationsResponseObject); ok {
+		if err := validResponse.VisitGetConfigurationsResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateConfiguration operation middleware
+func (sh *strictHandler) CreateConfiguration(ctx *fiber.Ctx) error {
+	var request CreateConfigurationRequestObject
+
+	var body CreateConfigurationJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateConfiguration(ctx.UserContext(), request.(CreateConfigurationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateConfiguration")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(CreateConfigurationResponseObject); ok {
+		if err := validResponse.VisitCreateConfigurationResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteConfiguration operation middleware
+func (sh *strictHandler) DeleteConfiguration(ctx *fiber.Ctx, id int64) error {
+	var request DeleteConfigurationRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteConfiguration(ctx.UserContext(), request.(DeleteConfigurationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteConfiguration")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(DeleteConfigurationResponseObject); ok {
+		if err := validResponse.VisitDeleteConfigurationResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetConfiguration operation middleware
+func (sh *strictHandler) GetConfiguration(ctx *fiber.Ctx, id int64) error {
+	var request GetConfigurationRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetConfiguration(ctx.UserContext(), request.(GetConfigurationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetConfiguration")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetConfigurationResponseObject); ok {
+		if err := validResponse.VisitGetConfigurationResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// UpdateConfiguration operation middleware
+func (sh *strictHandler) UpdateConfiguration(ctx *fiber.Ctx, id int64) error {
+	var request UpdateConfigurationRequestObject
+
+	request.Id = id
+
+	var body UpdateConfigurationJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateConfiguration(ctx.UserContext(), request.(UpdateConfigurationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateConfiguration")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(UpdateConfigurationResponseObject); ok {
+		if err := validResponse.VisitUpdateConfigurationResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
