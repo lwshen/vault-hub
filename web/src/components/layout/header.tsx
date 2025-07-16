@@ -21,7 +21,12 @@ export default function Header() {
   const [pathname, navigate] = useLocation();
   const { isAuthenticated, user, logout, isLoading } = useAuth();
 
-  const navigation = [
+  const navigation = isAuthenticated ? [
+    { name: 'Dashboard', href: PATH.DASHBOARD },
+    { name: 'Features', href: '/features' },
+    { name: 'Pricing', href: '/pricing' },
+    { name: 'Documentation', href: '/docs' },
+  ] : [
     { name: 'Home', href: '/' },
     { name: 'Features', href: '/features' },
     { name: 'Pricing', href: '/pricing' },
@@ -44,7 +49,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href={isAuthenticated ? PATH.DASHBOARD : '/'} className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 bg-emerald-500/20 rounded-md">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -210,7 +215,7 @@ export default function Header() {
                   </Button>
                   <Button 
                     className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={handleLogin}
+                    onClick={handleSignup}
                   >
                     Register
                   </Button>
