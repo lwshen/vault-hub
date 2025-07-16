@@ -3,6 +3,7 @@ import HeroSection from '@/components/hero/hero-section';
 import Login from '@/pages/auth/login';
 import Signup from '@/pages/auth/signup';
 import Dashboard from '@/pages/dashboard';
+import Vaults from '@/pages/vaults';
 import { PATH } from '@/const/path';
 
 export const AppRoutes = () => (
@@ -31,6 +32,9 @@ export const AppRoutes = () => (
     </Route>
     <Route path={PATH.DASHBOARD}>
       <Dashboard />
+    </Route>
+    <Route path={PATH.VAULTS}>
+      <Vaults />
     </Route>
     <Route>404: No such page!</Route>
   </Switch>

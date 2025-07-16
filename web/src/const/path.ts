@@ -3,6 +3,7 @@ export const PATH = {
   SIGNUP: '/signup',
   HOME: '/',
   DASHBOARD: '/dashboard',
+  VAULTS: '/dashboard/vaults',
   FEATURES: '/features',
   PRICING: '/pricing',
   ABOUT: '/about',
