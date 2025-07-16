@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
@@ -26,7 +24,6 @@ type AuditLog struct {
 	User      User       `gorm:"foreignKey:UserID"`
 	IPAddress string     `gorm:"size:45"`
 	UserAgent string     `gorm:"size:500"`
-	Timestamp time.Time  `gorm:"index"`
 }
 
 // CreateAuditLogParams defines parameters for creating an audit log entry
@@ -46,7 +43,6 @@ func CreateAuditLog(params CreateAuditLogParams) error {
 		UserID:    params.UserID,
 		IPAddress: params.IPAddress,
 		UserAgent: params.UserAgent,
-		Timestamp: time.Now(),
 	}
 
 	err := DB.Create(&auditLog).Error
@@ -83,7 +79,7 @@ func GetAuditLogsByUser(userID uint, limit int, offset int) ([]AuditLog, error) 
 	var logs []AuditLog
 	query := DB.Where("user_id = ?", userID).
 		Preload("User").
-		Order("timestamp DESC")
+		Order("created_at DESC")
 
 	if limit > 0 {
 		query = query.Limit(limit)
@@ -106,7 +102,7 @@ func GetAuditLogsByConfiguration(configID uint, userID uint) ([]AuditLog, error)
 	var logs []AuditLog
 	err := DB.Where("config_id = ? AND user_id = ?", configID, userID).
 		Preload("User").
-		Order("timestamp DESC").
+		Order("created_at DESC").
 		Find(&logs).Error
 
 	if err != nil {
