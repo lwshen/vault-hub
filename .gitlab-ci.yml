@@ -41,6 +41,7 @@ build:
     - cd ..
 
     # Run tests
+    - export JWT_SECRET=secret ENCRYPTION_KEY=test-encryption-key-for-ci
     - go test -v ./...
 
     # Build backend

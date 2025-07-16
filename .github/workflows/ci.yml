@@ -60,6 +60,7 @@ jobs:
       - name: Run tests
         run: |
           export JWT_SECRET=secret
+          export ENCRYPTION_KEY=test-encryption-key-for-ci
           go test -v ./...
 
       - name: Build backend

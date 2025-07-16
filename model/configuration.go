@@ -6,17 +6,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lwshen/vault-hub/internal/encryption"
 	"gorm.io/gorm"
 )
 
 type Configuration struct {
 	gorm.Model
-	UniqueID    string `gorm:"size:255;not null"`  // Unique identifier for the config
-	UserID      uint   `gorm:"index;not null"`     // User who owns this configuration
-	Name        string `gorm:"size:255"`           // Human-readable name
-	Value       string `gorm:"type:text;not null"` // Encrypted value
-	Description string `gorm:"size:500"`           // Human-readable description
-	Category    string `gorm:"size:100;index"`     // Category/type of config
+	UniqueID    string `gorm:"size:255;not null;unique"` // Unique identifier for the config
+	UserID      uint   `gorm:"index;not null"`           // User who owns this configuration
+	Name        string `gorm:"size:255"`                 // Human-readable name
+	Value       string `gorm:"type:text;not null"`       // Encrypted value
+	Description string `gorm:"size:500"`                 // Human-readable description
+	Category    string `gorm:"size:100;index"`           // Category/type of config
 }
 
 // CreateConfigurationParams defines parameters for creating a new configuration
@@ -110,11 +111,17 @@ func (params *CreateConfigurationParams) Create() (*Configuration, error) {
 		return nil, err
 	}
 
+	// Encrypt the value before storing
+	encryptedValue, err := encryption.Encrypt(params.Value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt value: %w", err)
+	}
+
 	config := Configuration{
 		UniqueID:    params.UniqueID,
 		UserID:      params.UserID,
 		Name:        params.Name,
-		Value:       params.Value, // TODO: Add encryption here
+		Value:       encryptedValue,
 		Description: params.Description,
 		Category:    params.Category,
 	}
@@ -122,6 +129,12 @@ func (params *CreateConfigurationParams) Create() (*Configuration, error) {
 	err = DB.Create(&config).Error
 	if err != nil {
 		return nil, err
+	}
+
+	// Decrypt the value for the response
+	config.Value, err = encryption.Decrypt(config.Value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt value for response: %w", err)
 	}
 
 	return &config, nil
@@ -133,6 +146,14 @@ func (c *Configuration) GetByID(id uint, userID uint) error {
 	if err != nil {
 		return err
 	}
+
+	// Decrypt the value
+	decryptedValue, err := encryption.Decrypt(c.Value)
+	if err != nil {
+		return fmt.Errorf("failed to decrypt value: %w", err)
+	}
+	c.Value = decryptedValue
+
 	return nil
 }
 
@@ -142,6 +163,14 @@ func (c *Configuration) GetByUniqueID(uniqueID string, userID uint) error {
 	if err != nil {
 		return err
 	}
+
+	// Decrypt the value
+	decryptedValue, err := encryption.Decrypt(c.Value)
+	if err != nil {
+		return fmt.Errorf("failed to decrypt value: %w", err)
+	}
+	c.Value = decryptedValue
+
 	return nil
 }
 
@@ -159,6 +188,15 @@ func GetConfigurationsByUser(userID uint, category string) ([]Configuration, err
 		return nil, err
 	}
 
+	// Decrypt all values
+	for i := range configs {
+		decryptedValue, err := encryption.Decrypt(configs[i].Value)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decrypt value for config %d: %w", configs[i].ID, err)
+		}
+		configs[i].Value = decryptedValue
+	}
+
 	return configs, nil
 }
 
@@ -171,7 +209,12 @@ func (c *Configuration) Update(params *UpdateConfigurationParams) error {
 	}
 
 	if params.Value != nil {
-		updates["value"] = *params.Value // TODO: Add encryption here
+		// Encrypt the new value before storing
+		encryptedValue, err := encryption.Encrypt(*params.Value)
+		if err != nil {
+			return fmt.Errorf("failed to encrypt value: %w", err)
+		}
+		updates["value"] = encryptedValue
 	}
 
 	if params.Description != nil {
@@ -189,6 +232,19 @@ func (c *Configuration) Update(params *UpdateConfigurationParams) error {
 	if err != nil {
 		return err
 	}
+
+	// Reload the configuration to get the updated data
+	err = DB.Where("id = ?", c.ID).First(c).Error
+	if err != nil {
+		return err
+	}
+
+	// Decrypt the value for the response
+	decryptedValue, err := encryption.Decrypt(c.Value)
+	if err != nil {
+		return fmt.Errorf("failed to decrypt value: %w", err)
+	}
+	c.Value = decryptedValue
 
 	return nil
 }
