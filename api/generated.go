@@ -14,15 +14,14 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// Configuration defines model for Configuration.
-type Configuration struct {
+// ConfigurationItem defines model for ConfigurationItem.
+type ConfigurationItem struct {
 	// Category Category/type of config
 	Category  *string    `json:"category,omitempty"`
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 
 	// Description Human-readable description
 	Description *string `json:"description,omitempty"`
-	Id          int64   `json:"id"`
 
 	// Name Human-readable name
 	Name string `json:"name"`
@@ -144,13 +143,13 @@ type ServerInterface interface {
 	CreateConfiguration(c *fiber.Ctx) error
 
 	// (DELETE /api/configurations/{id})
-	DeleteConfiguration(c *fiber.Ctx, id int64) error
+	DeleteConfiguration(c *fiber.Ctx, id int32) error
 
 	// (GET /api/configurations/{id})
-	GetConfiguration(c *fiber.Ctx, id int64) error
+	GetConfiguration(c *fiber.Ctx, id int32) error
 
 	// (PUT /api/configurations/{id})
-	UpdateConfiguration(c *fiber.Ctx, id int64) error
+	UpdateConfiguration(c *fiber.Ctx, id int32) error
 
 	// (GET /api/health)
 	Health(c *fiber.Ctx) error
@@ -220,7 +219,7 @@ func (siw *ServerInterfaceWrapper) DeleteConfiguration(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id int64
+	var id int32
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -236,7 +235,7 @@ func (siw *ServerInterfaceWrapper) GetConfiguration(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id int64
+	var id int32
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -252,7 +251,7 @@ func (siw *ServerInterfaceWrapper) UpdateConfiguration(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "id" -------------
-	var id int64
+	var id int32
 
 	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -374,7 +373,7 @@ type GetConfigurationsResponseObject interface {
 	VisitGetConfigurationsResponse(ctx *fiber.Ctx) error
 }
 
-type GetConfigurations200JSONResponse []Configuration
+type GetConfigurations200JSONResponse []ConfigurationItem
 
 func (response GetConfigurations200JSONResponse) VisitGetConfigurationsResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -391,7 +390,7 @@ type CreateConfigurationResponseObject interface {
 	VisitCreateConfigurationResponse(ctx *fiber.Ctx) error
 }
 
-type CreateConfiguration201JSONResponse Configuration
+type CreateConfiguration201JSONResponse ConfigurationItem
 
 func (response CreateConfiguration201JSONResponse) VisitCreateConfigurationResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -401,7 +400,7 @@ func (response CreateConfiguration201JSONResponse) VisitCreateConfigurationRespo
 }
 
 type DeleteConfigurationRequestObject struct {
-	Id int64 `json:"id"`
+	Id int32 `json:"id"`
 }
 
 type DeleteConfigurationResponseObject interface {
@@ -417,14 +416,14 @@ func (response DeleteConfiguration204Response) VisitDeleteConfigurationResponse(
 }
 
 type GetConfigurationRequestObject struct {
-	Id int64 `json:"id"`
+	Id int32 `json:"id"`
 }
 
 type GetConfigurationResponseObject interface {
 	VisitGetConfigurationResponse(ctx *fiber.Ctx) error
 }
 
-type GetConfiguration200JSONResponse Configuration
+type GetConfiguration200JSONResponse ConfigurationItem
 
 func (response GetConfiguration200JSONResponse) VisitGetConfigurationResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -434,7 +433,7 @@ func (response GetConfiguration200JSONResponse) VisitGetConfigurationResponse(ct
 }
 
 type UpdateConfigurationRequestObject struct {
-	Id   int64 `json:"id"`
+	Id   int32 `json:"id"`
 	Body *UpdateConfigurationJSONRequestBody
 }
 
@@ -442,7 +441,7 @@ type UpdateConfigurationResponseObject interface {
 	VisitUpdateConfigurationResponse(ctx *fiber.Ctx) error
 }
 
-type UpdateConfiguration200JSONResponse Configuration
+type UpdateConfiguration200JSONResponse ConfigurationItem
 
 func (response UpdateConfiguration200JSONResponse) VisitUpdateConfigurationResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -676,7 +675,7 @@ func (sh *strictHandler) CreateConfiguration(ctx *fiber.Ctx) error {
 }
 
 // DeleteConfiguration operation middleware
-func (sh *strictHandler) DeleteConfiguration(ctx *fiber.Ctx, id int64) error {
+func (sh *strictHandler) DeleteConfiguration(ctx *fiber.Ctx, id int32) error {
 	var request DeleteConfigurationRequestObject
 
 	request.Id = id
@@ -703,7 +702,7 @@ func (sh *strictHandler) DeleteConfiguration(ctx *fiber.Ctx, id int64) error {
 }
 
 // GetConfiguration operation middleware
-func (sh *strictHandler) GetConfiguration(ctx *fiber.Ctx, id int64) error {
+func (sh *strictHandler) GetConfiguration(ctx *fiber.Ctx, id int32) error {
 	var request GetConfigurationRequestObject
 
 	request.Id = id
@@ -730,7 +729,7 @@ func (sh *strictHandler) GetConfiguration(ctx *fiber.Ctx, id int64) error {
 }
 
 // UpdateConfiguration operation middleware
-func (sh *strictHandler) UpdateConfiguration(ctx *fiber.Ctx, id int64) error {
+func (sh *strictHandler) UpdateConfiguration(ctx *fiber.Ctx, id int32) error {
 	var request UpdateConfigurationRequestObject
 
 	request.Id = id

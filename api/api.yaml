@@ -95,7 +95,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Configuration'
+                  $ref: '#/components/schemas/ConfigurationItem'
     post:
       description: Create a new configuration
       tags:
@@ -113,7 +113,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Configuration'
+                $ref: '#/components/schemas/ConfigurationItem'
   /api/configurations/{id}:
     get:
       description: Get a specific configuration by ID
@@ -127,14 +127,15 @@ paths:
           description: Configuration ID
           schema:
             type: integer
-            format: int64
+            format: int32
+            minimum: 0
       responses:
         '200':
           description: Configuration details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Configuration'
+                $ref: '#/components/schemas/ConfigurationItem'
     put:
       description: Update a configuration
       tags:
@@ -147,7 +148,8 @@ paths:
           description: Configuration ID
           schema:
             type: integer
-            format: int64
+            format: int32
+            minimum: 0
       requestBody:
         required: true
         content:
@@ -160,7 +162,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Configuration'
+                $ref: '#/components/schemas/ConfigurationItem'
     delete:
       description: Delete a configuration
       tags:
@@ -173,7 +175,8 @@ paths:
           description: Configuration ID
           schema:
             type: integer
-            format: int64
+            format: int32
+            minimum: 0
       responses:
         '204':
           description: Configuration deleted successfully
@@ -247,17 +250,13 @@ components:
         avatar:
           type: string
 
-    Configuration:
+    ConfigurationItem:
       type: object
       required:
-        - id
         - unique_id
         - name
         - value
       properties:
-        id:
-          type: integer
-          format: int64
         unique_id:
           type: string
           description: Unique identifier for the config

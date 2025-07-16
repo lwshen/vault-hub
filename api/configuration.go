@@ -59,14 +59,14 @@ func (Server) GetConfigurations(c *fiber.Ctx, params GetConfigurationsParams) er
 }
 
 // GetConfiguration handles GET /api/configurations/{id}
-func (Server) GetConfiguration(c *fiber.Ctx, id int64) error {
+func (Server) GetConfiguration(c *fiber.Ctx, id int32) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
 	var config model.Configuration
-	err = config.GetByID(uint(id), user.ID)
+	err = config.GetByID(uint(id), user.ID) // #nosec G115
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "configuration not found")
@@ -127,14 +127,14 @@ func (Server) CreateConfiguration(c *fiber.Ctx) error {
 }
 
 // UpdateConfiguration handles PUT /api/configurations/{id}
-func (Server) UpdateConfiguration(c *fiber.Ctx, id int64) error {
+func (Server) UpdateConfiguration(c *fiber.Ctx, id int32) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
 	var config model.Configuration
-	err = config.GetByID(uint(id), user.ID)
+	err = config.GetByID(uint(id), user.ID) // #nosec G115
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "configuration not found")
@@ -179,14 +179,14 @@ func (Server) UpdateConfiguration(c *fiber.Ctx, id int64) error {
 }
 
 // DeleteConfiguration handles DELETE /api/configurations/{id}
-func (Server) DeleteConfiguration(c *fiber.Ctx, id int64) error {
+func (Server) DeleteConfiguration(c *fiber.Ctx, id int32) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
 	var config model.Configuration
-	err = config.GetByID(uint(id), user.ID)
+	err = config.GetByID(uint(id), user.ID) // #nosec G115
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "configuration not found")
