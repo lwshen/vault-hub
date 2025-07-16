@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -52,7 +53,9 @@ func (Server) GetConfigurations(c *fiber.Ctx, params GetConfigurationsParams) er
 	// Log read action for each configuration
 	ip, userAgent := getClientInfo(c)
 	for _, config := range configs {
-		_ = model.LogConfigurationAction(config.ID, model.ActionReadConfig, user.ID, ip, userAgent)
+		if err := model.LogConfigurationAction(config.ID, model.ActionReadConfig, user.ID, ip, userAgent); err != nil {
+			slog.Error("Failed to create audit log for read config", "error", err, "configID", config.ID)
+		}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(configs)
@@ -76,7 +79,9 @@ func (Server) GetConfiguration(c *fiber.Ctx, id int32) error {
 
 	// Log read action
 	ip, userAgent := getClientInfo(c)
-	_ = model.LogConfigurationAction(config.ID, model.ActionReadConfig, user.ID, ip, userAgent)
+	if err := model.LogConfigurationAction(config.ID, model.ActionReadConfig, user.ID, ip, userAgent); err != nil {
+		slog.Error("Failed to create audit log for read config", "error", err, "configID", config.ID)
+	}
 
 	return c.Status(fiber.StatusOK).JSON(config)
 }
@@ -121,7 +126,9 @@ func (Server) CreateConfiguration(c *fiber.Ctx) error {
 
 	// Log create action
 	ip, userAgent := getClientInfo(c)
-	_ = model.LogConfigurationAction(config.ID, model.ActionCreateConfig, user.ID, ip, userAgent)
+	if err := model.LogConfigurationAction(config.ID, model.ActionCreateConfig, user.ID, ip, userAgent); err != nil {
+		slog.Error("Failed to create audit log for create config", "error", err, "configID", config.ID)
+	}
 
 	return c.Status(fiber.StatusCreated).JSON(config)
 }
