@@ -1,4 +1,3 @@
-import DashboardLayout from '@/components/layout/dashboard-layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -10,7 +9,7 @@ import {
   Users
 } from 'lucide-react';
 
-function VaultsContent() {
+export default function VaultsContent() {
   const vaults = [
     { name: 'Production API Keys', status: 'locked', members: 5, secrets: 12, lastAccessed: '2 hours ago' },
     { name: 'Database Credentials', status: 'unlocked', members: 3, secrets: 8, lastAccessed: '1 day ago' },
@@ -19,7 +18,7 @@ function VaultsContent() {
     { name: 'AWS Secrets', status: 'locked', members: 6, secrets: 20, lastAccessed: '2 days ago' },
     { name: 'Third-party APIs', status: 'unlocked', members: 3, secrets: 7, lastAccessed: '5 hours ago' }
   ];
-
+  
   return (
     <>
       {/* Top Header */}
@@ -43,7 +42,7 @@ function VaultsContent() {
           </div>
         </div>
       </header>
-
+  
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
         <div className="grid gap-4">
@@ -84,11 +83,3 @@ function VaultsContent() {
     </>
   );
 }
-
-export default function Vaults() {
-  return (
-    <DashboardLayout>
-      <VaultsContent />
-    </DashboardLayout>
-  );
-} 

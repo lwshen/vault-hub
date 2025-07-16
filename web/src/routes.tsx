@@ -2,8 +2,9 @@ import { Route, Switch } from 'wouter';
 import HeroSection from '@/components/hero/hero-section';
 import Login from '@/pages/auth/login';
 import Signup from '@/pages/auth/signup';
-import Dashboard from '@/pages/dashboard';
-import Vaults from '@/pages/vaults';
+import Dashboard from '@/pages/dashboard/dashboard';
+import Vaults from '@/pages/dashboard/vaults';
+import ActivityLog from '@/pages/dashboard/activity-log';
 import { PATH } from '@/const/path';
 
 export const AppRoutes = () => (
@@ -35,6 +36,9 @@ export const AppRoutes = () => (
     </Route>
     <Route path={PATH.VAULTS}>
       <Vaults />
+    </Route>
+    <Route path={PATH.ACTIVITY_LOG}>
+      <ActivityLog />
     </Route>
     <Route>404: No such page!</Route>
   </Switch>
