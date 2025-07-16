@@ -2,6 +2,23 @@
 
 VaultHub now implements AES-256-GCM encryption for all configuration values stored in the database, ensuring that sensitive data like API keys and secrets are securely protected.
 
+## Quick Start
+
+**TL;DR**: Generate and set your encryption key before starting VaultHub:
+
+```bash
+# Generate a secure encryption key
+export ENCRYPTION_KEY=$(openssl rand -base64 32)
+
+# Start VaultHub
+./vault-hub-server
+
+# Or for Docker
+docker run -e ENCRYPTION_KEY=$(openssl rand -base64 32) vault-hub
+```
+
+**⚠️ Important**: Save your encryption key securely! If you lose it, you cannot decrypt your existing data.
+
 ## Overview
 
 All configuration values are automatically encrypted before being stored in the database and decrypted when retrieved. This encryption happens transparently at the model layer, so API consumers receive plaintext values while the database stores only encrypted data.
@@ -24,24 +41,102 @@ Set the following environment variable to enable encryption:
 ENCRYPTION_KEY=your-secure-encryption-key-here
 ```
 
+### Generating a Secure Encryption Key
+
+**Important**: Use a cryptographically secure method to generate your encryption key. Here are several recommended approaches:
+
+#### Method 1: Using OpenSSL (Recommended)
+
+```bash
+# Generate a 256-bit (32-byte) random key and encode it as base64
+openssl rand -base64 32
+
+# Example output: 2xK9mNvB7qL8pRt4WyE6uI1oA5zC3dF0sG2hJ9kMnPqRsT
+```
+
+#### Method 2: Using /dev/urandom (Linux/macOS)
+
+```bash
+# Generate 32 random bytes and encode as base64
+head -c 32 /dev/urandom | base64
+
+# Or generate hex string
+head -c 32 /dev/urandom | xxd -p -c 32
+```
+
+#### Method 3: Using Python
+
+```python
+import secrets
+import base64
+
+# Generate 32 random bytes and encode as base64
+key = base64.b64encode(secrets.token_bytes(32)).decode('utf-8')
+print(f"ENCRYPTION_KEY={key}")
+```
+
+#### Method 4: Using Node.js
+
+```javascript
+const crypto = require('crypto');
+
+// Generate 32 random bytes and encode as base64
+const key = crypto.randomBytes(32).toString('base64');
+console.log(`ENCRYPTION_KEY=${key}`);
+```
+
+#### Method 5: Using Go
+
+```go
+package main
+
+import (
+    "crypto/rand"
+    "encoding/base64"
+    "fmt"
+)
+
+func main() {
+    key := make([]byte, 32)
+    rand.Read(key)
+    fmt.Printf("ENCRYPTION_KEY=%s\n", base64.StdEncoding.EncodeToString(key))
+}
+```
+
+#### Method 6: Online Secure Generator
+
+For quick testing only (not recommended for production):
+- Visit: https://www.random.org/passwords/?num=1&len=32&format=html&rnd=new
+- Set length to 32+ characters with mixed case, numbers, and symbols
+
 **Important Security Notes:**
 
 1. **Use a strong encryption key**: The key should be at least 32 characters long and contain a mix of letters, numbers, and special characters.
 2. **Keep the key secure**: Never commit the encryption key to version control.
 3. **Back up the key**: If you lose the encryption key, you will not be able to decrypt existing data.
 4. **Use different keys for different environments**: Production, staging, and development should each have their own unique encryption keys.
+5. **Generate keys securely**: Always use cryptographically secure random number generators.
 
 ### Example Configuration
 
 ```bash
-# Production
-ENCRYPTION_KEY=prod-2xK9mNvB7qL8pRt4WyE6uI1oA5zC3dF0sG2hJ9kM
+# Production (use openssl rand -base64 32 to generate)
+ENCRYPTION_KEY=2xK9mNvB7qL8pRt4WyE6uI1oA5zC3dF0sG2hJ9kMnPqRsT
 
-# Development
-ENCRYPTION_KEY=dev-test-encryption-key-for-development
+# Development (generate a different key for dev)
+ENCRYPTION_KEY=dev-mL3nK8pQ5rS7tU9vW2xY4zA6bC1dE0fG3hI5jK7mN9pQ
 
 # Docker
-docker run -e ENCRYPTION_KEY=your-secure-key vault-hub
+docker run -e ENCRYPTION_KEY=$(openssl rand -base64 32) vault-hub
+
+# Docker Compose
+version: '3.8'
+services:
+  vault-hub:
+    image: vault-hub
+    environment:
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    # Set ENCRYPTION_KEY in your .env file
 ```
 
 ## What Gets Encrypted

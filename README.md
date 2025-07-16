@@ -24,6 +24,10 @@ VaultHub implements industry-standard AES-256-GCM encryption for all configurati
 **Important**: Set the `ENCRYPTION_KEY` environment variable before starting the application:
 
 ```bash
+# Generate a secure encryption key
+export ENCRYPTION_KEY=$(openssl rand -base64 32)
+
+# Or set your own secure key
 export ENCRYPTION_KEY=your-secure-encryption-key-here
 ```
 
