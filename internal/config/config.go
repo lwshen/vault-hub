@@ -21,6 +21,7 @@ var (
 	DatabaseType     DatabaseTypeEnum
 	DatabaseUrl      string
 	JwtSecret        string
+	EncryptionKey    string
 	OidcEnabled      bool
 	OidcClientId     string
 	OidcClientSecret string
@@ -30,6 +31,7 @@ var (
 func init() {
 	AppPort = getEnv("APP_PORT", "3000")
 	JwtSecret = getEnv("JWT_SECRET", "")
+	EncryptionKey = getEnv("ENCRYPTION_KEY", "")
 	DatabaseType = DatabaseTypeEnum(getEnv("DATABASE_TYPE", "sqlite"))
 	DatabaseUrl = getEnv("DATABASE_URL", "data.db")
 
@@ -46,6 +48,7 @@ func init() {
 func printConfig() {
 	slog.Info("Config", "AppPort", AppPort)
 	slog.Info("Config", "JwtSecret", mask(JwtSecret))
+	slog.Info("Config", "EncryptionKey", mask(EncryptionKey))
 	slog.Info("Config", "DatabaseType", DatabaseType)
 	slog.Info("Config", "DatabaseUrl", DatabaseUrl)
 	slog.Info("Config", "OidcEnabled", OidcEnabled)
@@ -60,6 +63,10 @@ func checkConfig() {
 	hasError := false
 	if JwtSecret == "" {
 		slog.Error("JwtSecret is not set")
+		hasError = true
+	}
+	if EncryptionKey == "" {
+		slog.Error("EncryptionKey is not set")
 		hasError = true
 	}
 	if OidcEnabled {
