@@ -13,13 +13,16 @@ const (
 	ActionUpdateConfig ActionType = "update_config"
 	ActionDeleteConfig ActionType = "delete_config"
 	ActionCreateConfig ActionType = "create_config"
+	ActionLoginUser    ActionType = "login_user"
+	ActionRegisterUser ActionType = "register_user"
+	ActionLogoutUser   ActionType = "logout_user"
 )
 
 type AuditLog struct {
 	gorm.Model
 	ConfigID  *uint      `gorm:"index"`
 	Action    ActionType `gorm:"size:50;index"`
-	UserID    uint       `gorm:"index;not null;constraint:OnDelete:CASCADE"`
+	UserID    uint       `gorm:"index;constraint:OnDelete:CASCADE"`
 	User      User       `gorm:"foreignKey:UserID"`
 	IPAddress string     `gorm:"size:45"`
 	UserAgent string     `gorm:"size:500"`
@@ -58,6 +61,16 @@ func CreateAuditLog(params CreateAuditLogParams) error {
 func LogConfigurationAction(configID uint, action ActionType, userID uint, ipAddress, userAgent string) error {
 	return CreateAuditLog(CreateAuditLogParams{
 		ConfigID:  &configID,
+		Action:    action,
+		UserID:    userID,
+		IPAddress: ipAddress,
+		UserAgent: userAgent,
+	})
+}
+
+// LogUserAction logs a user-related action (login, register, logout)
+func LogUserAction(action ActionType, userID uint, ipAddress, userAgent string) error {
+	return CreateAuditLog(CreateAuditLogParams{
 		Action:    action,
 		UserID:    userID,
 		IPAddress: ipAddress,

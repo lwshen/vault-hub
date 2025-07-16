@@ -61,9 +61,20 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     [setToken],
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    // If there is a token, call the backend logout API to record the audit log
+    if (token) {
+      try {
+        await authApi.logout();
+      } catch (error) {
+        // Even if the API call fails, continue with the logout operation
+        console.warn('Failed to call logout API:', error);
+      }
+    }
     localStorage.removeItem('token');
     setUser(null);
+    navigate(PATH.HOME);
   }, []);
 
   const value = useMemo(
