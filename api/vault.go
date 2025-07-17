@@ -77,14 +77,6 @@ func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// Log read action for each vault
-	ip, userAgent := getClientInfo(c)
-	for _, vault := range vaults {
-		if err := model.LogVaultAction(vault.ID, model.ActionReadVault, user.ID, ip, userAgent); err != nil {
-			slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
-		}
-	}
-
 	// convert to api.Vault
 	apiVaults := make([]VaultLite, len(vaults))
 	for i, vault := range vaults {
