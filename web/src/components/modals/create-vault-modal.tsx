@@ -47,7 +47,6 @@ export function CreateVaultModal({ open, onOpenChange, onVaultCreated }: CreateV
 
     try {
       await vaultApi.createVault({
-        uniqueId: '',
         name: formData.name.trim(),
         value: formData.value.trim(),
         description: formData.description.trim() || undefined,

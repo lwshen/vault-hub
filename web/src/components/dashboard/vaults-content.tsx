@@ -124,7 +124,7 @@ export default function VaultsContent() {
                         )}
                         {vault.description && <span>{vault.description}</span>}
                         {vault.updatedAt && (
-                          <span>Updated {new Date(vault.updatedAt).toLocaleDateString()}</span>
+                          <span>Last Updated {new Date(vault.updatedAt).toLocaleDateString()}</span>
                         )}
                       </div>
                     </div>
