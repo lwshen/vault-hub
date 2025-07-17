@@ -114,8 +114,8 @@ export default function DashboardContent() {
               </Button>
             </div>
             <div className="space-y-3">
-              {recentVaults.map((vault, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
+              {recentVaults.map((vault) => (
+                <div key={vault.name} className="flex items-center justify-between p-3 rounded-lg border">
                   <div className="flex items-center gap-3">
                     {vault.status === 'locked' ? (
                       <Lock className="h-4 w-4 text-red-500" />

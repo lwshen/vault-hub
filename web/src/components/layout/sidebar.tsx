@@ -1,10 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'wouter';
 import { PATH } from '@/const/path';
-import { 
-  Vault, 
-  Activity, 
-  Plus
+import {
+  Vault,
+  Activity,
 } from 'lucide-react';
 
 export default function Sidebar() {
