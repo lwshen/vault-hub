@@ -6,7 +6,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -119,12 +118,6 @@ type VaultLite struct {
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
-// GetVaultsParams defines parameters for GetVaults.
-type GetVaultsParams struct {
-	// Category Filter by category
-	Category *string `form:"category,omitempty" json:"category,omitempty"`
-}
-
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
 
@@ -156,7 +149,7 @@ type ServerInterface interface {
 	GetCurrentUser(c *fiber.Ctx) error
 
 	// (GET /api/vaults)
-	GetVaults(c *fiber.Ctx, params GetVaultsParams) error
+	GetVaults(c *fiber.Ctx) error
 
 	// (POST /api/vaults)
 	CreateVault(c *fiber.Ctx) error
@@ -211,25 +204,7 @@ func (siw *ServerInterfaceWrapper) GetCurrentUser(c *fiber.Ctx) error {
 // GetVaults operation middleware
 func (siw *ServerInterfaceWrapper) GetVaults(c *fiber.Ctx) error {
 
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetVaultsParams
-
-	var query url.Values
-	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
-	}
-
-	// ------------- Optional query parameter "category" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "category", query, &params.Category)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter category: %w", err).Error())
-	}
-
-	return siw.Handler.GetVaults(c, params)
+	return siw.Handler.GetVaults(c)
 }
 
 // CreateVault operation middleware
@@ -411,7 +386,6 @@ func (response GetCurrentUser200JSONResponse) VisitGetCurrentUserResponse(ctx *f
 }
 
 type GetVaultsRequestObject struct {
-	Params GetVaultsParams
 }
 
 type GetVaultsResponseObject interface {
@@ -680,10 +654,8 @@ func (sh *strictHandler) GetCurrentUser(ctx *fiber.Ctx) error {
 }
 
 // GetVaults operation middleware
-func (sh *strictHandler) GetVaults(ctx *fiber.Ctx, params GetVaultsParams) error {
+func (sh *strictHandler) GetVaults(ctx *fiber.Ctx) error {
 	var request GetVaultsRequestObject
-
-	request.Params = params
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.GetVaults(ctx.UserContext(), request.(GetVaultsRequestObject))

@@ -158,13 +158,9 @@ func (v *Vault) GetByUniqueID(uniqueID string, userID uint) error {
 }
 
 // GetAllByUser retrieves all vaults for a user, optionally filtered by category
-func GetVaultsByUser(userID uint, category string, decrypt bool) ([]Vault, error) {
+func GetVaultsByUser(userID uint, decrypt bool) ([]Vault, error) {
 	var vaults []Vault
 	query := DB.Where("user_id = ?", userID)
-
-	if category != "" {
-		query = query.Where("category = ?", category)
-	}
 
 	err := query.Order("created_at DESC").Find(&vaults).Error
 	if err != nil {

@@ -65,15 +65,13 @@ func convertToApiVaultLite(vault *model.Vault) VaultLite {
 }
 
 // GetVaults handles GET /api/vaults
-func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
+func (Server) GetVaults(c *fiber.Ctx) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	category := getStringValue(params.Category)
-
-	vaults, err := model.GetVaultsByUser(user.ID, category, false)
+	vaults, err := model.GetVaultsByUser(user.ID, false)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
