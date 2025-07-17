@@ -140,23 +140,6 @@ func (params *CreateVaultParams) Create() (*Vault, error) {
 	return &vault, nil
 }
 
-// GetByID retrieves a vault by ID for a specific user
-func (v *Vault) GetByID(id uint, userID uint) error {
-	err := DB.Where("id = ? AND user_id = ?", id, userID).First(v).Error
-	if err != nil {
-		return err
-	}
-
-	// Decrypt the value
-	decryptedValue, err := encryption.Decrypt(v.Value)
-	if err != nil {
-		return fmt.Errorf("failed to decrypt value: %w", err)
-	}
-	v.Value = decryptedValue
-
-	return nil
-}
-
 // GetByUniqueID retrieves a vault by unique_id for a specific user
 func (v *Vault) GetByUniqueID(uniqueID string, userID uint) error {
 	err := DB.Where("unique_id = ? AND user_id = ?", uniqueID, userID).First(v).Error

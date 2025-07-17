@@ -114,17 +114,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Vault'
-  /api/vaults/{id}:
+  /api/vaults/{unique_id}:
     get:
-      description: Get a specific vault by ID
+      description: Get a specific vault by Unique ID
       tags:
         - Vault
       operationId: getVault
       parameters:
-        - name: id
+        - name: unique_id
           in: path
           required: true
-          description: Vault ID
+          description: Vault Unique ID
           schema:
             type: integer
             format: int32
@@ -142,10 +142,10 @@ paths:
         - Vault
       operationId: updateVault
       parameters:
-        - name: id
+        - name: unique_id
           in: path
           required: true
-          description: Vault ID
+          description: Vault Unique ID
           schema:
             type: integer
             format: int32
@@ -169,10 +169,10 @@ paths:
         - Vault
       operationId: deleteVault
       parameters:
-        - name: id
+        - name: unique_id
           in: path
           required: true
-          description: Vault ID
+          description: Vault Unique ID
           schema:
             type: integer
             format: int32
@@ -286,15 +286,9 @@ components:
     CreateVaultRequest:
       type: object
       required:
-        - unique_id
         - name
         - value
       properties:
-        unique_id:
-          type: string
-          description: Unique identifier for the vault
-          minLength: 1
-          maxLength: 255
         name:
           type: string
           description: Human-readable name

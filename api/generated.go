@@ -25,9 +25,6 @@ type CreateVaultRequest struct {
 	// Name Human-readable name
 	Name string `json:"name"`
 
-	// UniqueId Unique identifier for the vault
-	UniqueId string `json:"unique_id"`
-
 	// Value Value to be encrypted and stored
 	Value string `json:"value"`
 }
@@ -148,14 +145,14 @@ type ServerInterface interface {
 	// (POST /api/vaults)
 	CreateVault(c *fiber.Ctx) error
 
-	// (DELETE /api/vaults/{id})
-	DeleteVault(c *fiber.Ctx, id int32) error
+	// (DELETE /api/vaults/{unique_id})
+	DeleteVault(c *fiber.Ctx, uniqueId int32) error
 
-	// (GET /api/vaults/{id})
-	GetVault(c *fiber.Ctx, id int32) error
+	// (GET /api/vaults/{unique_id})
+	GetVault(c *fiber.Ctx, uniqueId int32) error
 
-	// (PUT /api/vaults/{id})
-	UpdateVault(c *fiber.Ctx, id int32) error
+	// (PUT /api/vaults/{unique_id})
+	UpdateVault(c *fiber.Ctx, uniqueId int32) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -230,15 +227,15 @@ func (siw *ServerInterfaceWrapper) DeleteVault(c *fiber.Ctx) error {
 
 	var err error
 
-	// ------------- Path parameter "id" -------------
-	var id int32
+	// ------------- Path parameter "unique_id" -------------
+	var uniqueId int32
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "unique_id", c.Params("unique_id"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter unique_id: %w", err).Error())
 	}
 
-	return siw.Handler.DeleteVault(c, id)
+	return siw.Handler.DeleteVault(c, uniqueId)
 }
 
 // GetVault operation middleware
@@ -246,15 +243,15 @@ func (siw *ServerInterfaceWrapper) GetVault(c *fiber.Ctx) error {
 
 	var err error
 
-	// ------------- Path parameter "id" -------------
-	var id int32
+	// ------------- Path parameter "unique_id" -------------
+	var uniqueId int32
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "unique_id", c.Params("unique_id"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter unique_id: %w", err).Error())
 	}
 
-	return siw.Handler.GetVault(c, id)
+	return siw.Handler.GetVault(c, uniqueId)
 }
 
 // UpdateVault operation middleware
@@ -262,15 +259,15 @@ func (siw *ServerInterfaceWrapper) UpdateVault(c *fiber.Ctx) error {
 
 	var err error
 
-	// ------------- Path parameter "id" -------------
-	var id int32
+	// ------------- Path parameter "unique_id" -------------
+	var uniqueId int32
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "unique_id", c.Params("unique_id"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter unique_id: %w", err).Error())
 	}
 
-	return siw.Handler.UpdateVault(c, id)
+	return siw.Handler.UpdateVault(c, uniqueId)
 }
 
 // FiberServerOptions provides options for the Fiber server.
@@ -308,11 +305,11 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Post(options.BaseURL+"/api/vaults", wrapper.CreateVault)
 
-	router.Delete(options.BaseURL+"/api/vaults/:id", wrapper.DeleteVault)
+	router.Delete(options.BaseURL+"/api/vaults/:unique_id", wrapper.DeleteVault)
 
-	router.Get(options.BaseURL+"/api/vaults/:id", wrapper.GetVault)
+	router.Get(options.BaseURL+"/api/vaults/:unique_id", wrapper.GetVault)
 
-	router.Put(options.BaseURL+"/api/vaults/:id", wrapper.UpdateVault)
+	router.Put(options.BaseURL+"/api/vaults/:unique_id", wrapper.UpdateVault)
 
 }
 
@@ -432,7 +429,7 @@ func (response CreateVault201JSONResponse) VisitCreateVaultResponse(ctx *fiber.C
 }
 
 type DeleteVaultRequestObject struct {
-	Id int32 `json:"id"`
+	UniqueId int32 `json:"unique_id"`
 }
 
 type DeleteVaultResponseObject interface {
@@ -448,7 +445,7 @@ func (response DeleteVault204Response) VisitDeleteVaultResponse(ctx *fiber.Ctx) 
 }
 
 type GetVaultRequestObject struct {
-	Id int32 `json:"id"`
+	UniqueId int32 `json:"unique_id"`
 }
 
 type GetVaultResponseObject interface {
@@ -465,8 +462,8 @@ func (response GetVault200JSONResponse) VisitGetVaultResponse(ctx *fiber.Ctx) er
 }
 
 type UpdateVaultRequestObject struct {
-	Id   int32 `json:"id"`
-	Body *UpdateVaultJSONRequestBody
+	UniqueId int32 `json:"unique_id"`
+	Body     *UpdateVaultJSONRequestBody
 }
 
 type UpdateVaultResponseObject interface {
@@ -506,13 +503,13 @@ type StrictServerInterface interface {
 	// (POST /api/vaults)
 	CreateVault(ctx context.Context, request CreateVaultRequestObject) (CreateVaultResponseObject, error)
 
-	// (DELETE /api/vaults/{id})
+	// (DELETE /api/vaults/{unique_id})
 	DeleteVault(ctx context.Context, request DeleteVaultRequestObject) (DeleteVaultResponseObject, error)
 
-	// (GET /api/vaults/{id})
+	// (GET /api/vaults/{unique_id})
 	GetVault(ctx context.Context, request GetVaultRequestObject) (GetVaultResponseObject, error)
 
-	// (PUT /api/vaults/{id})
+	// (PUT /api/vaults/{unique_id})
 	UpdateVault(ctx context.Context, request UpdateVaultRequestObject) (UpdateVaultResponseObject, error)
 }
 
@@ -725,10 +722,10 @@ func (sh *strictHandler) CreateVault(ctx *fiber.Ctx) error {
 }
 
 // DeleteVault operation middleware
-func (sh *strictHandler) DeleteVault(ctx *fiber.Ctx, id int32) error {
+func (sh *strictHandler) DeleteVault(ctx *fiber.Ctx, uniqueId int32) error {
 	var request DeleteVaultRequestObject
 
-	request.Id = id
+	request.UniqueId = uniqueId
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.DeleteVault(ctx.UserContext(), request.(DeleteVaultRequestObject))
@@ -752,10 +749,10 @@ func (sh *strictHandler) DeleteVault(ctx *fiber.Ctx, id int32) error {
 }
 
 // GetVault operation middleware
-func (sh *strictHandler) GetVault(ctx *fiber.Ctx, id int32) error {
+func (sh *strictHandler) GetVault(ctx *fiber.Ctx, uniqueId int32) error {
 	var request GetVaultRequestObject
 
-	request.Id = id
+	request.UniqueId = uniqueId
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.GetVault(ctx.UserContext(), request.(GetVaultRequestObject))
@@ -779,10 +776,10 @@ func (sh *strictHandler) GetVault(ctx *fiber.Ctx, id int32) error {
 }
 
 // UpdateVault operation middleware
-func (sh *strictHandler) UpdateVault(ctx *fiber.Ctx, id int32) error {
+func (sh *strictHandler) UpdateVault(ctx *fiber.Ctx, uniqueId int32) error {
 	var request UpdateVaultRequestObject
 
-	request.Id = id
+	request.UniqueId = uniqueId
 
 	var body UpdateVaultJSONRequestBody
 	if err := ctx.BodyParser(&body); err != nil {
