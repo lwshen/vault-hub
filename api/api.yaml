@@ -254,10 +254,6 @@ components:
         unique_id:
           type: string
           description: Unique identifier for the vault
-        user_id:
-          type: integer
-          format: int64
-          description: ID of the user who owns this vault
         name:
           type: string
           description: Human-readable name

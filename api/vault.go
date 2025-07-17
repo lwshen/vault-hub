@@ -37,6 +37,19 @@ func getUserFromContext(c *fiber.Ctx) (*model.User, error) {
 	return user, nil
 }
 
+// convertToApiVault converts a model.Vault to an api.Vault
+func convertToApiVault(vault *model.Vault) Vault {
+	return Vault{
+		UniqueId:    vault.UniqueID,
+		Name:        vault.Name,
+		Value:       vault.Value,
+		Description: &vault.Description,
+		Category:    &vault.Category,
+		CreatedAt:   &vault.CreatedAt,
+		UpdatedAt:   &vault.UpdatedAt,
+	}
+}
+
 // GetVaults handles GET /api/vaults
 func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 	user, err := getUserFromContext(c)
@@ -59,7 +72,13 @@ func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 		}
 	}
 
-	return c.Status(fiber.StatusOK).JSON(vaults)
+	// convert to api.Vault
+	apiVaults := make([]Vault, len(vaults))
+	for i, vault := range vaults {
+		apiVaults[i] = convertToApiVault(&vault)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(apiVaults)
 }
 
 // GetVault handles GET /api/vaults/{unique_id}
@@ -84,7 +103,7 @@ func (Server) GetVault(c *fiber.Ctx, uniqueID string) error {
 		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(vault)
+	return c.Status(fiber.StatusOK).JSON(convertToApiVault(&vault))
 }
 
 // CreateVault handles POST /api/vaults
@@ -135,7 +154,7 @@ func (Server) CreateVault(c *fiber.Ctx) error {
 		slog.Error("Failed to create audit log for create vault", "error", err, "vaultID", vault.ID)
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(vault)
+	return c.Status(fiber.StatusCreated).JSON(convertToApiVault(vault))
 }
 
 // UpdateVault handles PUT /api/vaults/{unique_id}
@@ -187,7 +206,7 @@ func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 	ip, userAgent := getClientInfo(c)
 	_ = model.LogVaultAction(vault.ID, model.ActionUpdateVault, user.ID, ip, userAgent)
 
-	return c.Status(fiber.StatusOK).JSON(vault)
+	return c.Status(fiber.StatusOK).JSON(convertToApiVault(&vault))
 }
 
 // DeleteVault handles DELETE /api/vaults/{unique_id}
