@@ -10,18 +10,18 @@ import (
 	"gorm.io/gorm"
 )
 
-type Configuration struct {
+type Vault struct {
 	gorm.Model
-	UniqueID    string `gorm:"size:255;not null;unique"` // Unique identifier for the config
-	UserID      uint   `gorm:"index;not null"`           // User who owns this configuration
+	UniqueID    string `gorm:"size:255;not null;unique"` // Unique identifier for the vault
+	UserID      uint   `gorm:"index;not null"`           // User who owns this vault
 	Name        string `gorm:"size:255"`                 // Human-readable name
 	Value       string `gorm:"type:text;not null"`       // Encrypted value
 	Description string `gorm:"size:500"`                 // Human-readable description
-	Category    string `gorm:"size:100;index"`           // Category/type of config
+	Category    string `gorm:"size:100;index"`           // Category/type of vault
 }
 
-// CreateConfigurationParams defines parameters for creating a new configuration
-type CreateConfigurationParams struct {
+// CreateVaultParams defines parameters for creating a new vault
+type CreateVaultParams struct {
 	UniqueID    string
 	UserID      uint
 	Name        string
@@ -30,16 +30,16 @@ type CreateConfigurationParams struct {
 	Category    string
 }
 
-// UpdateConfigurationParams defines parameters for updating a configuration
-type UpdateConfigurationParams struct {
+// UpdateVaultParams defines parameters for updating a vault
+type UpdateVaultParams struct {
 	Name        *string
 	Value       *string
 	Description *string
 	Category    *string
 }
 
-// Validate validates the create configuration parameters
-func (params *CreateConfigurationParams) Validate() map[string]string {
+// Validate validates the create vault parameters
+func (params *CreateVaultParams) Validate() map[string]string {
 	errors := map[string]string{}
 
 	if strings.TrimSpace(params.UniqueID) == "" {
@@ -73,8 +73,8 @@ func (params *CreateConfigurationParams) Validate() map[string]string {
 	return errors
 }
 
-// Validate validates the update configuration parameters
-func (params *UpdateConfigurationParams) Validate() map[string]string {
+// Validate validates the update vault parameters
+func (params *UpdateVaultParams) Validate() map[string]string {
 	errors := map[string]string{}
 
 	if params.Name != nil {
@@ -100,13 +100,13 @@ func (params *UpdateConfigurationParams) Validate() map[string]string {
 	return errors
 }
 
-// Create creates a new configuration
-func (params *CreateConfigurationParams) Create() (*Configuration, error) {
+// Create creates a new vault
+func (params *CreateVaultParams) Create() (*Vault, error) {
 	// Check if unique_id already exists for this user
-	var existing Configuration
+	var existing Vault
 	err := DB.Where("unique_id = ? AND user_id = ?", params.UniqueID, params.UserID).First(&existing).Error
 	if err == nil {
-		return nil, fmt.Errorf("configuration with unique_id '%s' already exists", params.UniqueID)
+		return nil, fmt.Errorf("vault with unique_id '%s' already exists", params.UniqueID)
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (params *CreateConfigurationParams) Create() (*Configuration, error) {
 		return nil, fmt.Errorf("failed to encrypt value: %w", err)
 	}
 
-	config := Configuration{
+	vault := Vault{
 		UniqueID:    params.UniqueID,
 		UserID:      params.UserID,
 		Name:        params.Name,
@@ -126,82 +126,82 @@ func (params *CreateConfigurationParams) Create() (*Configuration, error) {
 		Category:    params.Category,
 	}
 
-	err = DB.Create(&config).Error
+	err = DB.Create(&vault).Error
 	if err != nil {
 		return nil, err
 	}
 
 	// Decrypt the value for the response
-	config.Value, err = encryption.Decrypt(config.Value)
+	vault.Value, err = encryption.Decrypt(vault.Value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decrypt value for response: %w", err)
 	}
 
-	return &config, nil
+	return &vault, nil
 }
 
-// GetByID retrieves a configuration by ID for a specific user
-func (c *Configuration) GetByID(id uint, userID uint) error {
-	err := DB.Where("id = ? AND user_id = ?", id, userID).First(c).Error
+// GetByID retrieves a vault by ID for a specific user
+func (v *Vault) GetByID(id uint, userID uint) error {
+	err := DB.Where("id = ? AND user_id = ?", id, userID).First(v).Error
 	if err != nil {
 		return err
 	}
 
 	// Decrypt the value
-	decryptedValue, err := encryption.Decrypt(c.Value)
+	decryptedValue, err := encryption.Decrypt(v.Value)
 	if err != nil {
 		return fmt.Errorf("failed to decrypt value: %w", err)
 	}
-	c.Value = decryptedValue
+	v.Value = decryptedValue
 
 	return nil
 }
 
-// GetByUniqueID retrieves a configuration by unique_id for a specific user
-func (c *Configuration) GetByUniqueID(uniqueID string, userID uint) error {
-	err := DB.Where("unique_id = ? AND user_id = ?", uniqueID, userID).First(c).Error
+// GetByUniqueID retrieves a vault by unique_id for a specific user
+func (v *Vault) GetByUniqueID(uniqueID string, userID uint) error {
+	err := DB.Where("unique_id = ? AND user_id = ?", uniqueID, userID).First(v).Error
 	if err != nil {
 		return err
 	}
 
 	// Decrypt the value
-	decryptedValue, err := encryption.Decrypt(c.Value)
+	decryptedValue, err := encryption.Decrypt(v.Value)
 	if err != nil {
 		return fmt.Errorf("failed to decrypt value: %w", err)
 	}
-	c.Value = decryptedValue
+	v.Value = decryptedValue
 
 	return nil
 }
 
-// GetAllByUser retrieves all configurations for a user, optionally filtered by category
-func GetConfigurationsByUser(userID uint, category string) ([]Configuration, error) {
-	var configs []Configuration
+// GetAllByUser retrieves all vaults for a user, optionally filtered by category
+func GetVaultsByUser(userID uint, category string) ([]Vault, error) {
+	var vaults []Vault
 	query := DB.Where("user_id = ?", userID)
 
 	if category != "" {
 		query = query.Where("category = ?", category)
 	}
 
-	err := query.Order("created_at DESC").Find(&configs).Error
+	err := query.Order("created_at DESC").Find(&vaults).Error
 	if err != nil {
 		return nil, err
 	}
 
 	// Decrypt all values
-	for i := range configs {
-		decryptedValue, err := encryption.Decrypt(configs[i].Value)
+	for i := range vaults {
+		decryptedValue, err := encryption.Decrypt(vaults[i].Value)
 		if err != nil {
-			return nil, fmt.Errorf("failed to decrypt value for config %d: %w", configs[i].ID, err)
+			return nil, fmt.Errorf("failed to decrypt value for vault %d: %w", vaults[i].ID, err)
 		}
-		configs[i].Value = decryptedValue
+		vaults[i].Value = decryptedValue
 	}
 
-	return configs, nil
+	return vaults, nil
 }
 
-// Update updates a configuration
-func (c *Configuration) Update(params *UpdateConfigurationParams) error {
+// Update updates a vault
+func (v *Vault) Update(params *UpdateVaultParams) error {
 	updates := map[string]interface{}{}
 
 	if params.Name != nil {
@@ -228,30 +228,30 @@ func (c *Configuration) Update(params *UpdateConfigurationParams) error {
 	// Always update the updated_at timestamp
 	updates["updated_at"] = time.Now()
 
-	err := DB.Model(c).Updates(updates).Error
+	err := DB.Model(v).Updates(updates).Error
 	if err != nil {
 		return err
 	}
 
-	// Reload the configuration to get the updated data
-	err = DB.Where("id = ?", c.ID).First(c).Error
+	// Reload the vault to get the updated data
+	err = DB.Where("id = ?", v.ID).First(v).Error
 	if err != nil {
 		return err
 	}
 
 	// Decrypt the value for the response
-	decryptedValue, err := encryption.Decrypt(c.Value)
+	decryptedValue, err := encryption.Decrypt(v.Value)
 	if err != nil {
 		return fmt.Errorf("failed to decrypt value: %w", err)
 	}
-	c.Value = decryptedValue
+	v.Value = decryptedValue
 
 	return nil
 }
 
-// Delete deletes a configuration
-func (c *Configuration) Delete() error {
-	err := DB.Delete(c).Error
+// Delete deletes a vault
+func (v *Vault) Delete() error {
+	err := DB.Delete(v).Error
 	if err != nil {
 		return err
 	}
