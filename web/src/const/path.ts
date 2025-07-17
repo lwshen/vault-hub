@@ -4,7 +4,7 @@ export const PATH = {
   HOME: '/',
   DASHBOARD: '/dashboard',
   VAULTS: '/dashboard/vaults',
-  ACTIVITY_LOG: '/dashboard/activity-log',
+  AUDIT_LOG: '/dashboard/audit-log',
   FEATURES: '/features',
   PRICING: '/pricing',
   ABOUT: '/about',

@@ -40,17 +40,17 @@ export default function Sidebar() {
             Vaults
           </Button>
         </Link>
-        <Link href={PATH.ACTIVITY_LOG}>
+        <Link href={PATH.AUDIT_LOG}>
           <Button 
-            variant={pathname === PATH.ACTIVITY_LOG ? 'default' : 'ghost'} 
+            variant={pathname === PATH.AUDIT_LOG ? 'default' : 'ghost'} 
             className={`w-full justify-start ${
-              pathname === PATH.ACTIVITY_LOG 
+              pathname === PATH.AUDIT_LOG 
                 ? 'bg-primary/10 text-primary hover:bg-primary/20' 
                 : ''
             }`}
           >
             <Activity className="h-4 w-4 mr-3" />
-            Activity Log
+            Audit Log
           </Button>
         </Link>
       </nav>

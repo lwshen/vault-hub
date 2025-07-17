@@ -17,8 +17,8 @@ import {
   LogOut
 } from 'lucide-react';
 
-export default function ActivityLogContent() {
-  const activities = [
+export default function AuditLogContent() {
+  const audits = [
     {
       id: 1,
       type: 'vault_access',
@@ -131,7 +131,7 @@ export default function ActivityLogContent() {
     }
   ];
 
-  const getActivityTypeLabel = (type: string) => {
+  const getAuditTypeLabel = (type: string) => {
     const labels: { [key: string]: string; } = {
       vault_access: 'Vault Access',
       vault_created: 'Vault Created',
@@ -154,7 +154,7 @@ export default function ActivityLogContent() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Activity Log</h1>
             <p className="text-muted-foreground">
-              Monitor all system activities and user actions
+              Monitor all system audits and user actions
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -177,7 +177,7 @@ export default function ActivityLogContent() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
         <div className="space-y-4">
-          {/* Activity Stats */}
+          {/* Audit Stats */}
           <div className="grid gap-4 md:grid-cols-4 mb-6">
             <Card className="p-4">
               <div className="flex items-center gap-3">
@@ -217,34 +217,34 @@ export default function ActivityLogContent() {
             </Card>
           </div>
 
-          {/* Activity List */}
+          {/* Audit List */}
           <Card className="p-6">
             <div className="space-y-4">
-              {activities.map((activity) => {
-                const Icon = activity.icon;
+              {audits.map((audit) => {
+                const Icon = audit.icon;
                 return (
-                  <div key={activity.id} className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                  <div key={audit.id} className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
                     <div className="flex-shrink-0">
                       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                        <Icon className={`h-5 w-5 ${activity.iconColor}`} />
+                        <Icon className={`h-5 w-5 ${audit.iconColor}`} />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-medium text-foreground">{activity.title}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{activity.description}</p>
+                          <h3 className="font-medium text-foreground">{audit.title}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">{audit.description}</p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                            <span>By {activity.user}</span>
+                            <span>By {audit.user}</span>
                             <span>•</span>
-                            <span>{activity.timestamp}</span>
+                            <span>{audit.timestamp}</span>
                             <span>•</span>
-                            <span>{activity.details}</span>
+                            <span>{audit.details}</span>
                           </div>
                         </div>
                         <div className="flex-shrink-0">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                            {getActivityTypeLabel(activity.type)}
+                            {getAuditTypeLabel(audit.type)}
                           </span>
                         </div>
                       </div>
@@ -257,7 +257,7 @@ export default function ActivityLogContent() {
             {/* Load More */}
             <div className="mt-6 text-center">
               <Button variant="outline">
-                Load More Activities
+                Load More Audits
               </Button>
             </div>
           </Card>
