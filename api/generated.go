@@ -14,32 +14,9 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// ConfigurationItem defines model for ConfigurationItem.
-type ConfigurationItem struct {
-	// Category Category/type of config
-	Category  *string    `json:"category,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-
-	// Description Human-readable description
-	Description *string `json:"description,omitempty"`
-
-	// Name Human-readable name
-	Name string `json:"name"`
-
-	// UniqueId Unique identifier for the config
-	UniqueId  string     `json:"unique_id"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-
-	// UserId ID of the user who owns this configuration
-	UserId *int64 `json:"user_id,omitempty"`
-
-	// Value Encrypted value
-	Value string `json:"value"`
-}
-
-// CreateConfigurationRequest defines model for CreateConfigurationRequest.
-type CreateConfigurationRequest struct {
-	// Category Category/type of config
+// CreateVaultRequest defines model for CreateVaultRequest.
+type CreateVaultRequest struct {
+	// Category Category/type of vault
 	Category *string `json:"category,omitempty"`
 
 	// Description Human-readable description
@@ -48,7 +25,7 @@ type CreateConfigurationRequest struct {
 	// Name Human-readable name
 	Name string `json:"name"`
 
-	// UniqueId Unique identifier for the config
+	// UniqueId Unique identifier for the vault
 	UniqueId string `json:"unique_id"`
 
 	// Value Value to be encrypted and stored
@@ -91,9 +68,9 @@ type SignupResponse struct {
 	Token string `json:"token"`
 }
 
-// UpdateConfigurationRequest defines model for UpdateConfigurationRequest.
-type UpdateConfigurationRequest struct {
-	// Category Category/type of config
+// UpdateVaultRequest defines model for UpdateVaultRequest.
+type UpdateVaultRequest struct {
+	// Category Category/type of vault
 	Category *string `json:"category,omitempty"`
 
 	// Description Human-readable description
@@ -106,8 +83,31 @@ type UpdateConfigurationRequest struct {
 	Value *string `json:"value,omitempty"`
 }
 
-// GetConfigurationsParams defines parameters for GetConfigurations.
-type GetConfigurationsParams struct {
+// Vault defines model for Vault.
+type Vault struct {
+	// Category Category/type of vault
+	Category  *string    `json:"category,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+
+	// Name Human-readable name
+	Name string `json:"name"`
+
+	// UniqueId Unique identifier for the vault
+	UniqueId  string     `json:"unique_id"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+
+	// UserId ID of the user who owns this vault
+	UserId *int64 `json:"user_id,omitempty"`
+
+	// Value Encrypted value
+	Value string `json:"value"`
+}
+
+// GetVaultsParams defines parameters for GetVaults.
+type GetVaultsParams struct {
 	// Category Filter by category
 	Category *string `form:"category,omitempty" json:"category,omitempty"`
 }
@@ -118,11 +118,11 @@ type LoginJSONRequestBody = LoginRequest
 // SignupJSONRequestBody defines body for Signup for application/json ContentType.
 type SignupJSONRequestBody = SignupRequest
 
-// CreateConfigurationJSONRequestBody defines body for CreateConfiguration for application/json ContentType.
-type CreateConfigurationJSONRequestBody = CreateConfigurationRequest
+// CreateVaultJSONRequestBody defines body for CreateVault for application/json ContentType.
+type CreateVaultJSONRequestBody = CreateVaultRequest
 
-// UpdateConfigurationJSONRequestBody defines body for UpdateConfiguration for application/json ContentType.
-type UpdateConfigurationJSONRequestBody = UpdateConfigurationRequest
+// UpdateVaultJSONRequestBody defines body for UpdateVault for application/json ContentType.
+type UpdateVaultJSONRequestBody = UpdateVaultRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -136,26 +136,26 @@ type ServerInterface interface {
 	// (POST /api/auth/signup)
 	Signup(c *fiber.Ctx) error
 
-	// (GET /api/configurations)
-	GetConfigurations(c *fiber.Ctx, params GetConfigurationsParams) error
-
-	// (POST /api/configurations)
-	CreateConfiguration(c *fiber.Ctx) error
-
-	// (DELETE /api/configurations/{id})
-	DeleteConfiguration(c *fiber.Ctx, id int32) error
-
-	// (GET /api/configurations/{id})
-	GetConfiguration(c *fiber.Ctx, id int32) error
-
-	// (PUT /api/configurations/{id})
-	UpdateConfiguration(c *fiber.Ctx, id int32) error
-
 	// (GET /api/health)
 	Health(c *fiber.Ctx) error
 
 	// (GET /api/user)
 	GetCurrentUser(c *fiber.Ctx) error
+
+	// (GET /api/vaults)
+	GetVaults(c *fiber.Ctx, params GetVaultsParams) error
+
+	// (POST /api/vaults)
+	CreateVault(c *fiber.Ctx) error
+
+	// (DELETE /api/vaults/{id})
+	DeleteVault(c *fiber.Ctx, id int32) error
+
+	// (GET /api/vaults/{id})
+	GetVault(c *fiber.Ctx, id int32) error
+
+	// (PUT /api/vaults/{id})
+	UpdateVault(c *fiber.Ctx, id int32) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -183,13 +183,25 @@ func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
 	return siw.Handler.Signup(c)
 }
 
-// GetConfigurations operation middleware
-func (siw *ServerInterfaceWrapper) GetConfigurations(c *fiber.Ctx) error {
+// Health operation middleware
+func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
+
+	return siw.Handler.Health(c)
+}
+
+// GetCurrentUser operation middleware
+func (siw *ServerInterfaceWrapper) GetCurrentUser(c *fiber.Ctx) error {
+
+	return siw.Handler.GetCurrentUser(c)
+}
+
+// GetVaults operation middleware
+func (siw *ServerInterfaceWrapper) GetVaults(c *fiber.Ctx) error {
 
 	var err error
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetConfigurationsParams
+	var params GetVaultsParams
 
 	var query url.Values
 	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
@@ -204,17 +216,17 @@ func (siw *ServerInterfaceWrapper) GetConfigurations(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter category: %w", err).Error())
 	}
 
-	return siw.Handler.GetConfigurations(c, params)
+	return siw.Handler.GetVaults(c, params)
 }
 
-// CreateConfiguration operation middleware
-func (siw *ServerInterfaceWrapper) CreateConfiguration(c *fiber.Ctx) error {
+// CreateVault operation middleware
+func (siw *ServerInterfaceWrapper) CreateVault(c *fiber.Ctx) error {
 
-	return siw.Handler.CreateConfiguration(c)
+	return siw.Handler.CreateVault(c)
 }
 
-// DeleteConfiguration operation middleware
-func (siw *ServerInterfaceWrapper) DeleteConfiguration(c *fiber.Ctx) error {
+// DeleteVault operation middleware
+func (siw *ServerInterfaceWrapper) DeleteVault(c *fiber.Ctx) error {
 
 	var err error
 
@@ -226,11 +238,11 @@ func (siw *ServerInterfaceWrapper) DeleteConfiguration(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
 	}
 
-	return siw.Handler.DeleteConfiguration(c, id)
+	return siw.Handler.DeleteVault(c, id)
 }
 
-// GetConfiguration operation middleware
-func (siw *ServerInterfaceWrapper) GetConfiguration(c *fiber.Ctx) error {
+// GetVault operation middleware
+func (siw *ServerInterfaceWrapper) GetVault(c *fiber.Ctx) error {
 
 	var err error
 
@@ -242,11 +254,11 @@ func (siw *ServerInterfaceWrapper) GetConfiguration(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
 	}
 
-	return siw.Handler.GetConfiguration(c, id)
+	return siw.Handler.GetVault(c, id)
 }
 
-// UpdateConfiguration operation middleware
-func (siw *ServerInterfaceWrapper) UpdateConfiguration(c *fiber.Ctx) error {
+// UpdateVault operation middleware
+func (siw *ServerInterfaceWrapper) UpdateVault(c *fiber.Ctx) error {
 
 	var err error
 
@@ -258,19 +270,7 @@ func (siw *ServerInterfaceWrapper) UpdateConfiguration(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
 	}
 
-	return siw.Handler.UpdateConfiguration(c, id)
-}
-
-// Health operation middleware
-func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
-
-	return siw.Handler.Health(c)
-}
-
-// GetCurrentUser operation middleware
-func (siw *ServerInterfaceWrapper) GetCurrentUser(c *fiber.Ctx) error {
-
-	return siw.Handler.GetCurrentUser(c)
+	return siw.Handler.UpdateVault(c, id)
 }
 
 // FiberServerOptions provides options for the Fiber server.
@@ -300,19 +300,19 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
 
-	router.Get(options.BaseURL+"/api/configurations", wrapper.GetConfigurations)
-
-	router.Post(options.BaseURL+"/api/configurations", wrapper.CreateConfiguration)
-
-	router.Delete(options.BaseURL+"/api/configurations/:id", wrapper.DeleteConfiguration)
-
-	router.Get(options.BaseURL+"/api/configurations/:id", wrapper.GetConfiguration)
-
-	router.Put(options.BaseURL+"/api/configurations/:id", wrapper.UpdateConfiguration)
-
 	router.Get(options.BaseURL+"/api/health", wrapper.Health)
 
 	router.Get(options.BaseURL+"/api/user", wrapper.GetCurrentUser)
+
+	router.Get(options.BaseURL+"/api/vaults", wrapper.GetVaults)
+
+	router.Post(options.BaseURL+"/api/vaults", wrapper.CreateVault)
+
+	router.Delete(options.BaseURL+"/api/vaults/:id", wrapper.DeleteVault)
+
+	router.Get(options.BaseURL+"/api/vaults/:id", wrapper.GetVault)
+
+	router.Put(options.BaseURL+"/api/vaults/:id", wrapper.UpdateVault)
 
 }
 
@@ -365,91 +365,6 @@ func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error 
 	return ctx.JSON(&response)
 }
 
-type GetConfigurationsRequestObject struct {
-	Params GetConfigurationsParams
-}
-
-type GetConfigurationsResponseObject interface {
-	VisitGetConfigurationsResponse(ctx *fiber.Ctx) error
-}
-
-type GetConfigurations200JSONResponse []ConfigurationItem
-
-func (response GetConfigurations200JSONResponse) VisitGetConfigurationsResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
-}
-
-type CreateConfigurationRequestObject struct {
-	Body *CreateConfigurationJSONRequestBody
-}
-
-type CreateConfigurationResponseObject interface {
-	VisitCreateConfigurationResponse(ctx *fiber.Ctx) error
-}
-
-type CreateConfiguration201JSONResponse ConfigurationItem
-
-func (response CreateConfiguration201JSONResponse) VisitCreateConfigurationResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(201)
-
-	return ctx.JSON(&response)
-}
-
-type DeleteConfigurationRequestObject struct {
-	Id int32 `json:"id"`
-}
-
-type DeleteConfigurationResponseObject interface {
-	VisitDeleteConfigurationResponse(ctx *fiber.Ctx) error
-}
-
-type DeleteConfiguration204Response struct {
-}
-
-func (response DeleteConfiguration204Response) VisitDeleteConfigurationResponse(ctx *fiber.Ctx) error {
-	ctx.Status(204)
-	return nil
-}
-
-type GetConfigurationRequestObject struct {
-	Id int32 `json:"id"`
-}
-
-type GetConfigurationResponseObject interface {
-	VisitGetConfigurationResponse(ctx *fiber.Ctx) error
-}
-
-type GetConfiguration200JSONResponse ConfigurationItem
-
-func (response GetConfiguration200JSONResponse) VisitGetConfigurationResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
-}
-
-type UpdateConfigurationRequestObject struct {
-	Id   int32 `json:"id"`
-	Body *UpdateConfigurationJSONRequestBody
-}
-
-type UpdateConfigurationResponseObject interface {
-	VisitUpdateConfigurationResponse(ctx *fiber.Ctx) error
-}
-
-type UpdateConfiguration200JSONResponse ConfigurationItem
-
-func (response UpdateConfiguration200JSONResponse) VisitUpdateConfigurationResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
-}
-
 type HealthRequestObject struct {
 }
 
@@ -482,6 +397,91 @@ func (response GetCurrentUser200JSONResponse) VisitGetCurrentUserResponse(ctx *f
 	return ctx.JSON(&response)
 }
 
+type GetVaultsRequestObject struct {
+	Params GetVaultsParams
+}
+
+type GetVaultsResponseObject interface {
+	VisitGetVaultsResponse(ctx *fiber.Ctx) error
+}
+
+type GetVaults200JSONResponse []Vault
+
+func (response GetVaults200JSONResponse) VisitGetVaultsResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type CreateVaultRequestObject struct {
+	Body *CreateVaultJSONRequestBody
+}
+
+type CreateVaultResponseObject interface {
+	VisitCreateVaultResponse(ctx *fiber.Ctx) error
+}
+
+type CreateVault201JSONResponse Vault
+
+func (response CreateVault201JSONResponse) VisitCreateVaultResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(201)
+
+	return ctx.JSON(&response)
+}
+
+type DeleteVaultRequestObject struct {
+	Id int32 `json:"id"`
+}
+
+type DeleteVaultResponseObject interface {
+	VisitDeleteVaultResponse(ctx *fiber.Ctx) error
+}
+
+type DeleteVault204Response struct {
+}
+
+func (response DeleteVault204Response) VisitDeleteVaultResponse(ctx *fiber.Ctx) error {
+	ctx.Status(204)
+	return nil
+}
+
+type GetVaultRequestObject struct {
+	Id int32 `json:"id"`
+}
+
+type GetVaultResponseObject interface {
+	VisitGetVaultResponse(ctx *fiber.Ctx) error
+}
+
+type GetVault200JSONResponse Vault
+
+func (response GetVault200JSONResponse) VisitGetVaultResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type UpdateVaultRequestObject struct {
+	Id   int32 `json:"id"`
+	Body *UpdateVaultJSONRequestBody
+}
+
+type UpdateVaultResponseObject interface {
+	VisitUpdateVaultResponse(ctx *fiber.Ctx) error
+}
+
+type UpdateVault200JSONResponse Vault
+
+func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
@@ -494,26 +494,26 @@ type StrictServerInterface interface {
 	// (POST /api/auth/signup)
 	Signup(ctx context.Context, request SignupRequestObject) (SignupResponseObject, error)
 
-	// (GET /api/configurations)
-	GetConfigurations(ctx context.Context, request GetConfigurationsRequestObject) (GetConfigurationsResponseObject, error)
-
-	// (POST /api/configurations)
-	CreateConfiguration(ctx context.Context, request CreateConfigurationRequestObject) (CreateConfigurationResponseObject, error)
-
-	// (DELETE /api/configurations/{id})
-	DeleteConfiguration(ctx context.Context, request DeleteConfigurationRequestObject) (DeleteConfigurationResponseObject, error)
-
-	// (GET /api/configurations/{id})
-	GetConfiguration(ctx context.Context, request GetConfigurationRequestObject) (GetConfigurationResponseObject, error)
-
-	// (PUT /api/configurations/{id})
-	UpdateConfiguration(ctx context.Context, request UpdateConfigurationRequestObject) (UpdateConfigurationResponseObject, error)
-
 	// (GET /api/health)
 	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
 
 	// (GET /api/user)
 	GetCurrentUser(ctx context.Context, request GetCurrentUserRequestObject) (GetCurrentUserResponseObject, error)
+
+	// (GET /api/vaults)
+	GetVaults(ctx context.Context, request GetVaultsRequestObject) (GetVaultsResponseObject, error)
+
+	// (POST /api/vaults)
+	CreateVault(ctx context.Context, request CreateVaultRequestObject) (CreateVaultResponseObject, error)
+
+	// (DELETE /api/vaults/{id})
+	DeleteVault(ctx context.Context, request DeleteVaultRequestObject) (DeleteVaultResponseObject, error)
+
+	// (GET /api/vaults/{id})
+	GetVault(ctx context.Context, request GetVaultRequestObject) (GetVaultResponseObject, error)
+
+	// (PUT /api/vaults/{id})
+	UpdateVault(ctx context.Context, request UpdateVaultRequestObject) (UpdateVaultResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *fiber.Ctx, args interface{}) (interface{}, error)
@@ -616,151 +616,6 @@ func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
 	return nil
 }
 
-// GetConfigurations operation middleware
-func (sh *strictHandler) GetConfigurations(ctx *fiber.Ctx, params GetConfigurationsParams) error {
-	var request GetConfigurationsRequestObject
-
-	request.Params = params
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetConfigurations(ctx.UserContext(), request.(GetConfigurationsRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetConfigurations")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(GetConfigurationsResponseObject); ok {
-		if err := validResponse.VisitGetConfigurationsResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// CreateConfiguration operation middleware
-func (sh *strictHandler) CreateConfiguration(ctx *fiber.Ctx) error {
-	var request CreateConfigurationRequestObject
-
-	var body CreateConfigurationJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	request.Body = &body
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.CreateConfiguration(ctx.UserContext(), request.(CreateConfigurationRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "CreateConfiguration")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(CreateConfigurationResponseObject); ok {
-		if err := validResponse.VisitCreateConfigurationResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// DeleteConfiguration operation middleware
-func (sh *strictHandler) DeleteConfiguration(ctx *fiber.Ctx, id int32) error {
-	var request DeleteConfigurationRequestObject
-
-	request.Id = id
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.DeleteConfiguration(ctx.UserContext(), request.(DeleteConfigurationRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "DeleteConfiguration")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(DeleteConfigurationResponseObject); ok {
-		if err := validResponse.VisitDeleteConfigurationResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// GetConfiguration operation middleware
-func (sh *strictHandler) GetConfiguration(ctx *fiber.Ctx, id int32) error {
-	var request GetConfigurationRequestObject
-
-	request.Id = id
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetConfiguration(ctx.UserContext(), request.(GetConfigurationRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetConfiguration")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(GetConfigurationResponseObject); ok {
-		if err := validResponse.VisitGetConfigurationResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// UpdateConfiguration operation middleware
-func (sh *strictHandler) UpdateConfiguration(ctx *fiber.Ctx, id int32) error {
-	var request UpdateConfigurationRequestObject
-
-	request.Id = id
-
-	var body UpdateConfigurationJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	request.Body = &body
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.UpdateConfiguration(ctx.UserContext(), request.(UpdateConfigurationRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "UpdateConfiguration")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(UpdateConfigurationResponseObject); ok {
-		if err := validResponse.VisitUpdateConfigurationResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
 // Health operation middleware
 func (sh *strictHandler) Health(ctx *fiber.Ctx) error {
 	var request HealthRequestObject
@@ -803,6 +658,151 @@ func (sh *strictHandler) GetCurrentUser(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(GetCurrentUserResponseObject); ok {
 		if err := validResponse.VisitGetCurrentUserResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetVaults operation middleware
+func (sh *strictHandler) GetVaults(ctx *fiber.Ctx, params GetVaultsParams) error {
+	var request GetVaultsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaults(ctx.UserContext(), request.(GetVaultsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetVaults")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetVaultsResponseObject); ok {
+		if err := validResponse.VisitGetVaultsResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateVault operation middleware
+func (sh *strictHandler) CreateVault(ctx *fiber.Ctx) error {
+	var request CreateVaultRequestObject
+
+	var body CreateVaultJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateVault(ctx.UserContext(), request.(CreateVaultRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateVault")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(CreateVaultResponseObject); ok {
+		if err := validResponse.VisitCreateVaultResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteVault operation middleware
+func (sh *strictHandler) DeleteVault(ctx *fiber.Ctx, id int32) error {
+	var request DeleteVaultRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteVault(ctx.UserContext(), request.(DeleteVaultRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteVault")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(DeleteVaultResponseObject); ok {
+		if err := validResponse.VisitDeleteVaultResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetVault operation middleware
+func (sh *strictHandler) GetVault(ctx *fiber.Ctx, id int32) error {
+	var request GetVaultRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVault(ctx.UserContext(), request.(GetVaultRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetVault")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetVaultResponseObject); ok {
+		if err := validResponse.VisitGetVaultResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// UpdateVault operation middleware
+func (sh *strictHandler) UpdateVault(ctx *fiber.Ctx, id int32) error {
+	var request UpdateVaultRequestObject
+
+	request.Id = id
+
+	var body UpdateVaultJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateVault(ctx.UserContext(), request.(UpdateVaultRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateVault")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(UpdateVaultResponseObject); ok {
+		if err := validResponse.VisitUpdateVaultResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

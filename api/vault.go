@@ -36,8 +36,8 @@ func getUserFromContext(c *fiber.Ctx) (*model.User, error) {
 	return user, nil
 }
 
-// GetConfigurations handles GET /api/configurations
-func (Server) GetConfigurations(c *fiber.Ctx, params GetConfigurationsParams) error {
+// GetVaults handles GET /api/vaults
+func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
@@ -45,61 +45,61 @@ func (Server) GetConfigurations(c *fiber.Ctx, params GetConfigurationsParams) er
 
 	category := getStringValue(params.Category)
 
-	configs, err := model.GetConfigurationsByUser(user.ID, category)
+	vaults, err := model.GetVaultsByUser(user.ID, category)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// Log read action for each configuration
+	// Log read action for each vault
 	ip, userAgent := getClientInfo(c)
-	for _, config := range configs {
-		if err := model.LogConfigurationAction(config.ID, model.ActionReadConfig, user.ID, ip, userAgent); err != nil {
-			slog.Error("Failed to create audit log for read config", "error", err, "configID", config.ID)
+	for _, vault := range vaults {
+		if err := model.LogVaultAction(vault.ID, model.ActionReadVault, user.ID, ip, userAgent); err != nil {
+			slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
 		}
 	}
 
-	return c.Status(fiber.StatusOK).JSON(configs)
+	return c.Status(fiber.StatusOK).JSON(vaults)
 }
 
-// GetConfiguration handles GET /api/configurations/{id}
-func (Server) GetConfiguration(c *fiber.Ctx, id int32) error {
+// GetVault handles GET /api/vaults/{id}
+func (Server) GetVault(c *fiber.Ctx, id int32) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	var config model.Configuration
-	err = config.GetByID(uint(id), user.ID) // #nosec G115
+	var vault model.Vault
+	err = vault.GetByID(uint(id), user.ID) // #nosec G115
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return handler.SendError(c, fiber.StatusNotFound, "configuration not found")
+			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
 		}
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	// Log read action
 	ip, userAgent := getClientInfo(c)
-	if err := model.LogConfigurationAction(config.ID, model.ActionReadConfig, user.ID, ip, userAgent); err != nil {
-		slog.Error("Failed to create audit log for read config", "error", err, "configID", config.ID)
+	if err := model.LogVaultAction(vault.ID, model.ActionReadVault, user.ID, ip, userAgent); err != nil {
+		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(config)
+	return c.Status(fiber.StatusOK).JSON(vault)
 }
 
-// CreateConfiguration handles POST /api/configurations
-func (Server) CreateConfiguration(c *fiber.Ctx) error {
+// CreateVault handles POST /api/vaults
+func (Server) CreateVault(c *fiber.Ctx) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	var input CreateConfigurationRequest
+	var input CreateVaultRequest
 	if err := c.BodyParser(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	// Create parameters
-	params := model.CreateConfigurationParams{
+	params := model.CreateVaultParams{
 		UniqueID:    input.UniqueId,
 		UserID:      user.ID,
 		Name:        input.Name,
@@ -118,44 +118,44 @@ func (Server) CreateConfiguration(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMsgs, "; "))
 	}
 
-	// Create configuration
-	config, err := params.Create()
+	// Create vault
+	vault, err := params.Create()
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	// Log create action
 	ip, userAgent := getClientInfo(c)
-	if err := model.LogConfigurationAction(config.ID, model.ActionCreateConfig, user.ID, ip, userAgent); err != nil {
-		slog.Error("Failed to create audit log for create config", "error", err, "configID", config.ID)
+	if err := model.LogVaultAction(vault.ID, model.ActionCreateVault, user.ID, ip, userAgent); err != nil {
+		slog.Error("Failed to create audit log for create vault", "error", err, "vaultID", vault.ID)
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(config)
+	return c.Status(fiber.StatusCreated).JSON(vault)
 }
 
-// UpdateConfiguration handles PUT /api/configurations/{id}
-func (Server) UpdateConfiguration(c *fiber.Ctx, id int32) error {
+// UpdateVault handles PUT /api/vaults/{id}
+func (Server) UpdateVault(c *fiber.Ctx, id int32) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	var config model.Configuration
-	err = config.GetByID(uint(id), user.ID) // #nosec G115
+	var vault model.Vault
+	err = vault.GetByID(uint(id), user.ID) // #nosec G115
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return handler.SendError(c, fiber.StatusNotFound, "configuration not found")
+			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
 		}
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	var input UpdateConfigurationRequest
+	var input UpdateVaultRequest
 	if err := c.BodyParser(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
 	// Create update parameters
-	params := model.UpdateConfigurationParams{
+	params := model.UpdateVaultParams{
 		Name:        input.Name,
 		Value:       input.Value,
 		Description: input.Description,
@@ -172,44 +172,44 @@ func (Server) UpdateConfiguration(c *fiber.Ctx, id int32) error {
 		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMsgs, "; "))
 	}
 
-	// Update configuration
-	err = config.Update(&params)
+	// Update vault
+	err = vault.Update(&params)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	// Log update action
 	ip, userAgent := getClientInfo(c)
-	_ = model.LogConfigurationAction(config.ID, model.ActionUpdateConfig, user.ID, ip, userAgent)
+	_ = model.LogVaultAction(vault.ID, model.ActionUpdateVault, user.ID, ip, userAgent)
 
-	return c.Status(fiber.StatusOK).JSON(config)
+	return c.Status(fiber.StatusOK).JSON(vault)
 }
 
-// DeleteConfiguration handles DELETE /api/configurations/{id}
-func (Server) DeleteConfiguration(c *fiber.Ctx, id int32) error {
+// DeleteVault handles DELETE /api/vaults/{id}
+func (Server) DeleteVault(c *fiber.Ctx, id int32) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	var config model.Configuration
-	err = config.GetByID(uint(id), user.ID) // #nosec G115
+	var vault model.Vault
+	err = vault.GetByID(uint(id), user.ID) // #nosec G115
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return handler.SendError(c, fiber.StatusNotFound, "configuration not found")
+			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
 		}
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// Delete configuration
-	err = config.Delete()
+	// Delete vault
+	err = vault.Delete()
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	// Log delete action
 	ip, userAgent := getClientInfo(c)
-	_ = model.LogConfigurationAction(config.ID, model.ActionDeleteConfig, user.ID, ip, userAgent)
+	_ = model.LogVaultAction(vault.ID, model.ActionDeleteVault, user.ID, ip, userAgent)
 
 	return c.SendStatus(fiber.StatusNoContent)
 }

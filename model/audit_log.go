@@ -7,10 +7,10 @@ import (
 type ActionType string
 
 const (
-	ActionReadConfig   ActionType = "read_config"
-	ActionUpdateConfig ActionType = "update_config"
-	ActionDeleteConfig ActionType = "delete_config"
-	ActionCreateConfig ActionType = "create_config"
+	ActionReadVault    ActionType = "read_vault"
+	ActionUpdateVault  ActionType = "update_vault"
+	ActionDeleteVault  ActionType = "delete_vault"
+	ActionCreateVault  ActionType = "create_vault"
 	ActionLoginUser    ActionType = "login_user"
 	ActionRegisterUser ActionType = "register_user"
 	ActionLogoutUser   ActionType = "logout_user"
@@ -18,7 +18,7 @@ const (
 
 type AuditLog struct {
 	gorm.Model
-	ConfigID  *uint      `gorm:"index"`
+	VaultID   *uint      `gorm:"index"`
 	Action    ActionType `gorm:"size:50;index"`
 	UserID    uint       `gorm:"index;constraint:OnDelete:CASCADE"`
 	User      User       `gorm:"foreignKey:UserID"`
@@ -28,7 +28,7 @@ type AuditLog struct {
 
 // CreateAuditLogParams defines parameters for creating an audit log entry
 type CreateAuditLogParams struct {
-	ConfigID  *uint
+	VaultID   *uint
 	Action    ActionType
 	UserID    uint
 	IPAddress string
@@ -38,7 +38,7 @@ type CreateAuditLogParams struct {
 // CreateAuditLog creates a new audit log entry
 func CreateAuditLog(params CreateAuditLogParams) error {
 	auditLog := AuditLog{
-		ConfigID:  params.ConfigID,
+		VaultID:   params.VaultID,
 		Action:    params.Action,
 		UserID:    params.UserID,
 		IPAddress: params.IPAddress,
@@ -53,10 +53,10 @@ func CreateAuditLog(params CreateAuditLogParams) error {
 	return nil
 }
 
-// LogConfigurationAction logs a configuration-related action
-func LogConfigurationAction(configID uint, action ActionType, userID uint, ipAddress, userAgent string) error {
+// LogVaultAction logs a vault-related action
+func LogVaultAction(vaultID uint, action ActionType, userID uint, ipAddress, userAgent string) error {
 	return CreateAuditLog(CreateAuditLogParams{
-		ConfigID:  &configID,
+		VaultID:   &vaultID,
 		Action:    action,
 		UserID:    userID,
 		IPAddress: ipAddress,
@@ -97,10 +97,10 @@ func GetAuditLogsByUser(userID uint, limit int, offset int) ([]AuditLog, error) 
 	return logs, nil
 }
 
-// GetAuditLogsByConfiguration retrieves audit logs for a specific configuration
-func GetAuditLogsByConfiguration(configID uint, userID uint) ([]AuditLog, error) {
+// GetAuditLogsByVault retrieves audit logs for a specific vault
+func GetAuditLogsByVault(vaultID uint, userID uint) ([]AuditLog, error) {
 	var logs []AuditLog
-	err := DB.Where("config_id = ? AND user_id = ?", configID, userID).
+	err := DB.Where("vault_id = ? AND user_id = ?", vaultID, userID).
 		Preload("User").
 		Order("created_at DESC").
 		Find(&logs).Error

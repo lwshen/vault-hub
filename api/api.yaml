@@ -74,12 +74,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetUserResponse'
-  /api/configurations:
+  /api/vaults:
     get:
-      description: Get all configurations for the current user
+      description: Get all vaults for the current user
       tags:
-        - Configuration
-      operationId: getConfigurations
+        - Vault
+      operationId: getVaults
       parameters:
         - name: category
           in: query
@@ -89,63 +89,63 @@ paths:
             type: string
       responses:
         '200':
-          description: List of configurations
+          description: List of vaults
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ConfigurationItem'
+                  $ref: '#/components/schemas/Vault'
     post:
-      description: Create a new configuration
+      description: Create a new vault
       tags:
-        - Configuration
-      operationId: createConfiguration
+        - Vault
+      operationId: createVault
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateConfigurationRequest"
+              $ref: "#/components/schemas/CreateVaultRequest"
       responses:
         '201':
-          description: Configuration created successfully
+          description: Vault created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConfigurationItem'
-  /api/configurations/{id}:
+                $ref: '#/components/schemas/Vault'
+  /api/vaults/{id}:
     get:
-      description: Get a specific configuration by ID
+      description: Get a specific vault by ID
       tags:
-        - Configuration
-      operationId: getConfiguration
+        - Vault
+      operationId: getVault
       parameters:
         - name: id
           in: path
           required: true
-          description: Configuration ID
+          description: Vault ID
           schema:
             type: integer
             format: int32
             minimum: 0
       responses:
         '200':
-          description: Configuration details
+          description: Vault details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConfigurationItem'
+                $ref: '#/components/schemas/Vault'
     put:
-      description: Update a configuration
+      description: Update a vault
       tags:
-        - Configuration
-      operationId: updateConfiguration
+        - Vault
+      operationId: updateVault
       parameters:
         - name: id
           in: path
           required: true
-          description: Configuration ID
+          description: Vault ID
           schema:
             type: integer
             format: int32
@@ -155,31 +155,31 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateConfigurationRequest"
+              $ref: "#/components/schemas/UpdateVaultRequest"
       responses:
         '200':
-          description: Configuration updated successfully
+          description: Vault updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConfigurationItem'
+                $ref: '#/components/schemas/Vault'
     delete:
-      description: Delete a configuration
+      description: Delete a vault
       tags:
-        - Configuration
-      operationId: deleteConfiguration
+        - Vault
+      operationId: deleteVault
       parameters:
         - name: id
           in: path
           required: true
-          description: Configuration ID
+          description: Vault ID
           schema:
             type: integer
             format: int32
             minimum: 0
       responses:
         '204':
-          description: Configuration deleted successfully
+          description: Vault deleted successfully
 
 components:
   schemas:
@@ -250,7 +250,7 @@ components:
         avatar:
           type: string
 
-    ConfigurationItem:
+    Vault:
       type: object
       required:
         - unique_id
@@ -259,11 +259,11 @@ components:
       properties:
         unique_id:
           type: string
-          description: Unique identifier for the config
+          description: Unique identifier for the vault
         user_id:
           type: integer
           format: int64
-          description: ID of the user who owns this configuration
+          description: ID of the user who owns this vault
         name:
           type: string
           description: Human-readable name
@@ -275,7 +275,7 @@ components:
           description: Human-readable description
         category:
           type: string
-          description: Category/type of config
+          description: Category/type of vault
         created_at:
           type: string
           format: date-time
@@ -283,7 +283,7 @@ components:
           type: string
           format: date-time
 
-    CreateConfigurationRequest:
+    CreateVaultRequest:
       type: object
       required:
         - unique_id
@@ -292,7 +292,7 @@ components:
       properties:
         unique_id:
           type: string
-          description: Unique identifier for the config
+          description: Unique identifier for the vault
           minLength: 1
           maxLength: 255
         name:
@@ -310,10 +310,10 @@ components:
           maxLength: 500
         category:
           type: string
-          description: Category/type of config
+          description: Category/type of vault
           maxLength: 100
 
-    UpdateConfigurationRequest:
+    UpdateVaultRequest:
       type: object
       properties:
         name:
@@ -331,5 +331,5 @@ components:
           maxLength: 500
         category:
           type: string
-          description: Category/type of config
+          description: Category/type of vault
           maxLength: 100

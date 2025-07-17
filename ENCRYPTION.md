@@ -1,6 +1,6 @@
 # Encryption in VaultHub
 
-VaultHub now implements AES-256-GCM encryption for all configuration values stored in the database, ensuring that sensitive data like API keys and secrets are securely protected.
+VaultHub now implements AES-256-GCM encryption for all vault values stored in the database, ensuring that sensitive data like API keys and secrets are securely protected.
 
 ## Quick Start
 
@@ -21,7 +21,7 @@ docker run -e ENCRYPTION_KEY=$(openssl rand -base64 32) vault-hub
 
 ## Overview
 
-All configuration values are automatically encrypted before being stored in the database and decrypted when retrieved. This encryption happens transparently at the model layer, so API consumers receive plaintext values while the database stores only encrypted data.
+All vault values are automatically encrypted before being stored in the database and decrypted when retrieved. This encryption happens transparently at the model layer, so API consumers receive plaintext values while the database stores only encrypted data.
 
 ## Encryption Details
 
@@ -31,7 +31,7 @@ All configuration values are automatically encrypted before being stored in the 
 - **Encoding**: Base64 encoding for database storage
 - **Nonce**: Randomly generated per encryption operation (ensures different ciphertext for identical plaintext)
 
-## Configuration
+## Setup
 
 ### Environment Variables
 
@@ -117,7 +117,7 @@ For quick testing only (not recommended for production):
 4. **Use different keys for different environments**: Production, staging, and development should each have their own unique encryption keys.
 5. **Generate keys securely**: Always use cryptographically secure random number generators.
 
-### Example Configuration
+### Example Setup
 
 ```bash
 # Production (use openssl rand -base64 32 to generate)
@@ -141,7 +141,7 @@ services:
 
 ## What Gets Encrypted
 
-- **Configuration Values**: The `value` field of all configurations is encrypted
+- **Vault Values**: The `value` field of all vaults is encrypted
 - **API Responses**: Values are automatically decrypted when retrieved via the API
 - **Database Storage**: Only encrypted values are stored in the database
 
@@ -149,7 +149,7 @@ services:
 
 The following fields remain unencrypted for indexing and querying purposes:
 
-- Configuration names
+- Vault names
 - Descriptions
 - Categories
 - Unique IDs
@@ -160,14 +160,14 @@ The following fields remain unencrypted for indexing and querying purposes:
 
 ### Encryption Process
 
-1. When creating or updating a configuration, the plaintext value is encrypted using AES-256-GCM
+1. When creating or updating a vault, the plaintext value is encrypted using AES-256-GCM
 2. A random nonce is generated for each encryption operation
 3. The encrypted data is base64-encoded and stored in the database
 4. The plaintext value is never stored in the database
 
 ### Decryption Process
 
-1. When retrieving configurations, the encrypted value is fetched from the database
+1. When retrieving vaults, the encrypted value is fetched from the database
 2. The base64-encoded data is decoded
 3. The value is decrypted using AES-256-GCM
 4. The plaintext value is returned to the API consumer
@@ -187,9 +187,9 @@ If decryption fails (e.g., due to wrong encryption key or corrupted data):
 To rotate the encryption key:
 
 1. **WARNING**: This will make existing encrypted data unreadable
-2. Export all configurations before changing the key
+2. Export all vaults before changing the key
 3. Update the `ENCRYPTION_KEY` environment variable
-4. Re-import configurations (they will be encrypted with the new key)
+4. Re-import vaults (they will be encrypted with the new key)
 
 ### Performance
 
@@ -244,7 +244,7 @@ If you're upgrading from a version without encryption:
    - Ensure the key hasn't changed since the data was encrypted
 
 3. **Performance issues**
-   - Encryption is designed to be fast, but processing large numbers of configurations may take additional time
+   - Encryption is designed to be fast, but processing large numbers of vaults may take additional time
    - Consider implementing caching if needed
 
 ### Debug Mode
