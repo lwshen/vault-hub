@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	"gorm.io/gorm"
@@ -61,15 +62,15 @@ func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 	return c.Status(fiber.StatusOK).JSON(vaults)
 }
 
-// GetVault handles GET /api/vaults/{id}
-func (Server) GetVault(c *fiber.Ctx, id int32) error {
+// GetVault handles GET /api/vaults/{unique_id}
+func (Server) GetVault(c *fiber.Ctx, uniqueID string) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
 	var vault model.Vault
-	err = vault.GetByID(uint(id), user.ID) // #nosec G115
+	err = vault.GetByUniqueID(uniqueID, user.ID) // #nosec G115
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
@@ -99,8 +100,12 @@ func (Server) CreateVault(c *fiber.Ctx) error {
 	}
 
 	// Create parameters
+	uniqueID, err := uuid.NewV7()
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
 	params := model.CreateVaultParams{
-		UniqueID:    input.UniqueId,
+		UniqueID:    uniqueID.String(),
 		UserID:      user.ID,
 		Name:        input.Name,
 		Value:       input.Value,
@@ -133,15 +138,15 @@ func (Server) CreateVault(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(vault)
 }
 
-// UpdateVault handles PUT /api/vaults/{id}
-func (Server) UpdateVault(c *fiber.Ctx, id int32) error {
+// UpdateVault handles PUT /api/vaults/{unique_id}
+func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
 	var vault model.Vault
-	err = vault.GetByID(uint(id), user.ID) // #nosec G115
+	err = vault.GetByUniqueID(uniqueID, user.ID) // #nosec G115
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
@@ -185,15 +190,15 @@ func (Server) UpdateVault(c *fiber.Ctx, id int32) error {
 	return c.Status(fiber.StatusOK).JSON(vault)
 }
 
-// DeleteVault handles DELETE /api/vaults/{id}
-func (Server) DeleteVault(c *fiber.Ctx, id int32) error {
+// DeleteVault handles DELETE /api/vaults/{unique_id}
+func (Server) DeleteVault(c *fiber.Ctx, uniqueID string) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
 	var vault model.Vault
-	err = vault.GetByID(uint(id), user.ID) // #nosec G115
+	err = vault.GetByUniqueID(uniqueID, user.ID) // #nosec G115
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
