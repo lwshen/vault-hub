@@ -39,6 +39,7 @@ func getUserFromContext(c *fiber.Ctx) (*model.User, error) {
 
 // convertToApiVault converts a model.Vault to an api.Vault
 func convertToApiVault(vault *model.Vault) Vault {
+	// #nosec G115
 	userID := int64(vault.UserID)
 	return Vault{
 		UniqueId:    vault.UniqueID,
@@ -94,7 +95,7 @@ func (Server) GetVault(c *fiber.Ctx, uniqueID string) error {
 	}
 
 	var vault model.Vault
-	err = vault.GetByUniqueID(uniqueID, user.ID) // #nosec G115
+	err = vault.GetByUniqueID(uniqueID, user.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
@@ -170,7 +171,7 @@ func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 	}
 
 	var vault model.Vault
-	err = vault.GetByUniqueID(uniqueID, user.ID) // #nosec G115
+	err = vault.GetByUniqueID(uniqueID, user.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
@@ -222,7 +223,7 @@ func (Server) DeleteVault(c *fiber.Ctx, uniqueID string) error {
 	}
 
 	var vault model.Vault
-	err = vault.GetByUniqueID(uniqueID, user.ID) // #nosec G115
+	err = vault.GetByUniqueID(uniqueID, user.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
