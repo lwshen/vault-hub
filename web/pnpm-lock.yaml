@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@lwshen/vault-hub-ts-fetch-client':
-        specifier: ^0.20250717.140729
-        version: 0.20250717.140729
+        specifier: ^0.20250717.153004
+        version: 0.20250717.153004
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.15
         version: 2.1.15(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -468,8 +468,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@lwshen/vault-hub-ts-fetch-client@0.20250717.140729':
-    resolution: {integrity: sha512-qVes+lrTIdNI6q/zY5/hQdH39vNzg2iWDnKawnjkJm56b3YXwthSid2sRBBkAQ9WELQIQClg0HCokjgccCPXKQ==}
+  '@lwshen/vault-hub-ts-fetch-client@0.20250717.153004':
+    resolution: {integrity: sha512-Kir1cn3con4s5LyPtyh95SaY6VRqVZ9VxLe8E96JUAcWHRjGIRl4hXxsIWFuirCLI7B7GknnfLe2g9n02y2gcA==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2310,7 +2310,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@lwshen/vault-hub-ts-fetch-client@0.20250717.140729': {}
+  '@lwshen/vault-hub-ts-fetch-client@0.20250717.153004': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

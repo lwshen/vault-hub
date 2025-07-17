@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { vaultApi } from '@/apis/api';
-import type { Vault } from '@lwshen/vault-hub-ts-fetch-client';
+import type { VaultLite } from '@lwshen/vault-hub-ts-fetch-client';
 
 interface UseVaultsReturn {
-  vaults: Vault[];
+  vaults: VaultLite[];
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
 }
 
 export const useVaults = (): UseVaultsReturn => {
-  const [vaults, setVaults] = useState<Vault[]>([]);
+  const [vaults, setVaults] = useState<VaultLite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
