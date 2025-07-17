@@ -56,12 +56,12 @@ export default function Sidebar() {
       </nav>
 
       {/* Quick Actions in Sidebar */}
-      <div className="p-4 border-t border-border flex-shrink-0">
+      {/* <div className="p-4 border-t border-border flex-shrink-0">
         <Button className="w-full">
           <Plus className="h-4 w-4 mr-2" />
           New Vault
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 } 

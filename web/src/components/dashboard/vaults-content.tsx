@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,9 +9,15 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useVaults } from '@/hooks/use-vaults';
+import { CreateVaultModal } from '@/components/modals/create-vault-modal';
 
 export default function VaultsContent() {
   const { vaults, isLoading, error, refetch } = useVaults();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const handleVaultCreated = () => {
+    refetch(); // Refresh the vault list after creation
+  };
 
   if (error) {
     return (
@@ -25,7 +32,7 @@ export default function VaultsContent() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Button size="sm">
+              <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Vault
               </Button>
@@ -46,6 +53,12 @@ export default function VaultsContent() {
             </div>
           </Card>
         </main>
+
+        <CreateVaultModal 
+          open={isCreateModalOpen}
+          onOpenChange={setIsCreateModalOpen}
+          onVaultCreated={handleVaultCreated}
+        />
       </>
     );
   }
@@ -62,7 +75,7 @@ export default function VaultsContent() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button size="sm">
+            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               New Vault
             </Button>
@@ -86,9 +99,9 @@ export default function VaultsContent() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold">No vaults found</h3>
                 <p className="text-muted-foreground mb-4">Create your first vault to get started</p>
-                <Button>
+                <Button onClick={() => setIsCreateModalOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Vault
+                  New Vault
                 </Button>
               </div>
             </div>
@@ -130,6 +143,12 @@ export default function VaultsContent() {
           </div>
         )}
       </main>
+
+      <CreateVaultModal 
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onVaultCreated={handleVaultCreated}
+      />
     </>
   );
 }
