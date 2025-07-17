@@ -95,7 +95,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Vault'
+                  $ref: '#/components/schemas/VaultLite'
     post:
       description: Create a new vault
       tags:
@@ -244,6 +244,28 @@ components:
         avatar:
           type: string
 
+    VaultLite:
+      type: object
+      required:
+        - unique_id
+        - name
+      properties:
+        unique_id:
+          type: string
+          description: Unique identifier for the vault
+        name:
+          type: string
+          description: Human-readable name
+        description:
+          type: string
+          description: Human-readable description
+        category:
+          type: string
+          description: Category/type of vault
+        updated_at:
+          type: string
+          format: date-time
+
     Vault:
       type: object
       required:
@@ -254,6 +276,10 @@ components:
         unique_id:
           type: string
           description: Unique identifier for the vault
+        user_id:
+          type: integer
+          format: int64
+          description: ID of the user who owns this vault
         name:
           type: string
           description: Human-readable name

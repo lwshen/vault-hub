@@ -158,7 +158,7 @@ func (v *Vault) GetByUniqueID(uniqueID string, userID uint) error {
 }
 
 // GetAllByUser retrieves all vaults for a user, optionally filtered by category
-func GetVaultsByUser(userID uint, category string) ([]Vault, error) {
+func GetVaultsByUser(userID uint, category string, decrypt bool) ([]Vault, error) {
 	var vaults []Vault
 	query := DB.Where("user_id = ?", userID)
 
@@ -171,13 +171,15 @@ func GetVaultsByUser(userID uint, category string) ([]Vault, error) {
 		return nil, err
 	}
 
-	// Decrypt all values
-	for i := range vaults {
-		decryptedValue, err := encryption.Decrypt(vaults[i].Value)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decrypt value for vault %d: %w", vaults[i].ID, err)
+	// Decrypt all values if requested
+	if decrypt {
+		for i := range vaults {
+			decryptedValue, err := encryption.Decrypt(vaults[i].Value)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decrypt value for vault %d: %w", vaults[i].ID, err)
+			}
+			vaults[i].Value = decryptedValue
 		}
-		vaults[i].Value = decryptedValue
 	}
 
 	return vaults, nil

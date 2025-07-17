@@ -39,13 +39,26 @@ func getUserFromContext(c *fiber.Ctx) (*model.User, error) {
 
 // convertToApiVault converts a model.Vault to an api.Vault
 func convertToApiVault(vault *model.Vault) Vault {
+	userID := int64(vault.UserID)
 	return Vault{
 		UniqueId:    vault.UniqueID,
+		UserId:      &userID,
 		Name:        vault.Name,
 		Value:       vault.Value,
 		Description: &vault.Description,
 		Category:    &vault.Category,
 		CreatedAt:   &vault.CreatedAt,
+		UpdatedAt:   &vault.UpdatedAt,
+	}
+}
+
+// convertToApiVaultLite converts a model.Vault to an api.VaultLite
+func convertToApiVaultLite(vault *model.Vault) VaultLite {
+	return VaultLite{
+		UniqueId:    vault.UniqueID,
+		Name:        vault.Name,
+		Description: &vault.Description,
+		Category:    &vault.Category,
 		UpdatedAt:   &vault.UpdatedAt,
 	}
 }
@@ -59,7 +72,7 @@ func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 
 	category := getStringValue(params.Category)
 
-	vaults, err := model.GetVaultsByUser(user.ID, category)
+	vaults, err := model.GetVaultsByUser(user.ID, category, false)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
@@ -73,9 +86,9 @@ func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 	}
 
 	// convert to api.Vault
-	apiVaults := make([]Vault, len(vaults))
+	apiVaults := make([]VaultLite, len(vaults))
 	for i, vault := range vaults {
-		apiVaults[i] = convertToApiVault(&vault)
+		apiVaults[i] = convertToApiVaultLite(&vault)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(apiVaults)

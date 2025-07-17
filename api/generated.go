@@ -103,6 +103,22 @@ type Vault struct {
 	Value string `json:"value"`
 }
 
+// VaultLite defines model for VaultLite.
+type VaultLite struct {
+	// Category Category/type of vault
+	Category *string `json:"category,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+
+	// Name Human-readable name
+	Name string `json:"name"`
+
+	// UniqueId Unique identifier for the vault
+	UniqueId  string     `json:"unique_id"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
+
 // GetVaultsParams defines parameters for GetVaults.
 type GetVaultsParams struct {
 	// Category Filter by category
@@ -402,7 +418,7 @@ type GetVaultsResponseObject interface {
 	VisitGetVaultsResponse(ctx *fiber.Ctx) error
 }
 
-type GetVaults200JSONResponse []Vault
+type GetVaults200JSONResponse []VaultLite
 
 func (response GetVaults200JSONResponse) VisitGetVaultsResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
