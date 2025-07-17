@@ -39,8 +39,11 @@ func getUserFromContext(c *fiber.Ctx) (*model.User, error) {
 
 // convertToApiVault converts a model.Vault to an api.Vault
 func convertToApiVault(vault *model.Vault) Vault {
+	// #nosec G115
+	userID := int64(vault.UserID)
 	return Vault{
 		UniqueId:    vault.UniqueID,
+		UserId:      &userID,
 		Name:        vault.Name,
 		Value:       vault.Value,
 		Description: &vault.Description,
@@ -50,32 +53,33 @@ func convertToApiVault(vault *model.Vault) Vault {
 	}
 }
 
+// convertToApiVaultLite converts a model.Vault to an api.VaultLite
+func convertToApiVaultLite(vault *model.Vault) VaultLite {
+	return VaultLite{
+		UniqueId:    vault.UniqueID,
+		Name:        vault.Name,
+		Description: &vault.Description,
+		Category:    &vault.Category,
+		UpdatedAt:   &vault.UpdatedAt,
+	}
+}
+
 // GetVaults handles GET /api/vaults
-func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
+func (Server) GetVaults(c *fiber.Ctx) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	category := getStringValue(params.Category)
-
-	vaults, err := model.GetVaultsByUser(user.ID, category)
+	vaults, err := model.GetVaultsByUser(user.ID, false)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	// Log read action for each vault
-	ip, userAgent := getClientInfo(c)
-	for _, vault := range vaults {
-		if err := model.LogVaultAction(vault.ID, model.ActionReadVault, user.ID, ip, userAgent); err != nil {
-			slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
-		}
-	}
-
 	// convert to api.Vault
-	apiVaults := make([]Vault, len(vaults))
+	apiVaults := make([]VaultLite, len(vaults))
 	for i, vault := range vaults {
-		apiVaults[i] = convertToApiVault(&vault)
+		apiVaults[i] = convertToApiVaultLite(&vault)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(apiVaults)
@@ -89,7 +93,7 @@ func (Server) GetVault(c *fiber.Ctx, uniqueID string) error {
 	}
 
 	var vault model.Vault
-	err = vault.GetByUniqueID(uniqueID, user.ID) // #nosec G115
+	err = vault.GetByUniqueID(uniqueID, user.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
@@ -165,7 +169,7 @@ func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 	}
 
 	var vault model.Vault
-	err = vault.GetByUniqueID(uniqueID, user.ID) // #nosec G115
+	err = vault.GetByUniqueID(uniqueID, user.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
@@ -217,7 +221,7 @@ func (Server) DeleteVault(c *fiber.Ctx, uniqueID string) error {
 	}
 
 	var vault model.Vault
-	err = vault.GetByUniqueID(uniqueID, user.ID) // #nosec G115
+	err = vault.GetByUniqueID(uniqueID, user.ID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
