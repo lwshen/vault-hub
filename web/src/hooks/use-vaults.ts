@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { vaultApi } from '@/apis/api';
 import type { Vault } from '@lwshen/vault-hub-ts-fetch-client';
 
@@ -9,7 +9,7 @@ interface UseVaultsReturn {
   refetch: () => Promise<void>;
 }
 
-export const useVaults = (category?: string): UseVaultsReturn => {
+export const useVaults = (): UseVaultsReturn => {
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +18,7 @@ export const useVaults = (category?: string): UseVaultsReturn => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await vaultApi.getVaults(category);
+      const response = await vaultApi.getVaults();
       setVaults(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch vaults');
@@ -26,10 +26,6 @@ export const useVaults = (category?: string): UseVaultsReturn => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchVaults();
-  }, [category]);
 
   return {
     vaults,
