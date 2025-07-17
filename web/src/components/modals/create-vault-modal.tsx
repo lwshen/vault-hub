@@ -42,6 +42,11 @@ export function CreateVaultModal({ open, onOpenChange, onVaultCreated }: CreateV
       return;
     }
 
+    if (formData.name.length > 100) {
+      setError('Name must be 100 characters or less');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
