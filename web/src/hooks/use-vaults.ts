@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { vaultApi } from '@/apis/api';
 import type { VaultLite } from '@lwshen/vault-hub-ts-fetch-client';
 
@@ -26,6 +26,11 @@ export const useVaults = (): UseVaultsReturn => {
       setIsLoading(false);
     }
   };
+
+  // Auto-fetch vaults when the hook is first used
+  useEffect(() => {
+    fetchVaults();
+  }, []);
 
   return {
     vaults,
