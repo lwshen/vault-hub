@@ -34,16 +34,24 @@ export function CreateVaultModal({ open, onOpenChange, onVaultCreated }: CreateV
     if (error) setError(null); // Clear error when user starts typing
   };
 
+  const validateForm = (data: FormData): string | null => {
+    const validations = [
+      { check: !data.name.trim(), message: 'Name is required' },
+      { check: !data.value.trim(), message: 'Value is required' },
+      { check: data.name.length > 100, message: 'Name must be ≤100 characters' },
+      { check: data.description?.length > 500, message: 'Description must be ≤500 characters' },
+    ];
+    
+    const failed = validations.find(v => v.check);
+    return failed?.message || null;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    if ( !formData.name.trim() || !formData.value.trim()) {
-      setError('Name, and Value are required fields');
-      return;
-    }
 
-    if (formData.name.length > 100) {
-      setError('Name must be 100 characters or less');
+    const validationError = validateForm(formData);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
