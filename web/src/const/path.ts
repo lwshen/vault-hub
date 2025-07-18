@@ -9,5 +9,6 @@ export const PATH = {
   PRICING: '/pricing',
   ABOUT: '/about',
   DOCS: '/docs',
+  MOCK: '/mock',
   USERS: '/users/:name',
 };
