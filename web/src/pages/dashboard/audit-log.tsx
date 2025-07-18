@@ -1,10 +1,10 @@
 import DashboardLayout from '@/components/layout/dashboard-layout';
-import ActivityLogContent from '@/components/dashboard/activity-log-content';
+import AuditLogContent from '@/components/dashboard/audit-log-content';
 
 export default function ActivityLog() {
   return (
     <DashboardLayout>
-      <ActivityLogContent />
+      <AuditLogContent />
     </DashboardLayout>
   );
 } 

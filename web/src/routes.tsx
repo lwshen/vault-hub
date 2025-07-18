@@ -4,7 +4,8 @@ import Login from '@/pages/auth/login';
 import Signup from '@/pages/auth/signup';
 import Dashboard from '@/pages/dashboard/dashboard';
 import Vaults from '@/pages/dashboard/vaults';
-import ActivityLog from '@/pages/dashboard/activity-log';
+import AuditLog from '@/pages/dashboard/audit-log';
+import Mock from '@/pages/mock';
 import { ProtectedRoute } from '@/components/protected-route';
 import { PATH } from '@/const/path';
 
@@ -22,8 +23,8 @@ export const AppRoutes = () => (
     <Route path={PATH.DOCS}>
       <div>Docs</div>
     </Route>
-    <Route path={PATH.ABOUT}>
-      <div>About</div>
+    <Route path={PATH.MOCK}>
+      <Mock />
     </Route>
     <Route path="/users/:name">{(params) => <>Hello, {params.name}!</>}</Route>
     <Route path={PATH.LOGIN}>
@@ -42,9 +43,9 @@ export const AppRoutes = () => (
         <Vaults />
       </ProtectedRoute>
     </Route>
-    <Route path={PATH.ACTIVITY_LOG}>
+    <Route path={PATH.AUDIT_LOG}>
       <ProtectedRoute>
-        <ActivityLog />
+        <AuditLog />
       </ProtectedRoute>
     </Route>
     <Route>404: No such page!</Route>

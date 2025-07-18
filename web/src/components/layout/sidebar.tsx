@@ -1,10 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'wouter';
 import { PATH } from '@/const/path';
-import { 
-  Vault, 
-  Activity, 
-  Plus
+import {
+  Vault,
+  Activity,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -40,28 +39,28 @@ export default function Sidebar() {
             Vaults
           </Button>
         </Link>
-        <Link href={PATH.ACTIVITY_LOG}>
+        <Link href={PATH.AUDIT_LOG}>
           <Button 
-            variant={pathname === PATH.ACTIVITY_LOG ? 'default' : 'ghost'} 
+            variant={pathname === PATH.AUDIT_LOG ? 'default' : 'ghost'} 
             className={`w-full justify-start ${
-              pathname === PATH.ACTIVITY_LOG 
+              pathname === PATH.AUDIT_LOG 
                 ? 'bg-primary/10 text-primary hover:bg-primary/20' 
                 : ''
             }`}
           >
             <Activity className="h-4 w-4 mr-3" />
-            Activity Log
+            Audit Log
           </Button>
         </Link>
       </nav>
 
       {/* Quick Actions in Sidebar */}
-      <div className="p-4 border-t border-border flex-shrink-0">
+      {/* <div className="p-4 border-t border-border flex-shrink-0">
         <Button className="w-full">
           <Plus className="h-4 w-4 mr-2" />
           New Vault
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 } 

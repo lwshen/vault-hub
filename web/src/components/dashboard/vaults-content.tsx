@@ -1,24 +1,68 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Search,
+import {
   Plus,
   MoreVertical,
   Lock,
-  Unlock,
-  Users
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
+import { useVaults } from '@/hooks/use-vaults';
+import { CreateVaultModal } from '@/components/modals/create-vault-modal';
 
 export default function VaultsContent() {
-  const vaults = [
-    { name: 'Production API Keys', status: 'locked', members: 5, secrets: 12, lastAccessed: '2 hours ago' },
-    { name: 'Database Credentials', status: 'unlocked', members: 3, secrets: 8, lastAccessed: '1 day ago' },
-    { name: 'SSL Certificates', status: 'locked', members: 2, secrets: 4, lastAccessed: '3 days ago' },
-    { name: 'OAuth Tokens', status: 'locked', members: 4, secrets: 15, lastAccessed: '1 week ago' },
-    { name: 'AWS Secrets', status: 'locked', members: 6, secrets: 20, lastAccessed: '2 days ago' },
-    { name: 'Third-party APIs', status: 'unlocked', members: 3, secrets: 7, lastAccessed: '5 hours ago' }
-  ];
-  
+  const { vaults, isLoading, error, refetch } = useVaults();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const handleVaultCreated = () => {
+    refetch(); // Refresh the vault list after creation
+  };
+
+  if (error) {
+    return (
+      <>
+        {/* Top Header */}
+        <header className="bg-card border-b border-border p-6 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Vaults</h1>
+              <p className="text-muted-foreground">
+                Manage and organize your secret vaults
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Vault
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Error State */}
+        <main className="flex-1 overflow-y-auto p-6">
+          <Card className="p-6">
+            <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
+              <AlertCircle className="h-12 w-12 text-red-500" />
+              <div className="text-center">
+                <h3 className="text-lg font-semibold">Failed to load vaults</h3>
+                <p className="text-muted-foreground mb-4">{error}</p>
+                <Button onClick={refetch}>Try Again</Button>
+              </div>
+            </div>
+          </Card>
+        </main>
+
+        <CreateVaultModal 
+          open={isCreateModalOpen}
+          onOpenChange={setIsCreateModalOpen}
+          onVaultCreated={handleVaultCreated}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       {/* Top Header */}
@@ -31,11 +75,7 @@ export default function VaultsContent() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               New Vault
             </Button>
@@ -45,41 +85,70 @@ export default function VaultsContent() {
   
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="grid gap-4">
-          {vaults.map((vault, index) => (
-            <Card key={index} className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {vault.status === 'locked' ? (
-                    <Lock className="h-5 w-5 text-red-500" />
-                  ) : (
-                    <Unlock className="h-5 w-5 text-green-500" />
-                  )}
-                  <div>
-                    <h3 className="text-lg font-semibold">{vault.name}</h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>{vault.secrets} secrets</span>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {vault.members} members
-                      </span>
-                      <span>Last accessed {vault.lastAccessed}</span>
+        {isLoading ? (
+          <Card className="p-6">
+            <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading vaults...</p>
+            </div>
+          </Card>
+        ) : vaults.length === 0 ? (
+          <Card className="p-6">
+            <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
+              <Lock className="h-12 w-12 text-muted-foreground" />
+              <div className="text-center">
+                <h3 className="text-lg font-semibold">No vaults found</h3>
+                <p className="text-muted-foreground mb-4">Create your first vault to get started</p>
+                <Button onClick={() => setIsCreateModalOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Vault
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {vaults.map((vault) => (
+              <Card key={vault.uniqueId} className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {/* Show lock icon - could be based on category or other logic */}
+                    <Lock className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <h3 className="text-lg font-semibold">{vault.name}</h3>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        {vault.category && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+                            {vault.category}
+                          </span>
+                        )}
+                        {vault.description && <span>{vault.description}</span>}
+                        {vault.updatedAt && (
+                          <span>Last Updated {new Date(vault.updatedAt).toLocaleDateString()}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm">
+                      View
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">
-                    View
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </main>
+
+      <CreateVaultModal 
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onVaultCreated={handleVaultCreated}
+      />
     </>
   );
 }
