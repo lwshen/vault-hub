@@ -6,12 +6,59 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Defines values for AuditLogAction.
+const (
+	CreateVault  AuditLogAction = "create_vault"
+	DeleteVault  AuditLogAction = "delete_vault"
+	LoginUser    AuditLogAction = "login_user"
+	LogoutUser   AuditLogAction = "logout_user"
+	ReadVault    AuditLogAction = "read_vault"
+	RegisterUser AuditLogAction = "register_user"
+	UpdateVault  AuditLogAction = "update_vault"
+)
+
+// AuditLog defines model for AuditLog.
+type AuditLog struct {
+	// Action Type of action performed
+	Action AuditLogAction `json:"action"`
+
+	// CreatedAt When the action occurred
+	CreatedAt time.Time `json:"created_at"`
+
+	// IpAddress IP address from which the action was performed
+	IpAddress *string `json:"ip_address,omitempty"`
+
+	// UserAgent User agent string from the client
+	UserAgent *string `json:"user_agent,omitempty"`
+
+	// VaultId ID of the vault (null for user actions)
+	VaultId *int64 `json:"vault_id"`
+}
+
+// AuditLogAction Type of action performed
+type AuditLogAction string
+
+// AuditLogsResponse defines model for AuditLogsResponse.
+type AuditLogsResponse struct {
+	AuditLogs []AuditLog `json:"audit_logs"`
+
+	// PageIndex Current page index (starting from 0)
+	PageIndex int `json:"pageIndex"`
+
+	// PageSize Number of logs per page
+	PageSize int `json:"pageSize"`
+
+	// TotalCount Total number of logs matching the filter criteria
+	TotalCount int `json:"total_count"`
+}
 
 // CreateVaultRequest defines model for CreateVaultRequest.
 type CreateVaultRequest struct {
@@ -118,6 +165,24 @@ type VaultLite struct {
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
+// GetAuditLogsParams defines parameters for GetAuditLogs.
+type GetAuditLogsParams struct {
+	// StartDate Filter logs from this date (ISO 8601 format)
+	StartDate *time.Time `form:"start_date,omitempty" json:"start_date,omitempty"`
+
+	// EndDate Filter logs until this date (ISO 8601 format)
+	EndDate *time.Time `form:"end_date,omitempty" json:"end_date,omitempty"`
+
+	// VaultId Filter logs by vault ID
+	VaultId *int64 `form:"vault_id,omitempty" json:"vault_id,omitempty"`
+
+	// PageSize Number of logs per page (default 100, max 1000)
+	PageSize int `form:"pageSize" json:"pageSize"`
+
+	// PageIndex Page index, starting from 0 (default 0)
+	PageIndex int `form:"pageIndex" json:"pageIndex"`
+}
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
 
@@ -132,6 +197,9 @@ type UpdateVaultJSONRequestBody = UpdateVaultRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+
+	// (GET /api/audit-logs)
+	GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error
 
 	// (POST /api/auth/login)
 	Login(c *fiber.Ctx) error
@@ -170,6 +238,74 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc fiber.Handler
+
+// GetAuditLogs operation middleware
+func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAuditLogsParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "start_date" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "start_date", query, &params.StartDate)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter start_date: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "end_date" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "end_date", query, &params.EndDate)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter end_date: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "vault_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "vault_id", query, &params.VaultId)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter vault_id: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "pageSize" -------------
+
+	if paramValue := c.Query("pageSize"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument pageSize is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "pageSize", query, &params.PageSize)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageSize: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "pageIndex" -------------
+
+	if paramValue := c.Query("pageIndex"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument pageIndex is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "pageIndex", query, &params.PageIndex)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageIndex: %w", err).Error())
+	}
+
+	return siw.Handler.GetAuditLogs(c, params)
+}
 
 // Login operation middleware
 func (siw *ServerInterfaceWrapper) Login(c *fiber.Ctx) error {
@@ -282,6 +418,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 		router.Use(fiber.Handler(m))
 	}
 
+	router.Get(options.BaseURL+"/api/audit-logs", wrapper.GetAuditLogs)
+
 	router.Post(options.BaseURL+"/api/auth/login", wrapper.Login)
 
 	router.Get(options.BaseURL+"/api/auth/logout", wrapper.Logout)
@@ -302,6 +440,23 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Put(options.BaseURL+"/api/vaults/:unique_id", wrapper.UpdateVault)
 
+}
+
+type GetAuditLogsRequestObject struct {
+	Params GetAuditLogsParams
+}
+
+type GetAuditLogsResponseObject interface {
+	VisitGetAuditLogsResponse(ctx *fiber.Ctx) error
+}
+
+type GetAuditLogs200JSONResponse AuditLogsResponse
+
+func (response GetAuditLogs200JSONResponse) VisitGetAuditLogsResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
 }
 
 type LoginRequestObject struct {
@@ -472,6 +627,9 @@ func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.C
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
+	// (GET /api/audit-logs)
+	GetAuditLogs(ctx context.Context, request GetAuditLogsRequestObject) (GetAuditLogsResponseObject, error)
+
 	// (POST /api/auth/login)
 	Login(ctx context.Context, request LoginRequestObject) (LoginResponseObject, error)
 
@@ -514,6 +672,33 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
+}
+
+// GetAuditLogs operation middleware
+func (sh *strictHandler) GetAuditLogs(ctx *fiber.Ctx, params GetAuditLogsParams) error {
+	var request GetAuditLogsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAuditLogs(ctx.UserContext(), request.(GetAuditLogsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAuditLogs")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetAuditLogsResponseObject); ok {
+		if err := validResponse.VisitGetAuditLogsResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
 }
 
 // Login operation middleware

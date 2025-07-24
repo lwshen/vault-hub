@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -110,4 +112,76 @@ func GetAuditLogsByVault(vaultID uint, userID uint) ([]AuditLog, error) {
 	}
 
 	return logs, nil
+}
+
+// GetAuditLogsWithFiltersParams defines parameters for filtering audit logs
+type GetAuditLogsWithFiltersParams struct {
+	UserID    uint
+	VaultID   *uint
+	StartDate *time.Time
+	EndDate   *time.Time
+	Limit     int
+	Offset    int
+}
+
+// GetAuditLogsWithFilters retrieves audit logs with optional filtering and pagination
+func GetAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) ([]AuditLog, error) {
+	var logs []AuditLog
+	query := DB.Where("user_id = ?", params.UserID).
+		Preload("User").
+		Order("created_at DESC")
+
+	// Add vault filter if specified
+	if params.VaultID != nil {
+		query = query.Where("vault_id = ?", *params.VaultID)
+	}
+
+	// Add date range filter if specified
+	if params.StartDate != nil {
+		query = query.Where("created_at >= ?", *params.StartDate)
+	}
+	if params.EndDate != nil {
+		query = query.Where("created_at <= ?", *params.EndDate)
+	}
+
+	// Add pagination
+	if params.Limit > 0 {
+		query = query.Limit(params.Limit)
+	}
+	if params.Offset > 0 {
+		query = query.Offset(params.Offset)
+	}
+
+	err := query.Find(&logs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return logs, nil
+}
+
+// CountAuditLogsWithFilters counts total audit logs matching the filter criteria
+func CountAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) (int64, error) {
+	var count int64
+	query := DB.Model(&AuditLog{}).Where("user_id = ?", params.UserID)
+
+	// Add vault filter if specified
+	if params.VaultID != nil {
+		query = query.Where("vault_id = ?", *params.VaultID)
+	}
+
+	// Add date range filter if specified
+	if params.StartDate != nil {
+		query = query.Where("created_at >= ?", *params.StartDate)
+	}
+	if params.EndDate != nil {
+		query = query.Where("created_at <= ?", *params.EndDate)
+	}
+
+	err := query.Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
