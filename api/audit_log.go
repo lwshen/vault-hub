@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
+	"gorm.io/gorm"
 )
 
 // convertToApiAuditLog converts a model.AuditLog to an api.AuditLog
@@ -48,6 +49,14 @@ func (Server) GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error {
 		// #nosec G115
 		vaultIDValue := uint(*params.VaultId)
 		vaultID = &vaultIDValue
+
+		// Validate that the vault belongs to the current user
+		if err := model.CheckVaultOwnership(vaultIDValue, user.ID); err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return handler.SendError(c, fiber.StatusNotFound, "vault not found or access denied")
+			}
+			return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		}
 	}
 
 	filterParams := model.GetAuditLogsWithFiltersParams{

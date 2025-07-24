@@ -238,3 +238,18 @@ func (v *Vault) Delete() error {
 	}
 	return nil
 }
+
+// CheckVaultOwnership verifies if a vault with the given ID belongs to the specified user
+func CheckVaultOwnership(vaultID uint, userID uint) error {
+	var count int64
+	err := DB.Model(&Vault{}).Where("id = ? AND user_id = ?", vaultID, userID).Count(&count).Error
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
