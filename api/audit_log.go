@@ -9,17 +9,22 @@ import (
 
 // convertToApiAuditLog converts a model.AuditLog to an api.AuditLog
 func convertToApiAuditLog(auditLog *model.AuditLog) AuditLog {
-	var vaultID *int64
-	if auditLog.VaultID != nil {
-		// #nosec G115
-		vaultIDValue := int64(*auditLog.VaultID)
-		vaultID = &vaultIDValue
+	var vault *VaultLite
+	if auditLog.Vault != nil {
+		vaultLite := VaultLite{
+			UniqueId:    auditLog.Vault.UniqueID,
+			Name:        auditLog.Vault.Name,
+			Description: &auditLog.Vault.Description,
+			Category:    &auditLog.Vault.Category,
+			UpdatedAt:   &auditLog.Vault.UpdatedAt,
+		}
+		vault = &vaultLite
 	}
 
 	return AuditLog{
 		Action:    AuditLogAction(auditLog.Action),
 		CreatedAt: auditLog.CreatedAt,
-		VaultId:   vaultID,
+		Vault:     vault,
 		IpAddress: &auditLog.IPAddress,
 		UserAgent: &auditLog.UserAgent,
 	}
@@ -45,18 +50,17 @@ func (Server) GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error {
 
 	// Prepare filter parameters
 	var vaultID *uint
-	if params.VaultId != nil {
-		// #nosec G115
-		vaultIDValue := uint(*params.VaultId)
-		vaultID = &vaultIDValue
-
-		// Validate that the vault belongs to the current user
-		if err := model.CheckVaultOwnership(vaultIDValue, user.ID); err != nil {
+	if params.VaultUniqueId != nil {
+		// Find vault by unique ID
+		var vault model.Vault
+		err := vault.GetByUniqueID(*params.VaultUniqueId, user.ID)
+		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				return handler.SendError(c, fiber.StatusNotFound, "vault not found or access denied")
 			}
 			return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 		}
+		vaultID = &vault.ID
 	}
 
 	filterParams := model.GetAuditLogsWithFiltersParams{

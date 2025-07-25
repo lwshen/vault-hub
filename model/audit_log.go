@@ -21,6 +21,7 @@ const (
 type AuditLog struct {
 	gorm.Model
 	VaultID   *uint      `gorm:"index"`
+	Vault     *Vault     `gorm:"foreignKey:VaultID"`
 	Action    ActionType `gorm:"size:50;index"`
 	UserID    uint       `gorm:"index;constraint:OnDelete:CASCADE"`
 	User      User       `gorm:"foreignKey:UserID"`
@@ -81,6 +82,7 @@ func GetAuditLogsByUser(userID uint, limit int, offset int) ([]AuditLog, error) 
 	var logs []AuditLog
 	query := DB.Where("user_id = ?", userID).
 		Preload("User").
+		Preload("Vault").
 		Order("created_at DESC")
 
 	if limit > 0 {
@@ -104,6 +106,7 @@ func GetAuditLogsByVault(vaultID uint, userID uint) ([]AuditLog, error) {
 	var logs []AuditLog
 	err := DB.Where("vault_id = ? AND user_id = ?", vaultID, userID).
 		Preload("User").
+		Preload("Vault").
 		Order("created_at DESC").
 		Find(&logs).Error
 
@@ -129,6 +132,7 @@ func GetAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) ([]AuditLog, 
 	var logs []AuditLog
 	query := DB.Where("user_id = ?", params.UserID).
 		Preload("User").
+		Preload("Vault").
 		Order("created_at DESC")
 
 	// Add vault filter if specified
