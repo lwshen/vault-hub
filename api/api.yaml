@@ -422,11 +422,8 @@ components:
           type: string
           format: date-time
           description: When the action occurred
-        vault_id:
-          type: integer
-          format: int64
-          nullable: true
-          description: ID of the vault (null for user actions)
+        vault:
+          $ref: '#/components/schemas/VaultLite'
         action:
           type: string
           enum: [read_vault, update_vault, delete_vault, create_vault, login_user, register_user, logout_user]

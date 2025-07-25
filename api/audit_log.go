@@ -9,17 +9,22 @@ import (
 
 // convertToApiAuditLog converts a model.AuditLog to an api.AuditLog
 func convertToApiAuditLog(auditLog *model.AuditLog) AuditLog {
-	var vaultID *int64
-	if auditLog.VaultID != nil {
-		// #nosec G115
-		vaultIDValue := int64(*auditLog.VaultID)
-		vaultID = &vaultIDValue
+	var vault *VaultLite
+	if auditLog.Vault != nil {
+		vaultLite := VaultLite{
+			UniqueId:    auditLog.Vault.UniqueID,
+			Name:        auditLog.Vault.Name,
+			Description: &auditLog.Vault.Description,
+			Category:    &auditLog.Vault.Category,
+			UpdatedAt:   &auditLog.Vault.UpdatedAt,
+		}
+		vault = &vaultLite
 	}
 
 	return AuditLog{
 		Action:    AuditLogAction(auditLog.Action),
 		CreatedAt: auditLog.CreatedAt,
-		VaultId:   vaultID,
+		Vault:     vault,
 		IpAddress: &auditLog.IPAddress,
 		UserAgent: &auditLog.UserAgent,
 	}

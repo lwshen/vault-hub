@@ -37,10 +37,8 @@ type AuditLog struct {
 	IpAddress *string `json:"ip_address,omitempty"`
 
 	// UserAgent User agent string from the client
-	UserAgent *string `json:"user_agent,omitempty"`
-
-	// VaultId ID of the vault (null for user actions)
-	VaultId *int64 `json:"vault_id"`
+	UserAgent *string    `json:"user_agent,omitempty"`
+	Vault     *VaultLite `json:"vault,omitempty"`
 }
 
 // AuditLogAction Type of action performed
