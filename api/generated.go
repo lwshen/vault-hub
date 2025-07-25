@@ -171,8 +171,8 @@ type GetAuditLogsParams struct {
 	// EndDate Filter logs until this date (ISO 8601 format)
 	EndDate *time.Time `form:"end_date,omitempty" json:"end_date,omitempty"`
 
-	// VaultId Filter logs by vault ID
-	VaultId *int64 `form:"vault_id,omitempty" json:"vault_id,omitempty"`
+	// VaultUniqueId Filter logs by vault unique ID
+	VaultUniqueId *string `form:"vault_unique_id,omitempty" json:"vault_unique_id,omitempty"`
 
 	// PageSize Number of logs per page (default 100, max 1000)
 	PageSize int `form:"pageSize" json:"pageSize"`
@@ -265,11 +265,11 @@ func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter end_date: %w", err).Error())
 	}
 
-	// ------------- Optional query parameter "vault_id" -------------
+	// ------------- Optional query parameter "vault_unique_id" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "vault_id", query, &params.VaultId)
+	err = runtime.BindQueryParameter("form", true, false, "vault_unique_id", query, &params.VaultUniqueId)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter vault_id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter vault_unique_id: %w", err).Error())
 	}
 
 	// ------------- Required query parameter "pageSize" -------------

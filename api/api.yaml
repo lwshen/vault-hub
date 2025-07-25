@@ -188,13 +188,12 @@ paths:
           schema:
             type: string
             format: date-time
-        - name: vault_id
+        - name: vault_unique_id
           in: query
           required: false
-          description: Filter logs by vault ID
+          description: Filter logs by vault unique ID
           schema:
-            type: integer
-            format: int64
+            type: string
         - name: pageSize
           in: query
           required: true
