@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -96,7 +96,7 @@ export default function AuditLogContent() {
 
   const pageSize = 20;
 
-  const fetchAuditLogs = async (reset = false) => {
+  const fetchAuditLogs = useCallback(async (reset = false) => {
     try {
       if (reset) {
         setIsLoading(true);
@@ -134,11 +134,11 @@ export default function AuditLogContent() {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  };
+  }, [pageIndex]);
 
   useEffect(() => {
     fetchAuditLogs(true);
-  }, []);
+  }, [fetchAuditLogs]);
 
   const loadMore = () => {
     if (!isLoadingMore && auditLogs.length < totalCount) {
@@ -307,10 +307,10 @@ export default function AuditLogContent() {
               </div>
             ) : (
               <div className="space-y-4">
-                {auditLogs.map((audit, index) => {
+                {auditLogs.map((audit) => {
                   const { icon: Icon, color } = getIconForAction(audit.action);
                   return (
-                    <div key={`${audit.action}-${audit.createdAt}-${index}`} className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                    <div key={`${audit.action}-${audit.createdAt}`} className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
                       <div className="flex-shrink-0">
                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                           <Icon className={`h-5 w-5 ${color}`} />
@@ -322,10 +322,10 @@ export default function AuditLogContent() {
                             <h3 className="font-medium text-foreground">{getActionTitle(audit.action)}</h3>
                             <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                               <span>{formatTimestamp(audit.createdAt)}</span>
-                              {audit.vaultId && (
+                              {audit.vault && (
                                 <>
                                   <span>•</span>
-                                  <span>Vault ID: {audit.vaultId}</span>
+                                  <span>Vault Name: {audit.vault.name}</span>
                                 </>
                               )}
                               {audit.ipAddress && (
