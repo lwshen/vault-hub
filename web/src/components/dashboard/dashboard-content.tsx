@@ -1,10 +1,10 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Vault, 
-  Users, 
-  Key, 
-  Activity, 
+import {
+  Vault,
+  Users,
+  Key,
+  Activity,
   Search,
   MoreVertical,
   Lock,
@@ -91,8 +91,8 @@ export default function DashboardContent() {
                 <div className="space-y-1">
                   <div className="text-2xl font-bold">{stat.value}</div>
                   <p className={`text-xs ${
-                    stat.changeType === 'positive' 
-                      ? 'text-green-600' 
+                    stat.changeType === 'positive'
+                      ? 'text-green-600'
                       : 'text-muted-foreground'
                   }`}>
                     {stat.change}
@@ -200,4 +200,4 @@ export default function DashboardContent() {
       </main>
     </>
   );
-} 
+}

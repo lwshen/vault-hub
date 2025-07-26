@@ -41,7 +41,7 @@ export function CreateVaultModal({ open, onOpenChange, onVaultCreated }: CreateV
       { check: data.name.length > 100, message: 'Name must be ≤100 characters' },
       { check: data.description?.length > 500, message: 'Description must be ≤500 characters' },
     ];
-    
+
     const failed = validations.find(v => v.check);
     return failed?.message || null;
   };
@@ -96,11 +96,11 @@ export function CreateVaultModal({ open, onOpenChange, onVaultCreated }: CreateV
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/50" 
+      <div
+        className="fixed inset-0 bg-black/50"
         onClick={handleClose}
       />
-      
+
       {/* Modal Content */}
       <Card className="relative z-10 w-full max-w-md mx-4">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -114,7 +114,7 @@ export function CreateVaultModal({ open, onOpenChange, onVaultCreated }: CreateV
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        
+
         <CardContent>
           <p className="text-muted-foreground text-sm mb-6">
             Create a new vault to securely store your secrets and sensitive data.
@@ -202,4 +202,4 @@ export function CreateVaultModal({ open, onOpenChange, onVaultCreated }: CreateV
       </Card>
     </div>
   );
-} 
+}

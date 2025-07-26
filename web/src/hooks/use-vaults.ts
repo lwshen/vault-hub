@@ -38,4 +38,4 @@ export const useVaults = (): UseVaultsReturn => {
     error,
     refetch: fetchVaults,
   };
-}; 
+};

@@ -213,7 +213,7 @@ export default function Header() {
                   >
                     Log in
                   </Button>
-                  <Button 
+                  <Button
                     className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={handleSignup}
                   >

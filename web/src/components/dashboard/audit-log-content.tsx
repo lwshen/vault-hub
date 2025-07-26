@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Search,
   Filter,
   Download,
@@ -32,7 +32,7 @@ const getIconForAction = (action: AuditLogActionEnum) => {
     [AuditLogActionEnum.LogoutUser]: { icon: LogOut, color: 'text-gray-500' },
     [AuditLogActionEnum.RegisterUser]: { icon: UserPlus, color: 'text-purple-500' },
   };
-  
+
   return iconMap[action] || { icon: Activity, color: 'text-gray-500' };
 };
 
@@ -47,7 +47,7 @@ const getActionTitle = (action: AuditLogActionEnum) => {
     [AuditLogActionEnum.LogoutUser]: 'User logged out',
     [AuditLogActionEnum.RegisterUser]: 'User registered',
   };
-  
+
   return titleMap[action] || action;
 };
 
@@ -63,15 +63,15 @@ const formatTimestamp = (timestamp: string | Date) => {
   // For very recent events, show relative time
   if (diffInMinutes < 1) return 'Just now';
   if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-  
+
   // For older events, show precise date and time
-  const timeString = date.toLocaleTimeString('en-US', { 
-    hour12: false, 
-    hour: '2-digit', 
+  const timeString = date.toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
     minute: '2-digit',
     second: '2-digit'
   });
-  
+
   if (diffInHours < 24) {
     return `Today ${timeString}`;
   } else if (diffInDays === 1) {
@@ -108,7 +108,7 @@ export default function AuditLogContent() {
       setError(null);
 
       const currentPageIndex = reset ? 1 : pageIndex;
-      
+
       // Call API with query parameters (pageIndex, pageSize are required)
       const response = await auditApi.getAuditLogs(
         pageSize,
@@ -117,13 +117,13 @@ export default function AuditLogContent() {
 
       // Convert API response to our format
       const newLogs = (response.auditLogs || []);
-      
+
       if (reset) {
         setAuditLogs(newLogs);
       } else {
         setAuditLogs(prev => [...prev, ...newLogs]);
       }
-      
+
       setTotalCount(response.totalCount || 0);
       if (!reset) {
         setPageIndex(currentPageIndex + 1);
@@ -149,7 +149,7 @@ export default function AuditLogContent() {
   const getAuditTypeLabel = (action: AuditLogActionEnum) => {
     const labels: { [key in AuditLogActionEnum]: string; } = {
       [AuditLogActionEnum.ReadVault]: 'Vault Operation',
-      [AuditLogActionEnum.CreateVault]: 'Vault Operation', 
+      [AuditLogActionEnum.CreateVault]: 'Vault Operation',
       [AuditLogActionEnum.UpdateVault]: 'Vault Operation',
       [AuditLogActionEnum.DeleteVault]: 'Vault Operation',
       [AuditLogActionEnum.LoginUser]: 'Authentication',
@@ -251,7 +251,7 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Lock className="h-8 w-8 text-green-500" />
                 <div>
-                  <p className="text-2xl font-bold">{auditLogs.filter(log => 
+                  <p className="text-2xl font-bold">{auditLogs.filter(log =>
                     log.action === AuditLogActionEnum.ReadVault ||
                     log.action === AuditLogActionEnum.CreateVault ||
                     log.action === AuditLogActionEnum.UpdateVault ||
@@ -265,7 +265,7 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Users className="h-8 w-8 text-purple-500" />
                 <div>
-                  <p className="text-2xl font-bold">{auditLogs.filter(log => 
+                  <p className="text-2xl font-bold">{auditLogs.filter(log =>
                     log.action === AuditLogActionEnum.LoginUser ||
                     log.action === AuditLogActionEnum.LogoutUser ||
                     log.action === AuditLogActionEnum.RegisterUser
@@ -350,8 +350,8 @@ export default function AuditLogContent() {
                 {/* Load More */}
                 {auditLogs.length < totalCount && (
                   <div className="mt-6 text-center">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={loadMore}
                       disabled={isLoadingMore}
                     >
@@ -373,4 +373,4 @@ export default function AuditLogContent() {
       </main>
     </>
   );
-} 
+}

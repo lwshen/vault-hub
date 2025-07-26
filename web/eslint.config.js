@@ -50,6 +50,7 @@ export default tseslint.config(
           },
         },
       ],
+      '@stylistic/no-trailing-spaces': 'error',
     },
   },
 )

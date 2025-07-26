@@ -33,4 +33,4 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // If authenticated, render children
   return <>{children}</>;
-}; 
+};
