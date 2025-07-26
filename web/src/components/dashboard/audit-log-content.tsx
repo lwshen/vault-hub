@@ -16,7 +16,7 @@ import {
   LogIn,
   LogOut,
   Loader2,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 import { auditApi } from '@/apis/api';
 import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
@@ -69,7 +69,7 @@ const formatTimestamp = (timestamp: string | Date) => {
     hour12: false,
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
   });
 
   if (diffInHours < 24) {
@@ -80,7 +80,7 @@ const formatTimestamp = (timestamp: string | Date) => {
     const dateString = date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
     });
     return `${dateString} ${timeString}`;
   }
@@ -154,7 +154,7 @@ export default function AuditLogContent() {
       [AuditLogActionEnum.DeleteVault]: 'Vault Operation',
       [AuditLogActionEnum.LoginUser]: 'Authentication',
       [AuditLogActionEnum.LogoutUser]: 'Authentication',
-      [AuditLogActionEnum.RegisterUser]: 'Authentication'
+      [AuditLogActionEnum.RegisterUser]: 'Authentication',
     };
     return labels[action] || 'System';
   };
@@ -255,7 +255,7 @@ export default function AuditLogContent() {
                     log.action === AuditLogActionEnum.ReadVault ||
                     log.action === AuditLogActionEnum.CreateVault ||
                     log.action === AuditLogActionEnum.UpdateVault ||
-                    log.action === AuditLogActionEnum.DeleteVault
+                    log.action === AuditLogActionEnum.DeleteVault,
                   ).length}</p>
                   <p className="text-sm text-muted-foreground">Vault Events</p>
                 </div>
@@ -268,7 +268,7 @@ export default function AuditLogContent() {
                   <p className="text-2xl font-bold">{auditLogs.filter(log =>
                     log.action === AuditLogActionEnum.LoginUser ||
                     log.action === AuditLogActionEnum.LogoutUser ||
-                    log.action === AuditLogActionEnum.RegisterUser
+                    log.action === AuditLogActionEnum.RegisterUser,
                   ).length}</p>
                   <p className="text-sm text-muted-foreground">User Events</p>
                 </div>

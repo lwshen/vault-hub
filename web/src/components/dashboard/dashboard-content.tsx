@@ -9,7 +9,7 @@ import {
   MoreVertical,
   Lock,
   Unlock,
-  Plus
+  Plus,
 } from 'lucide-react';
 
 export default function DashboardContent() {
@@ -19,36 +19,36 @@ export default function DashboardContent() {
       value: '12',
       icon: Vault,
       change: '+2 this month',
-      changeType: 'positive' as const
+      changeType: 'positive' as const,
     },
     {
       title: 'Active Users',
       value: '24',
       icon: Users,
       change: '+5 this week',
-      changeType: 'positive' as const
+      changeType: 'positive' as const,
     },
     {
       title: 'Secrets Stored',
       value: '156',
       icon: Key,
       change: '+12 today',
-      changeType: 'positive' as const
+      changeType: 'positive' as const,
     },
     {
       title: 'Recent Activity',
       value: '8',
       icon: Activity,
       change: 'Last 24 hours',
-      changeType: 'neutral' as const
-    }
+      changeType: 'neutral' as const,
+    },
   ];
 
   const recentVaults = [
     { name: 'Production API Keys', status: 'locked', lastAccessed: '2 hours ago' },
     { name: 'Database Credentials', status: 'unlocked', lastAccessed: '1 day ago' },
     { name: 'SSL Certificates', status: 'locked', lastAccessed: '3 days ago' },
-    { name: 'OAuth Tokens', status: 'locked', lastAccessed: '1 week ago' }
+    { name: 'OAuth Tokens', status: 'locked', lastAccessed: '1 week ago' },
   ];
 
   return (

@@ -6,7 +6,7 @@ import {
   MoreVertical,
   Lock,
   Loader2,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 import { useVaults } from '@/hooks/use-vaults';
 import { CreateVaultModal } from '@/components/modals/create-vault-modal';
