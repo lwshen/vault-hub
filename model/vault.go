@@ -12,12 +12,12 @@ import (
 
 type Vault struct {
 	gorm.Model
-	UniqueID    string `gorm:"size:255;not null;unique"` // Unique identifier for the vault
-	UserID      uint   `gorm:"index;not null"`           // User who owns this vault
-	Name        string `gorm:"size:255"`                 // Human-readable name
-	Value       string `gorm:"type:text;not null"`       // Encrypted value
-	Description string `gorm:"size:500"`                 // Human-readable description
-	Category    string `gorm:"size:100;index"`           // Category/type of vault
+	UniqueID    string `gorm:"size:255;not null;unique"`                    // Unique identifier for the vault
+	UserID      uint   `gorm:"uniqueIndex:idx_user_name;not null"`          // User who owns this vault
+	Name        string `gorm:"size:255;uniqueIndex:idx_user_name;not null"` // Human-readable name
+	Value       string `gorm:"type:text;not null"`                          // Encrypted value
+	Description string `gorm:"size:500"`                                    // Human-readable description
+	Category    string `gorm:"size:100;index"`                              // Category/type of vault
 }
 
 // CreateVaultParams defines parameters for creating a new vault
@@ -111,6 +111,12 @@ func (params *CreateVaultParams) Create() (*Vault, error) {
 		return nil, err
 	}
 
+	// Check if name already exists for this user
+	err = CheckVaultNameUnique(params.Name, params.UserID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Encrypt the value before storing
 	encryptedValue, err := encryption.Encrypt(params.Value)
 	if err != nil {
@@ -183,6 +189,14 @@ func GetVaultsByUser(userID uint, decrypt bool) ([]Vault, error) {
 
 // Update updates a vault
 func (v *Vault) Update(params *UpdateVaultParams) error {
+	// Check if name already exists for this user (excluding current vault)
+	if params.Name != nil {
+		err := CheckVaultNameUnique(*params.Name, v.UserID, v.ID)
+		if err != nil {
+			return err
+		}
+	}
+
 	updates := map[string]interface{}{}
 
 	if params.Name != nil {
@@ -249,6 +263,26 @@ func CheckVaultOwnership(vaultID uint, userID uint) error {
 
 	if count == 0 {
 		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+// CheckVaultNameUnique verifies if a vault name is unique for a specific user
+func CheckVaultNameUnique(name string, userID uint, excludeVaultID ...uint) error {
+	var existing Vault
+	query := DB.Where("name = ? AND user_id = ?", name, userID)
+
+	// Exclude a specific vault ID if provided (useful for updates)
+	if len(excludeVaultID) > 0 {
+		query = query.Where("id != ?", excludeVaultID[0])
+	}
+
+	err := query.First(&existing).Error
+	if err == nil {
+		return fmt.Errorf("vault with name '%s' already exists for this user", name)
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
 	}
 
 	return nil
