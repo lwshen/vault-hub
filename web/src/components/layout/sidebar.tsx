@@ -14,11 +14,11 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
         <Link href={PATH.DASHBOARD}>
-          <Button 
-            variant={pathname === PATH.DASHBOARD ? 'default' : 'ghost'} 
+          <Button
+            variant={pathname === PATH.DASHBOARD ? 'default' : 'ghost'}
             className={`w-full justify-start ${
-              pathname === PATH.DASHBOARD 
-                ? 'bg-primary/10 text-primary hover:bg-primary/20' 
+              pathname === PATH.DASHBOARD
+                ? 'bg-primary/10 text-primary hover:bg-primary/20'
                 : ''
             }`}
           >
@@ -27,11 +27,11 @@ export default function Sidebar() {
           </Button>
         </Link>
         <Link href={PATH.VAULTS}>
-          <Button 
-            variant={pathname === PATH.VAULTS ? 'default' : 'ghost'} 
+          <Button
+            variant={pathname === PATH.VAULTS ? 'default' : 'ghost'}
             className={`w-full justify-start ${
-              pathname === PATH.VAULTS 
-                ? 'bg-primary/10 text-primary hover:bg-primary/20' 
+              pathname === PATH.VAULTS
+                ? 'bg-primary/10 text-primary hover:bg-primary/20'
                 : ''
             }`}
           >
@@ -40,11 +40,11 @@ export default function Sidebar() {
           </Button>
         </Link>
         <Link href={PATH.AUDIT_LOG}>
-          <Button 
-            variant={pathname === PATH.AUDIT_LOG ? 'default' : 'ghost'} 
+          <Button
+            variant={pathname === PATH.AUDIT_LOG ? 'default' : 'ghost'}
             className={`w-full justify-start ${
-              pathname === PATH.AUDIT_LOG 
-                ? 'bg-primary/10 text-primary hover:bg-primary/20' 
+              pathname === PATH.AUDIT_LOG
+                ? 'bg-primary/10 text-primary hover:bg-primary/20'
                 : ''
             }`}
           >
@@ -63,4 +63,4 @@ export default function Sidebar() {
       </div> */}
     </div>
   );
-} 
+}

@@ -6,7 +6,7 @@ import {
   MoreVertical,
   Lock,
   Loader2,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 import { useVaults } from '@/hooks/use-vaults';
 import { CreateVaultModal } from '@/components/modals/create-vault-modal';
@@ -54,7 +54,7 @@ export default function VaultsContent() {
           </Card>
         </main>
 
-        <CreateVaultModal 
+        <CreateVaultModal
           open={isCreateModalOpen}
           onOpenChange={setIsCreateModalOpen}
           onVaultCreated={handleVaultCreated}
@@ -82,7 +82,7 @@ export default function VaultsContent() {
           </div>
         </div>
       </header>
-  
+
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
@@ -144,7 +144,7 @@ export default function VaultsContent() {
         )}
       </main>
 
-      <CreateVaultModal 
+      <CreateVaultModal
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         onVaultCreated={handleVaultCreated}

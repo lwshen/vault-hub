@@ -14,7 +14,7 @@ function debounceNavigateToLogin() {
     navigate(PATH.LOGIN);
     // Optionally, reset the flag after a short delay if needed:
     setTimeout(() => {
-      isNavigatingToLogin = false; 
+      isNavigatingToLogin = false;
     }, 1000);
   }
 }
@@ -37,7 +37,7 @@ const config = new Configuration({
 
         if (!response.ok) {
           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-          
+
           try {
             const errorBody = await response.clone().text();
             if (errorBody) {
@@ -61,7 +61,7 @@ const config = new Configuration({
           }
           throw error;
         }
-        
+
         return response;
       },
     },
