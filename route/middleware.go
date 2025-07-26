@@ -24,6 +24,28 @@ func jwtMiddleware(c *fiber.Ctx) error {
 
 	tokenString := tokenParts[1]
 
+	// Check if it's an API key (starts with "vhub_")
+	if strings.HasPrefix(tokenString, "vhub_") {
+		return handleAPIKeyAuth(c, tokenString)
+	}
+
+	// Handle JWT token
+	return handleJWTAuth(c, tokenString)
+}
+
+func handleAPIKeyAuth(c *fiber.Ctx, apiKey string) error {
+	key, err := model.ValidateAPIKey(apiKey)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusUnauthorized, "invalid API key")
+	}
+
+	c.Locals("user_id", &key.UserID)
+	c.Locals("api_key", key)
+
+	return c.Next()
+}
+
+func handleJWTAuth(c *fiber.Ctx, tokenString string) error {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
