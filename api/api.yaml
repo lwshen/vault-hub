@@ -218,6 +218,82 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuditLogsResponse'
+  /api/api-keys:
+    get:
+      description: Get all API keys for the current user
+      tags:
+        - APIKey
+      operationId: getAPIKeys
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/APIKey'
+    post:
+      description: Create a new API key
+      tags:
+        - APIKey
+      operationId: createAPIKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAPIKeyRequest"
+      responses:
+        '201':
+          description: API key created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAPIKeyResponse'
+  /api/api-keys/{id}:
+    patch:
+      description: Update an API key (enable/disable or modify properties)
+      tags:
+        - APIKey
+      operationId: updateAPIKey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAPIKeyRequest"
+      responses:
+        '200':
+          description: API key updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIKey'
+    delete:
+      description: Delete an API key
+      tags:
+        - APIKey
+      operationId: deleteAPIKey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: API key deleted successfully
 
 components:
   schemas:
@@ -433,3 +509,96 @@ components:
         user_agent:
           type: string
           description: User agent string from the client
+
+    APIKey:
+      type: object
+      required:
+        - id
+        - name
+        - is_active
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique API key ID
+        name:
+          type: string
+          description: Human-readable name for the API key
+        vaults:
+          type: array
+          items:
+            $ref: '#/components/schemas/VaultLite'
+          description: Array of vaults this key can access (null/empty = all user's vaults)
+        expires_at:
+          type: string
+          format: date-time
+          description: Optional expiration date
+        last_used_at:
+          type: string
+          format: date-time
+          description: When the key was last used
+        is_active:
+          type: boolean
+          description: Whether the key is currently active
+        created_at:
+          type: string
+          format: date-time
+          description: When the key was created
+        updated_at:
+          type: string
+          format: date-time
+          description: When the key was last updated
+
+    CreateAPIKeyRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Human-readable name for the API key
+          minLength: 1
+          maxLength: 255
+        vault_unique_ids:
+          type: array
+          items:
+            type: string
+          description: Array of vault unique IDs this key can access (empty = all user's vaults)
+        expires_at:
+          type: string
+          format: date-time
+          description: Optional expiration date
+
+    CreateAPIKeyResponse:
+      type: object
+      required:
+        - api_key
+        - key
+      properties:
+        api_key:
+          $ref: '#/components/schemas/APIKey'
+        key:
+          type: string
+          description: The generated API key (only shown once)
+
+    UpdateAPIKeyRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Human-readable name for the API key
+          minLength: 1
+          maxLength: 255
+        vault_unique_ids:
+          type: array
+          items:
+            type: string
+          description: Array of vault unique IDs this key can access (empty = all user's vaults)
+        expires_at:
+          type: string
+          format: date-time
+          description: Optional expiration date
+        is_active:
+          type: boolean
+          description: Enable or disable the API key

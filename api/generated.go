@@ -25,6 +25,33 @@ const (
 	UpdateVault  AuditLogAction = "update_vault"
 )
 
+// APIKey defines model for APIKey.
+type APIKey struct {
+	// CreatedAt When the key was created
+	CreatedAt time.Time `json:"created_at"`
+
+	// ExpiresAt Optional expiration date
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+
+	// Id Unique API key ID
+	Id int64 `json:"id"`
+
+	// IsActive Whether the key is currently active
+	IsActive bool `json:"is_active"`
+
+	// LastUsedAt When the key was last used
+	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
+
+	// Name Human-readable name for the API key
+	Name string `json:"name"`
+
+	// UpdatedAt When the key was last updated
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+
+	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
+	Vaults *[]VaultLite `json:"vaults,omitempty"`
+}
+
 // AuditLog defines model for AuditLog.
 type AuditLog struct {
 	// Action Type of action performed
@@ -56,6 +83,26 @@ type AuditLogsResponse struct {
 
 	// TotalCount Total number of logs matching the filter criteria
 	TotalCount int `json:"total_count"`
+}
+
+// CreateAPIKeyRequest defines model for CreateAPIKeyRequest.
+type CreateAPIKeyRequest struct {
+	// ExpiresAt Optional expiration date
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+
+	// Name Human-readable name for the API key
+	Name string `json:"name"`
+
+	// VaultUniqueIds Array of vault unique IDs this key can access (empty = all user's vaults)
+	VaultUniqueIds *[]string `json:"vault_unique_ids,omitempty"`
+}
+
+// CreateAPIKeyResponse defines model for CreateAPIKeyResponse.
+type CreateAPIKeyResponse struct {
+	ApiKey APIKey `json:"api_key"`
+
+	// Key The generated API key (only shown once)
+	Key string `json:"key"`
 }
 
 // CreateVaultRequest defines model for CreateVaultRequest.
@@ -107,6 +154,21 @@ type SignupRequest struct {
 // SignupResponse defines model for SignupResponse.
 type SignupResponse struct {
 	Token string `json:"token"`
+}
+
+// UpdateAPIKeyRequest defines model for UpdateAPIKeyRequest.
+type UpdateAPIKeyRequest struct {
+	// ExpiresAt Optional expiration date
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+
+	// IsActive Enable or disable the API key
+	IsActive *bool `json:"is_active,omitempty"`
+
+	// Name Human-readable name for the API key
+	Name *string `json:"name,omitempty"`
+
+	// VaultUniqueIds Array of vault unique IDs this key can access (empty = all user's vaults)
+	VaultUniqueIds *[]string `json:"vault_unique_ids,omitempty"`
 }
 
 // UpdateVaultRequest defines model for UpdateVaultRequest.
@@ -181,6 +243,12 @@ type GetAuditLogsParams struct {
 	PageIndex int `form:"pageIndex" json:"pageIndex"`
 }
 
+// CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
+type CreateAPIKeyJSONRequestBody = CreateAPIKeyRequest
+
+// UpdateAPIKeyJSONRequestBody defines body for UpdateAPIKey for application/json ContentType.
+type UpdateAPIKeyJSONRequestBody = UpdateAPIKeyRequest
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
 
@@ -195,6 +263,18 @@ type UpdateVaultJSONRequestBody = UpdateVaultRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+
+	// (GET /api/api-keys)
+	GetAPIKeys(c *fiber.Ctx) error
+
+	// (POST /api/api-keys)
+	CreateAPIKey(c *fiber.Ctx) error
+
+	// (DELETE /api/api-keys/{id})
+	DeleteAPIKey(c *fiber.Ctx, id int64) error
+
+	// (PATCH /api/api-keys/{id})
+	UpdateAPIKey(c *fiber.Ctx, id int64) error
 
 	// (GET /api/audit-logs)
 	GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error
@@ -236,6 +316,50 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc fiber.Handler
+
+// GetAPIKeys operation middleware
+func (siw *ServerInterfaceWrapper) GetAPIKeys(c *fiber.Ctx) error {
+
+	return siw.Handler.GetAPIKeys(c)
+}
+
+// CreateAPIKey operation middleware
+func (siw *ServerInterfaceWrapper) CreateAPIKey(c *fiber.Ctx) error {
+
+	return siw.Handler.CreateAPIKey(c)
+}
+
+// DeleteAPIKey operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAPIKey(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	return siw.Handler.DeleteAPIKey(c, id)
+}
+
+// UpdateAPIKey operation middleware
+func (siw *ServerInterfaceWrapper) UpdateAPIKey(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	return siw.Handler.UpdateAPIKey(c, id)
+}
 
 // GetAuditLogs operation middleware
 func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
@@ -416,6 +540,14 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 		router.Use(fiber.Handler(m))
 	}
 
+	router.Get(options.BaseURL+"/api/api-keys", wrapper.GetAPIKeys)
+
+	router.Post(options.BaseURL+"/api/api-keys", wrapper.CreateAPIKey)
+
+	router.Delete(options.BaseURL+"/api/api-keys/:id", wrapper.DeleteAPIKey)
+
+	router.Patch(options.BaseURL+"/api/api-keys/:id", wrapper.UpdateAPIKey)
+
 	router.Get(options.BaseURL+"/api/audit-logs", wrapper.GetAuditLogs)
 
 	router.Post(options.BaseURL+"/api/auth/login", wrapper.Login)
@@ -438,6 +570,73 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Put(options.BaseURL+"/api/vaults/:unique_id", wrapper.UpdateVault)
 
+}
+
+type GetAPIKeysRequestObject struct {
+}
+
+type GetAPIKeysResponseObject interface {
+	VisitGetAPIKeysResponse(ctx *fiber.Ctx) error
+}
+
+type GetAPIKeys200JSONResponse []APIKey
+
+func (response GetAPIKeys200JSONResponse) VisitGetAPIKeysResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type CreateAPIKeyRequestObject struct {
+	Body *CreateAPIKeyJSONRequestBody
+}
+
+type CreateAPIKeyResponseObject interface {
+	VisitCreateAPIKeyResponse(ctx *fiber.Ctx) error
+}
+
+type CreateAPIKey201JSONResponse CreateAPIKeyResponse
+
+func (response CreateAPIKey201JSONResponse) VisitCreateAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(201)
+
+	return ctx.JSON(&response)
+}
+
+type DeleteAPIKeyRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type DeleteAPIKeyResponseObject interface {
+	VisitDeleteAPIKeyResponse(ctx *fiber.Ctx) error
+}
+
+type DeleteAPIKey204Response struct {
+}
+
+func (response DeleteAPIKey204Response) VisitDeleteAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Status(204)
+	return nil
+}
+
+type UpdateAPIKeyRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *UpdateAPIKeyJSONRequestBody
+}
+
+type UpdateAPIKeyResponseObject interface {
+	VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error
+}
+
+type UpdateAPIKey200JSONResponse APIKey
+
+func (response UpdateAPIKey200JSONResponse) VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
 }
 
 type GetAuditLogsRequestObject struct {
@@ -625,6 +824,18 @@ func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.C
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
+	// (GET /api/api-keys)
+	GetAPIKeys(ctx context.Context, request GetAPIKeysRequestObject) (GetAPIKeysResponseObject, error)
+
+	// (POST /api/api-keys)
+	CreateAPIKey(ctx context.Context, request CreateAPIKeyRequestObject) (CreateAPIKeyResponseObject, error)
+
+	// (DELETE /api/api-keys/{id})
+	DeleteAPIKey(ctx context.Context, request DeleteAPIKeyRequestObject) (DeleteAPIKeyResponseObject, error)
+
+	// (PATCH /api/api-keys/{id})
+	UpdateAPIKey(ctx context.Context, request UpdateAPIKeyRequestObject) (UpdateAPIKeyResponseObject, error)
+
 	// (GET /api/audit-logs)
 	GetAuditLogs(ctx context.Context, request GetAuditLogsRequestObject) (GetAuditLogsResponseObject, error)
 
@@ -670,6 +881,122 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
+}
+
+// GetAPIKeys operation middleware
+func (sh *strictHandler) GetAPIKeys(ctx *fiber.Ctx) error {
+	var request GetAPIKeysRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAPIKeys(ctx.UserContext(), request.(GetAPIKeysRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAPIKeys")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetAPIKeysResponseObject); ok {
+		if err := validResponse.VisitGetAPIKeysResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateAPIKey operation middleware
+func (sh *strictHandler) CreateAPIKey(ctx *fiber.Ctx) error {
+	var request CreateAPIKeyRequestObject
+
+	var body CreateAPIKeyJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAPIKey(ctx.UserContext(), request.(CreateAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(CreateAPIKeyResponseObject); ok {
+		if err := validResponse.VisitCreateAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteAPIKey operation middleware
+func (sh *strictHandler) DeleteAPIKey(ctx *fiber.Ctx, id int64) error {
+	var request DeleteAPIKeyRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAPIKey(ctx.UserContext(), request.(DeleteAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(DeleteAPIKeyResponseObject); ok {
+		if err := validResponse.VisitDeleteAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// UpdateAPIKey operation middleware
+func (sh *strictHandler) UpdateAPIKey(ctx *fiber.Ctx, id int64) error {
+	var request UpdateAPIKeyRequestObject
+
+	request.Id = id
+
+	var body UpdateAPIKeyJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAPIKey(ctx.UserContext(), request.(UpdateAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(UpdateAPIKeyResponseObject); ok {
+		if err := validResponse.VisitUpdateAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
 }
 
 // GetAuditLogs operation middleware
