@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -8,6 +9,28 @@ import (
 	"github.com/lwshen/vault-hub/model"
 	"gorm.io/gorm"
 )
+
+// auditAPIKeyOperation creates an audit log entry for API key operations
+func auditAPIKeyOperation(c *fiber.Ctx, action model.ActionType, userID uint, apiKeyID uint, apiKeyName string) {
+	ip, userAgent := getClientInfo(c)
+	
+	err := model.CreateAuditLog(model.CreateAuditLogParams{
+		Action:    action,
+		UserID:    userID,
+		IPAddress: ip,
+		UserAgent: userAgent,
+	})
+	
+	if err != nil {
+		// Log the audit error but don't fail the main operation
+		slog.Error("Failed to create audit log for API key operation", 
+			"action", action,
+			"user_id", userID,
+			"api_key_id", apiKeyID,
+			"api_key_name", apiKeyName,
+			"error", err)
+	}
+}
 
 // convertToApiAPIKey converts a model.APIKey to an api.APIKey
 func convertToApiAPIKey(apiKey *model.APIKey) (*APIKey, error) {
@@ -129,6 +152,9 @@ func (s Server) CreateAPIKey(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to convert API key")
 	}
 
+	// Create audit log for API key creation
+	auditAPIKeyOperation(c, model.ActionCreateAPIKey, user.ID, apiKey.ID, apiKey.Name)
+
 	response := CreateAPIKeyResponse{
 		ApiKey: *apiAPIKey,
 		Key:    plainKey,
@@ -197,6 +223,9 @@ func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to convert API key")
 	}
 
+	// Create audit log for API key update
+	auditAPIKeyOperation(c, model.ActionUpdateAPIKey, user.ID, apiKey.ID, apiKey.Name)
+
 	return c.Status(fiber.StatusOK).JSON(*apiAPIKey)
 }
 
@@ -222,6 +251,9 @@ func (s Server) DeleteAPIKey(c *fiber.Ctx, id int64) error {
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to delete API key")
 	}
+
+	// Create audit log for API key deletion
+	auditAPIKeyOperation(c, model.ActionDeleteAPIKey, user.ID, apiKey.ID, apiKey.Name)
 
 	return c.SendStatus(fiber.StatusNoContent)
 }
