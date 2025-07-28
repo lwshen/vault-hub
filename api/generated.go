@@ -16,12 +16,15 @@ import (
 
 // Defines values for AuditLogAction.
 const (
+	CreateApiKey AuditLogAction = "create_api_key"
 	CreateVault  AuditLogAction = "create_vault"
+	DeleteApiKey AuditLogAction = "delete_api_key"
 	DeleteVault  AuditLogAction = "delete_vault"
 	LoginUser    AuditLogAction = "login_user"
 	LogoutUser   AuditLogAction = "logout_user"
 	ReadVault    AuditLogAction = "read_vault"
 	RegisterUser AuditLogAction = "register_user"
+	UpdateApiKey AuditLogAction = "update_api_key"
 	UpdateVault  AuditLogAction = "update_vault"
 )
 
@@ -56,6 +59,7 @@ type APIKey struct {
 type AuditLog struct {
 	// Action Type of action performed
 	Action AuditLogAction `json:"action"`
+	ApiKey *APIKey        `json:"api_key,omitempty"`
 
 	// CreatedAt When the action occurred
 	CreatedAt time.Time `json:"created_at"`

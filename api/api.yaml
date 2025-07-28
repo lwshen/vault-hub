@@ -499,9 +499,11 @@ components:
           description: When the action occurred
         vault:
           $ref: '#/components/schemas/VaultLite'
+        api_key:
+          $ref: '#/components/schemas/APIKey'
         action:
           type: string
-          enum: [read_vault, update_vault, delete_vault, create_vault, login_user, register_user, logout_user]
+          enum: [read_vault, update_vault, delete_vault, create_vault, login_user, register_user, logout_user, create_api_key, update_api_key, delete_api_key]
           description: Type of action performed
         ip_address:
           type: string
