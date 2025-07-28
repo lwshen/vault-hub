@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -166,7 +167,13 @@ func ValidateAPIKey(key string) (*APIKey, error) {
 	// Update last used timestamp
 	now := time.Now()
 	apiKey.LastUsedAt = &now
-	DB.Save(&apiKey)
+	if err := DB.Save(&apiKey).Error; err != nil {
+		// Log the error but don't fail the validation - usage tracking is not critical
+		// for API key validation functionality
+		slog.Error("Failed to update API key last used timestamp", 
+			"api_key_id", apiKey.ID, 
+			"error", err)
+	}
 
 	return apiKey, nil
 }
