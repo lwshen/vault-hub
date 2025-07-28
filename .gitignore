@@ -32,3 +32,5 @@ tmp/
 *.pid
 
 data.db
+
+.claude/settings.local.json
