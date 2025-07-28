@@ -13,12 +13,12 @@ import (
 // auditAPIKeyOperation creates an audit log entry for API key operations
 func auditAPIKeyOperation(c *fiber.Ctx, action model.ActionType, userID uint, apiKeyID uint, apiKeyName string) {
 	ip, userAgent := getClientInfo(c)
-	
+
 	err := model.LogAPIKeyAction(apiKeyID, action, userID, ip, userAgent)
-	
+
 	if err != nil {
 		// Log the audit error but don't fail the main operation
-		slog.Error("Failed to create audit log for API key operation", 
+		slog.Error("Failed to create audit log for API key operation",
 			"action", action,
 			"user_id", userID,
 			"api_key_id", apiKeyID,
@@ -63,7 +63,6 @@ func convertToApiAPIKey(apiKey *model.APIKey) (*APIKey, error) {
 		UpdatedAt:  &apiKey.UpdatedAt,
 	}, nil
 }
-
 
 // GetAPIKeys - Get all API keys for the current user
 func (s Server) GetAPIKeys(c *fiber.Ctx) error {

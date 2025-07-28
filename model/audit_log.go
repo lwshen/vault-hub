@@ -17,6 +17,7 @@ const (
 	ActionRegisterUser ActionType = "register_user"
 	ActionLogoutUser   ActionType = "logout_user"
 	ActionCreateAPIKey ActionType = "create_api_key"
+	//nolint:gosec // G101 here is the enum name
 	ActionUpdateAPIKey ActionType = "update_api_key"
 	ActionDeleteAPIKey ActionType = "delete_api_key"
 )

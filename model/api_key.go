@@ -170,8 +170,8 @@ func ValidateAPIKey(key string) (*APIKey, error) {
 	if err := DB.Save(&apiKey).Error; err != nil {
 		// Log the error but don't fail the validation - usage tracking is not critical
 		// for API key validation functionality
-		slog.Error("Failed to update API key last used timestamp", 
-			"api_key_id", apiKey.ID, 
+		slog.Error("Failed to update API key last used timestamp",
+			"api_key_id", apiKey.ID,
 			"error", err)
 	}
 
