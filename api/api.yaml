@@ -107,14 +107,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Vault'
-  /api/vaults/{unique_id}:
+  /api/vaults/{uniqueId}:
     get:
       description: Get a specific vault by Unique ID
       tags:
         - Vault
       operationId: getVault
       parameters:
-        - name: unique_id
+        - name: uniqueId
           in: path
           required: true
           description: Vault Unique ID
@@ -133,7 +133,7 @@ paths:
         - Vault
       operationId: updateVault
       parameters:
-        - name: unique_id
+        - name: uniqueId
           in: path
           required: true
           description: Vault Unique ID
@@ -158,7 +158,7 @@ paths:
         - Vault
       operationId: deleteVault
       parameters:
-        - name: unique_id
+        - name: uniqueId
           in: path
           required: true
           description: Vault Unique ID
@@ -174,21 +174,21 @@ paths:
         - Audit
       operationId: getAuditLogs
       parameters:
-        - name: start_date
+        - name: startDate
           in: query
           required: false
           description: Filter logs from this date (ISO 8601 format)
           schema:
             type: string
             format: date-time
-        - name: end_date
+        - name: endDate
           in: query
           required: false
           description: Filter logs until this date (ISO 8601 format)
           schema:
             type: string
             format: date-time
-        - name: vault_unique_id
+        - name: vaultUniqueId
           in: query
           required: false
           description: Filter logs by vault unique ID
@@ -383,10 +383,10 @@ components:
     VaultLite:
       type: object
       required:
-        - unique_id
+        - uniqueId
         - name
       properties:
-        unique_id:
+        uniqueId:
           type: string
           description: Unique identifier for the vault
         name:
@@ -398,21 +398,21 @@ components:
         category:
           type: string
           description: Category/type of vault
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
 
     Vault:
       type: object
       required:
-        - unique_id
+        - uniqueId
         - name
         - value
       properties:
-        unique_id:
+        uniqueId:
           type: string
           description: Unique identifier for the vault
-        user_id:
+        userId:
           type: integer
           format: int64
           description: ID of the user who owns this vault
@@ -428,10 +428,10 @@ components:
         category:
           type: string
           description: Category/type of vault
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
 
@@ -483,16 +483,16 @@ components:
     AuditLogsResponse:
       type: object
       required:
-        - audit_logs
-        - total_count
+        - auditLogs
+        - totalCount
         - pageSize
         - pageIndex
       properties:
-        audit_logs:
+        auditLogs:
           type: array
           items:
             $ref: '#/components/schemas/AuditLog'
-        total_count:
+        totalCount:
           type: integer
           description: Total number of logs matching the filter criteria
         pageSize:
@@ -505,16 +505,16 @@ components:
     APIKeysResponse:
       type: object
       required:
-        - api_keys
-        - total_count
+        - apiKeys
+        - totalCount
         - pageSize
         - pageIndex
       properties:
-        api_keys:
+        apiKeys:
           type: array
           items:
             $ref: '#/components/schemas/APIKey'
-        total_count:
+        totalCount:
           type: integer
           description: Total number of API keys
         pageSize:
@@ -527,26 +527,26 @@ components:
     AuditLog:
       type: object
       required:
-        - created_at
-        - user_id
+        - createdAt
+        - userId
         - action
       properties:
-        created_at:
+        createdAt:
           type: string
           format: date-time
           description: When the action occurred
         vault:
           $ref: '#/components/schemas/VaultLite'
-        api_key:
+        apiKey:
           $ref: '#/components/schemas/APIKey'
         action:
           type: string
           enum: [read_vault, update_vault, delete_vault, create_vault, login_user, register_user, logout_user, create_api_key, update_api_key, delete_api_key]
           description: Type of action performed
-        ip_address:
+        ipAddress:
           type: string
           description: IP address from which the action was performed
-        user_agent:
+        userAgent:
           type: string
           description: User agent string from the client
 
@@ -555,8 +555,8 @@ components:
       required:
         - id
         - name
-        - is_active
-        - created_at
+        - isActive
+        - createdAt
       properties:
         id:
           type: integer
@@ -570,22 +570,22 @@ components:
           items:
             $ref: '#/components/schemas/VaultLite'
           description: Array of vaults this key can access (null/empty = all user's vaults)
-        expires_at:
+        expiresAt:
           type: string
           format: date-time
           description: Optional expiration date
-        last_used_at:
+        lastUsedAt:
           type: string
           format: date-time
           description: When the key was last used
-        is_active:
+        isActive:
           type: boolean
           description: Whether the key is currently active
-        created_at:
+        createdAt:
           type: string
           format: date-time
           description: When the key was created
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           description: When the key was last updated
@@ -600,12 +600,12 @@ components:
           description: Human-readable name for the API key
           minLength: 1
           maxLength: 255
-        vault_unique_ids:
+        vaultUniqueIds:
           type: array
           items:
             type: string
           description: Array of vault unique IDs this key can access (empty = all user's vaults)
-        expires_at:
+        expiresAt:
           type: string
           format: date-time
           description: Optional expiration date
@@ -613,10 +613,10 @@ components:
     CreateAPIKeyResponse:
       type: object
       required:
-        - api_key
+        - apiKey
         - key
       properties:
-        api_key:
+        apiKey:
           $ref: '#/components/schemas/APIKey'
         key:
           type: string
@@ -630,15 +630,15 @@ components:
           description: Human-readable name for the API key
           minLength: 1
           maxLength: 255
-        vault_unique_ids:
+        vaultUniqueIds:
           type: array
           items:
             type: string
           description: Array of vault unique IDs this key can access (empty = all user's vaults)
-        expires_at:
+        expiresAt:
           type: string
           format: date-time
           description: Optional expiration date
-        is_active:
+        isActive:
           type: boolean
           description: Enable or disable the API key
