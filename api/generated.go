@@ -31,25 +31,25 @@ const (
 // APIKey defines model for APIKey.
 type APIKey struct {
 	// CreatedAt When the key was created
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"createdAt"`
 
 	// ExpiresAt Optional expiration date
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 
 	// Id Unique API key ID
 	Id int64 `json:"id"`
 
 	// IsActive Whether the key is currently active
-	IsActive bool `json:"is_active"`
+	IsActive bool `json:"isActive"`
 
 	// LastUsedAt When the key was last used
-	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
+	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
 
 	// Name Human-readable name for the API key
 	Name string `json:"name"`
 
 	// UpdatedAt When the key was last updated
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 
 	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
 	Vaults *[]VaultLite `json:"vaults,omitempty"`
@@ -57,7 +57,7 @@ type APIKey struct {
 
 // APIKeysResponse defines model for APIKeysResponse.
 type APIKeysResponse struct {
-	ApiKeys []APIKey `json:"api_keys"`
+	ApiKeys []APIKey `json:"apiKeys"`
 
 	// PageIndex Current page index (starting from 1)
 	PageIndex int `json:"pageIndex"`
@@ -66,23 +66,23 @@ type APIKeysResponse struct {
 	PageSize int `json:"pageSize"`
 
 	// TotalCount Total number of API keys
-	TotalCount int `json:"total_count"`
+	TotalCount int `json:"totalCount"`
 }
 
 // AuditLog defines model for AuditLog.
 type AuditLog struct {
 	// Action Type of action performed
 	Action AuditLogAction `json:"action"`
-	ApiKey *APIKey        `json:"api_key,omitempty"`
+	ApiKey *APIKey        `json:"apiKey,omitempty"`
 
 	// CreatedAt When the action occurred
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"createdAt"`
 
 	// IpAddress IP address from which the action was performed
-	IpAddress *string `json:"ip_address,omitempty"`
+	IpAddress *string `json:"ipAddress,omitempty"`
 
 	// UserAgent User agent string from the client
-	UserAgent *string    `json:"user_agent,omitempty"`
+	UserAgent *string    `json:"userAgent,omitempty"`
 	Vault     *VaultLite `json:"vault,omitempty"`
 }
 
@@ -91,7 +91,7 @@ type AuditLogAction string
 
 // AuditLogsResponse defines model for AuditLogsResponse.
 type AuditLogsResponse struct {
-	AuditLogs []AuditLog `json:"audit_logs"`
+	AuditLogs []AuditLog `json:"auditLogs"`
 
 	// PageIndex Current page index (starting from 0)
 	PageIndex int `json:"pageIndex"`
@@ -100,24 +100,24 @@ type AuditLogsResponse struct {
 	PageSize int `json:"pageSize"`
 
 	// TotalCount Total number of logs matching the filter criteria
-	TotalCount int `json:"total_count"`
+	TotalCount int `json:"totalCount"`
 }
 
 // CreateAPIKeyRequest defines model for CreateAPIKeyRequest.
 type CreateAPIKeyRequest struct {
 	// ExpiresAt Optional expiration date
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 
 	// Name Human-readable name for the API key
 	Name string `json:"name"`
 
 	// VaultUniqueIds Array of vault unique IDs this key can access (empty = all user's vaults)
-	VaultUniqueIds *[]string `json:"vault_unique_ids,omitempty"`
+	VaultUniqueIds *[]string `json:"vaultUniqueIds,omitempty"`
 }
 
 // CreateAPIKeyResponse defines model for CreateAPIKeyResponse.
 type CreateAPIKeyResponse struct {
-	ApiKey APIKey `json:"api_key"`
+	ApiKey APIKey `json:"apiKey"`
 
 	// Key The generated API key (only shown once)
 	Key string `json:"key"`
@@ -177,16 +177,16 @@ type SignupResponse struct {
 // UpdateAPIKeyRequest defines model for UpdateAPIKeyRequest.
 type UpdateAPIKeyRequest struct {
 	// ExpiresAt Optional expiration date
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 
 	// IsActive Enable or disable the API key
-	IsActive *bool `json:"is_active,omitempty"`
+	IsActive *bool `json:"isActive,omitempty"`
 
 	// Name Human-readable name for the API key
 	Name *string `json:"name,omitempty"`
 
 	// VaultUniqueIds Array of vault unique IDs this key can access (empty = all user's vaults)
-	VaultUniqueIds *[]string `json:"vault_unique_ids,omitempty"`
+	VaultUniqueIds *[]string `json:"vaultUniqueIds,omitempty"`
 }
 
 // UpdateVaultRequest defines model for UpdateVaultRequest.
@@ -208,7 +208,7 @@ type UpdateVaultRequest struct {
 type Vault struct {
 	// Category Category/type of vault
 	Category  *string    `json:"category,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 
 	// Description Human-readable description
 	Description *string `json:"description,omitempty"`
@@ -217,11 +217,11 @@ type Vault struct {
 	Name string `json:"name"`
 
 	// UniqueId Unique identifier for the vault
-	UniqueId  string     `json:"unique_id"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	UniqueId  string     `json:"uniqueId"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 
 	// UserId ID of the user who owns this vault
-	UserId *int64 `json:"user_id,omitempty"`
+	UserId *int64 `json:"userId,omitempty"`
 
 	// Value Encrypted value
 	Value string `json:"value"`
@@ -239,8 +239,8 @@ type VaultLite struct {
 	Name string `json:"name"`
 
 	// UniqueId Unique identifier for the vault
-	UniqueId  string     `json:"unique_id"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	UniqueId  string     `json:"uniqueId"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 // GetAPIKeysParams defines parameters for GetAPIKeys.
@@ -255,13 +255,13 @@ type GetAPIKeysParams struct {
 // GetAuditLogsParams defines parameters for GetAuditLogs.
 type GetAuditLogsParams struct {
 	// StartDate Filter logs from this date (ISO 8601 format)
-	StartDate *time.Time `form:"start_date,omitempty" json:"start_date,omitempty"`
+	StartDate *time.Time `form:"startDate,omitempty" json:"startDate,omitempty"`
 
 	// EndDate Filter logs until this date (ISO 8601 format)
-	EndDate *time.Time `form:"end_date,omitempty" json:"end_date,omitempty"`
+	EndDate *time.Time `form:"endDate,omitempty" json:"endDate,omitempty"`
 
 	// VaultUniqueId Filter logs by vault unique ID
-	VaultUniqueId *string `form:"vault_unique_id,omitempty" json:"vault_unique_id,omitempty"`
+	VaultUniqueId *string `form:"vaultUniqueId,omitempty" json:"vaultUniqueId,omitempty"`
 
 	// PageSize Number of logs per page (default 100, max 1000)
 	PageSize int `form:"pageSize" json:"pageSize"`
@@ -327,13 +327,13 @@ type ServerInterface interface {
 	// (POST /api/vaults)
 	CreateVault(c *fiber.Ctx) error
 
-	// (DELETE /api/vaults/{unique_id})
+	// (DELETE /api/vaults/{uniqueId})
 	DeleteVault(c *fiber.Ctx, uniqueId string) error
 
-	// (GET /api/vaults/{unique_id})
+	// (GET /api/vaults/{uniqueId})
 	GetVault(c *fiber.Ctx, uniqueId string) error
 
-	// (PUT /api/vaults/{unique_id})
+	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(c *fiber.Ctx, uniqueId string) error
 }
 
@@ -443,25 +443,25 @@ func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
 	}
 
-	// ------------- Optional query parameter "start_date" -------------
+	// ------------- Optional query parameter "startDate" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "start_date", query, &params.StartDate)
+	err = runtime.BindQueryParameter("form", true, false, "startDate", query, &params.StartDate)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter start_date: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter startDate: %w", err).Error())
 	}
 
-	// ------------- Optional query parameter "end_date" -------------
+	// ------------- Optional query parameter "endDate" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "end_date", query, &params.EndDate)
+	err = runtime.BindQueryParameter("form", true, false, "endDate", query, &params.EndDate)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter end_date: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter endDate: %w", err).Error())
 	}
 
-	// ------------- Optional query parameter "vault_unique_id" -------------
+	// ------------- Optional query parameter "vaultUniqueId" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "vault_unique_id", query, &params.VaultUniqueId)
+	err = runtime.BindQueryParameter("form", true, false, "vaultUniqueId", query, &params.VaultUniqueId)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter vault_unique_id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter vaultUniqueId: %w", err).Error())
 	}
 
 	// ------------- Required query parameter "pageSize" -------------
@@ -544,12 +544,12 @@ func (siw *ServerInterfaceWrapper) DeleteVault(c *fiber.Ctx) error {
 
 	var err error
 
-	// ------------- Path parameter "unique_id" -------------
+	// ------------- Path parameter "uniqueId" -------------
 	var uniqueId string
 
-	err = runtime.BindStyledParameterWithOptions("simple", "unique_id", c.Params("unique_id"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "uniqueId", c.Params("uniqueId"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter unique_id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter uniqueId: %w", err).Error())
 	}
 
 	return siw.Handler.DeleteVault(c, uniqueId)
@@ -560,12 +560,12 @@ func (siw *ServerInterfaceWrapper) GetVault(c *fiber.Ctx) error {
 
 	var err error
 
-	// ------------- Path parameter "unique_id" -------------
+	// ------------- Path parameter "uniqueId" -------------
 	var uniqueId string
 
-	err = runtime.BindStyledParameterWithOptions("simple", "unique_id", c.Params("unique_id"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "uniqueId", c.Params("uniqueId"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter unique_id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter uniqueId: %w", err).Error())
 	}
 
 	return siw.Handler.GetVault(c, uniqueId)
@@ -576,12 +576,12 @@ func (siw *ServerInterfaceWrapper) UpdateVault(c *fiber.Ctx) error {
 
 	var err error
 
-	// ------------- Path parameter "unique_id" -------------
+	// ------------- Path parameter "uniqueId" -------------
 	var uniqueId string
 
-	err = runtime.BindStyledParameterWithOptions("simple", "unique_id", c.Params("unique_id"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "uniqueId", c.Params("uniqueId"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter unique_id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter uniqueId: %w", err).Error())
 	}
 
 	return siw.Handler.UpdateVault(c, uniqueId)
@@ -632,11 +632,11 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Post(options.BaseURL+"/api/vaults", wrapper.CreateVault)
 
-	router.Delete(options.BaseURL+"/api/vaults/:unique_id", wrapper.DeleteVault)
+	router.Delete(options.BaseURL+"/api/vaults/:uniqueId", wrapper.DeleteVault)
 
-	router.Get(options.BaseURL+"/api/vaults/:unique_id", wrapper.GetVault)
+	router.Get(options.BaseURL+"/api/vaults/:uniqueId", wrapper.GetVault)
 
-	router.Put(options.BaseURL+"/api/vaults/:unique_id", wrapper.UpdateVault)
+	router.Put(options.BaseURL+"/api/vaults/:uniqueId", wrapper.UpdateVault)
 
 }
 
@@ -840,7 +840,7 @@ func (response CreateVault201JSONResponse) VisitCreateVaultResponse(ctx *fiber.C
 }
 
 type DeleteVaultRequestObject struct {
-	UniqueId string `json:"unique_id"`
+	UniqueId string `json:"uniqueId"`
 }
 
 type DeleteVaultResponseObject interface {
@@ -856,7 +856,7 @@ func (response DeleteVault204Response) VisitDeleteVaultResponse(ctx *fiber.Ctx) 
 }
 
 type GetVaultRequestObject struct {
-	UniqueId string `json:"unique_id"`
+	UniqueId string `json:"uniqueId"`
 }
 
 type GetVaultResponseObject interface {
@@ -873,7 +873,7 @@ func (response GetVault200JSONResponse) VisitGetVaultResponse(ctx *fiber.Ctx) er
 }
 
 type UpdateVaultRequestObject struct {
-	UniqueId string `json:"unique_id"`
+	UniqueId string `json:"uniqueId"`
 	Body     *UpdateVaultJSONRequestBody
 }
 
@@ -929,13 +929,13 @@ type StrictServerInterface interface {
 	// (POST /api/vaults)
 	CreateVault(ctx context.Context, request CreateVaultRequestObject) (CreateVaultResponseObject, error)
 
-	// (DELETE /api/vaults/{unique_id})
+	// (DELETE /api/vaults/{uniqueId})
 	DeleteVault(ctx context.Context, request DeleteVaultRequestObject) (DeleteVaultResponseObject, error)
 
-	// (GET /api/vaults/{unique_id})
+	// (GET /api/vaults/{uniqueId})
 	GetVault(ctx context.Context, request GetVaultRequestObject) (GetVaultResponseObject, error)
 
-	// (PUT /api/vaults/{unique_id})
+	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(ctx context.Context, request UpdateVaultRequestObject) (UpdateVaultResponseObject, error)
 }
 
