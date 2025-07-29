@@ -31,6 +31,9 @@ const getIconForAction = (action: AuditLogActionEnum) => {
     [AuditLogActionEnum.LoginUser]: { icon: LogIn, color: 'text-purple-500' },
     [AuditLogActionEnum.LogoutUser]: { icon: LogOut, color: 'text-gray-500' },
     [AuditLogActionEnum.RegisterUser]: { icon: UserPlus, color: 'text-purple-500' },
+    [AuditLogActionEnum.CreateApiKey]: { icon: Key, color: 'text-green-500' },
+    [AuditLogActionEnum.UpdateApiKey]: { icon: Key, color: 'text-yellow-500' },
+    [AuditLogActionEnum.DeleteApiKey]: { icon: Key, color: 'text-red-500' },
   };
 
   return iconMap[action] || { icon: Activity, color: 'text-gray-500' };
@@ -46,6 +49,9 @@ const getActionTitle = (action: AuditLogActionEnum) => {
     [AuditLogActionEnum.LoginUser]: 'User logged in',
     [AuditLogActionEnum.LogoutUser]: 'User logged out',
     [AuditLogActionEnum.RegisterUser]: 'User registered',
+    [AuditLogActionEnum.CreateApiKey]: 'API key created',
+    [AuditLogActionEnum.UpdateApiKey]: 'API key updated',
+    [AuditLogActionEnum.DeleteApiKey]: 'API key deleted',
   };
 
   return titleMap[action] || action;
@@ -155,6 +161,9 @@ export default function AuditLogContent() {
       [AuditLogActionEnum.LoginUser]: 'Authentication',
       [AuditLogActionEnum.LogoutUser]: 'Authentication',
       [AuditLogActionEnum.RegisterUser]: 'Authentication',
+      [AuditLogActionEnum.CreateApiKey]: 'API Key Management',
+      [AuditLogActionEnum.UpdateApiKey]: 'API Key Management',
+      [AuditLogActionEnum.DeleteApiKey]: 'API Key Management',
     };
     return labels[action] || 'System';
   };
