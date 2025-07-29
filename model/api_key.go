@@ -226,6 +226,27 @@ type UpdateAPIKeyParams struct {
 	IsActive  *bool
 }
 
+// Validate validates the update API key parameters
+func (params *UpdateAPIKeyParams) Validate() map[string]string {
+	errors := map[string]string{}
+
+	if params.Name != nil {
+		name := strings.TrimSpace(*params.Name)
+		if name == "" {
+			errors["name"] = "name cannot be empty"
+		}
+		if len(name) > 255 {
+			errors["name"] = "name must be less than 255 characters"
+		}
+	}
+
+	if params.ExpiresAt != nil && params.ExpiresAt.Before(time.Now()) {
+		errors["expires_at"] = "expiration date must be in the future"
+	}
+
+	return errors
+}
+
 // Update updates an API key
 func (k *APIKey) Update(params UpdateAPIKeyParams) error {
 	if params.Name != nil {
