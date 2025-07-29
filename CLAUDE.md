@@ -72,6 +72,8 @@ The project uses OpenAPI 3.0 specification (`api/api.yaml`) with `oapi-codegen` 
 - Go server stubs (`api/generated.go`)
 - TypeScript client library (published as npm package)
 
+**Important**: Always run `go generate api/tool.go` after modifying `api/api.yaml` to regenerate the Go types and interfaces. The API spec uses camelCase naming convention for all properties (e.g., `uniqueId`, `createdAt`, `isActive`).
+
 ## Testing Strategy
 - Go unit tests for encryption (`internal/encryption/encryption_test.go`)
 - Database model tests (`model/db_test.go`)
