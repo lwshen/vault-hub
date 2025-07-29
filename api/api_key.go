@@ -74,7 +74,7 @@ func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
 	// Parse pagination parameters with defaults
 	pageSize := params.PageSize
 	pageIndex := params.PageIndex
-	
+
 	// Apply defaults if parameters are zero
 	if pageSize == 0 {
 		pageSize = 20
