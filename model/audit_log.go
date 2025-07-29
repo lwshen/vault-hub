@@ -16,12 +16,18 @@ const (
 	ActionLoginUser    ActionType = "login_user"
 	ActionRegisterUser ActionType = "register_user"
 	ActionLogoutUser   ActionType = "logout_user"
+	ActionCreateAPIKey ActionType = "create_api_key"
+	//nolint:gosec // G101 here is the enum name
+	ActionUpdateAPIKey ActionType = "update_api_key"
+	ActionDeleteAPIKey ActionType = "delete_api_key"
 )
 
 type AuditLog struct {
 	gorm.Model
 	VaultID   *uint      `gorm:"index"`
 	Vault     *Vault     `gorm:"foreignKey:VaultID"`
+	APIKeyID  *uint      `gorm:"index"`
+	APIKey    *APIKey    `gorm:"foreignKey:APIKeyID"`
 	Action    ActionType `gorm:"size:50;index"`
 	UserID    uint       `gorm:"index;constraint:OnDelete:CASCADE"`
 	User      User       `gorm:"foreignKey:UserID"`
@@ -32,6 +38,7 @@ type AuditLog struct {
 // CreateAuditLogParams defines parameters for creating an audit log entry
 type CreateAuditLogParams struct {
 	VaultID   *uint
+	APIKeyID  *uint
 	Action    ActionType
 	UserID    uint
 	IPAddress string
@@ -42,6 +49,7 @@ type CreateAuditLogParams struct {
 func CreateAuditLog(params CreateAuditLogParams) error {
 	auditLog := AuditLog{
 		VaultID:   params.VaultID,
+		APIKeyID:  params.APIKeyID,
 		Action:    params.Action,
 		UserID:    params.UserID,
 		IPAddress: params.IPAddress,
@@ -77,12 +85,24 @@ func LogUserAction(action ActionType, userID uint, ipAddress, userAgent string) 
 	})
 }
 
+// LogAPIKeyAction logs an API key-related action
+func LogAPIKeyAction(apiKeyID uint, action ActionType, userID uint, ipAddress, userAgent string) error {
+	return CreateAuditLog(CreateAuditLogParams{
+		APIKeyID:  &apiKeyID,
+		Action:    action,
+		UserID:    userID,
+		IPAddress: ipAddress,
+		UserAgent: userAgent,
+	})
+}
+
 // GetAuditLogsByUser retrieves audit logs for a specific user
 func GetAuditLogsByUser(userID uint, limit int, offset int) ([]AuditLog, error) {
 	var logs []AuditLog
 	query := DB.Where("user_id = ?", userID).
 		Preload("User").
 		Preload("Vault").
+		Preload("APIKey").
 		Order("created_at DESC")
 
 	if limit > 0 {
@@ -107,6 +127,7 @@ func GetAuditLogsByVault(vaultID uint, userID uint) ([]AuditLog, error) {
 	err := DB.Where("vault_id = ? AND user_id = ?", vaultID, userID).
 		Preload("User").
 		Preload("Vault").
+		Preload("APIKey").
 		Order("created_at DESC").
 		Find(&logs).Error
 
@@ -133,6 +154,7 @@ func GetAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) ([]AuditLog, 
 	query := DB.Where("user_id = ?", params.UserID).
 		Preload("User").
 		Preload("Vault").
+		Preload("APIKey").
 		Order("created_at DESC")
 
 	// Add vault filter if specified
