@@ -206,7 +206,7 @@ func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
 	}
 
 	// Validate parameters
-	if validationErrors := updateParams.Validate(); len(validationErrors) > 0 {
+	if validationErrors := updateParams.ValidateForUpdate(user.ID, apiKey.ID); len(validationErrors) > 0 {
 		return handler.SendError(c, fiber.StatusBadRequest, "validation failed")
 	}
 

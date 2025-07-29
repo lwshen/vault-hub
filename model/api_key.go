@@ -70,12 +70,24 @@ func (params *CreateAPIKeyParams) Validate() map[string]string {
 		errors["user_id"] = "user ID is required"
 	}
 
-	if strings.TrimSpace(params.Name) == "" {
+	name := strings.TrimSpace(params.Name)
+	if name == "" {
 		errors["name"] = "name is required"
 	}
 
 	if len(params.Name) > 255 {
 		errors["name"] = "name must be less than 255 characters"
+	}
+
+	// Check name uniqueness for the user
+	if name != "" && params.UserID != 0 {
+		var count int64
+		err := DB.Model(&APIKey{}).Where("user_id = ? AND name = ?", params.UserID, name).Count(&count).Error
+		if err != nil {
+			errors["name"] = "failed to validate name uniqueness"
+		} else if count > 0 {
+			errors["name"] = "API key name already exists"
+		}
 	}
 
 	if params.ExpiresAt != nil && params.ExpiresAt.Before(time.Now()) {
@@ -242,6 +254,27 @@ func (params *UpdateAPIKeyParams) Validate() map[string]string {
 
 	if params.ExpiresAt != nil && params.ExpiresAt.Before(time.Now()) {
 		errors["expires_at"] = "expiration date must be in the future"
+	}
+
+	return errors
+}
+
+// ValidateForUpdate validates the update API key parameters for a specific API key
+func (params *UpdateAPIKeyParams) ValidateForUpdate(userID uint, currentAPIKeyID uint) map[string]string {
+	errors := params.Validate()
+
+	if params.Name != nil {
+		name := strings.TrimSpace(*params.Name)
+		if name != "" {
+			// Check name uniqueness for the user, excluding the current API key
+			var count int64
+			err := DB.Model(&APIKey{}).Where("user_id = ? AND name = ? AND id != ?", userID, name, currentAPIKeyID).Count(&count).Error
+			if err != nil {
+				errors["name"] = "failed to validate name uniqueness"
+			} else if count > 0 {
+				errors["name"] = "API key name already exists"
+			}
+		}
 	}
 
 	return errors
