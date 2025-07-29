@@ -220,19 +220,35 @@ paths:
                 $ref: '#/components/schemas/AuditLogsResponse'
   /api/api-keys:
     get:
-      description: Get all API keys for the current user
+      description: Get API keys for the current user with pagination
       tags:
         - APIKey
       operationId: getAPIKeys
+      parameters:
+        - name: pageSize
+          in: query
+          required: true
+          description: Number of API keys per page (default 20, max 1000)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 20
+        - name: pageIndex
+          in: query
+          required: true
+          description: Page index, starting from 1 (default 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
       responses:
         '200':
           description: List of API keys
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/APIKey'
+                $ref: '#/components/schemas/APIKeysResponse'
     post:
       description: Create a new API key
       tags:
@@ -485,6 +501,28 @@ components:
         pageIndex:
           type: integer
           description: Current page index (starting from 0)
+
+    APIKeysResponse:
+      type: object
+      required:
+        - api_keys
+        - total_count
+        - pageSize
+        - pageIndex
+      properties:
+        api_keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIKey'
+        total_count:
+          type: integer
+          description: Total number of API keys
+        pageSize:
+          type: integer
+          description: Number of API keys per page
+        pageIndex:
+          type: integer
+          description: Current page index (starting from 1)
 
     AuditLog:
       type: object

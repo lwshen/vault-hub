@@ -55,6 +55,20 @@ type APIKey struct {
 	Vaults *[]VaultLite `json:"vaults,omitempty"`
 }
 
+// APIKeysResponse defines model for APIKeysResponse.
+type APIKeysResponse struct {
+	ApiKeys []APIKey `json:"api_keys"`
+
+	// PageIndex Current page index (starting from 1)
+	PageIndex int `json:"pageIndex"`
+
+	// PageSize Number of API keys per page
+	PageSize int `json:"pageSize"`
+
+	// TotalCount Total number of API keys
+	TotalCount int `json:"total_count"`
+}
+
 // AuditLog defines model for AuditLog.
 type AuditLog struct {
 	// Action Type of action performed
@@ -229,6 +243,15 @@ type VaultLite struct {
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 }
 
+// GetAPIKeysParams defines parameters for GetAPIKeys.
+type GetAPIKeysParams struct {
+	// PageSize Number of API keys per page (default 20, max 1000)
+	PageSize int `form:"pageSize" json:"pageSize"`
+
+	// PageIndex Page index, starting from 1 (default 1)
+	PageIndex int `form:"pageIndex" json:"pageIndex"`
+}
+
 // GetAuditLogsParams defines parameters for GetAuditLogs.
 type GetAuditLogsParams struct {
 	// StartDate Filter logs from this date (ISO 8601 format)
@@ -269,7 +292,7 @@ type UpdateVaultJSONRequestBody = UpdateVaultRequest
 type ServerInterface interface {
 
 	// (GET /api/api-keys)
-	GetAPIKeys(c *fiber.Ctx) error
+	GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error
 
 	// (POST /api/api-keys)
 	CreateAPIKey(c *fiber.Ctx) error
@@ -324,7 +347,48 @@ type MiddlewareFunc fiber.Handler
 // GetAPIKeys operation middleware
 func (siw *ServerInterfaceWrapper) GetAPIKeys(c *fiber.Ctx) error {
 
-	return siw.Handler.GetAPIKeys(c)
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAPIKeysParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "pageSize" -------------
+
+	if paramValue := c.Query("pageSize"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument pageSize is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "pageSize", query, &params.PageSize)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageSize: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "pageIndex" -------------
+
+	if paramValue := c.Query("pageIndex"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument pageIndex is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "pageIndex", query, &params.PageIndex)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageIndex: %w", err).Error())
+	}
+
+	return siw.Handler.GetAPIKeys(c, params)
 }
 
 // CreateAPIKey operation middleware
@@ -577,13 +641,14 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 }
 
 type GetAPIKeysRequestObject struct {
+	Params GetAPIKeysParams
 }
 
 type GetAPIKeysResponseObject interface {
 	VisitGetAPIKeysResponse(ctx *fiber.Ctx) error
 }
 
-type GetAPIKeys200JSONResponse []APIKey
+type GetAPIKeys200JSONResponse APIKeysResponse
 
 func (response GetAPIKeys200JSONResponse) VisitGetAPIKeysResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -888,8 +953,10 @@ type strictHandler struct {
 }
 
 // GetAPIKeys operation middleware
-func (sh *strictHandler) GetAPIKeys(ctx *fiber.Ctx) error {
+func (sh *strictHandler) GetAPIKeys(ctx *fiber.Ctx, params GetAPIKeysParams) error {
 	var request GetAPIKeysRequestObject
+
+	request.Params = params
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.GetAPIKeys(ctx.UserContext(), request.(GetAPIKeysRequestObject))

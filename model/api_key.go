@@ -312,6 +312,30 @@ func GetUserAPIKeys(userID uint) ([]APIKey, error) {
 	return apiKeys, err
 }
 
+// GetUserAPIKeysWithPagination returns API keys for a user with pagination
+func GetUserAPIKeysWithPagination(userID uint, pageSize, pageIndex int) ([]APIKey, int64, error) {
+	var apiKeys []APIKey
+	var totalCount int64
+
+	// Get total count
+	err := DB.Model(&APIKey{}).Where("user_id = ?", userID).Count(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Calculate offset (pageIndex is 1-based)
+	offset := (pageIndex - 1) * pageSize
+
+	// Get paginated results
+	err = DB.Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Limit(pageSize).
+		Offset(offset).
+		Find(&apiKeys).Error
+
+	return apiKeys, totalCount, err
+}
+
 // Delete soft deletes an API key
 func (k *APIKey) Delete() error {
 	return DB.Delete(k).Error

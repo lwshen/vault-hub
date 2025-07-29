@@ -64,27 +64,55 @@ func convertToApiAPIKey(apiKey *model.APIKey) (*APIKey, error) {
 	}, nil
 }
 
-// GetAPIKeys - Get all API keys for the current user
-func (s Server) GetAPIKeys(c *fiber.Ctx) error {
+// GetAPIKeys - Get API keys for the current user with pagination
+func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	// Get all API keys for the user
-	apiKeys, err := model.GetUserAPIKeys(user.ID)
+	// Parse pagination parameters with defaults
+	pageSize := params.PageSize
+	pageIndex := params.PageIndex
+	
+	// Apply defaults if parameters are zero
+	if pageSize == 0 {
+		pageSize = 20
+	}
+	if pageIndex == 0 {
+		pageIndex = 1
+	}
+
+	// Validate parameters
+	if pageSize < 1 || pageSize > 1000 {
+		return handler.SendError(c, fiber.StatusBadRequest, "pageSize must be between 1 and 1000")
+	}
+	if pageIndex < 1 {
+		return handler.SendError(c, fiber.StatusBadRequest, "pageIndex must be at least 1")
+	}
+
+	// Get paginated API keys for the user
+	apiKeys, totalCount, err := model.GetUserAPIKeysWithPagination(user.ID, pageSize, pageIndex)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to get API keys")
 	}
 
 	// Convert to API format
-	var response []APIKey
+	var apiKeyList []APIKey
 	for _, apiKey := range apiKeys {
 		apiAPIKey, err := convertToApiAPIKey(&apiKey)
 		if err != nil {
 			return handler.SendError(c, fiber.StatusInternalServerError, "failed to convert API key")
 		}
-		response = append(response, *apiAPIKey)
+		apiKeyList = append(apiKeyList, *apiAPIKey)
+	}
+
+	// #nosec G115
+	response := APIKeysResponse{
+		ApiKeys:    apiKeyList,
+		TotalCount: int(totalCount),
+		PageSize:   pageSize,
+		PageIndex:  pageIndex,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response)
