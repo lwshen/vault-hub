@@ -7,9 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Go Backend
 - **Build**: `go build -o tmp/main ./cmd/main.go`
 - **Run**: `go run ./cmd/main.go`
-- **Test**: `go test ./...` (run all tests)
-- **Test specific package**: `go test ./internal/encryption/...` or `go test ./model/...`
-- **Generate API code**: Uses `oapi-codegen` tool defined in go.mod
+- **Test**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` (run all tests with required env vars)
+- **Test specific package**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./model -v`
+- **Generate API code**: `go generate api/tool.go` (run after modifying `api/api.yaml`)
 
 ### React Frontend (web/)
 - **Install dependencies**: `pnpm install` (uses pnpm as package manager)
