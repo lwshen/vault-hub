@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,17 +14,10 @@ interface EditApiKeyModalProps {
   onApiKeyUpdated?: () => void;
 }
 
-export function EditApiKeyModal({ open, onOpenChange, apiKey, onApiKeyUpdated }: EditApiKeyModalProps) {
-  const [name, setName] = useState('');
+export default function EditApiKeyModal({ open, onOpenChange, apiKey, onApiKeyUpdated }: EditApiKeyModalProps) {
+  const [name, setName] = useState(apiKey?.name ?? '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (apiKey) {
-      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
-      setName(apiKey.name ?? '');
-    }
-  }, [apiKey]);
 
   const validate = (): string | null => {
     if (!name.trim()) return 'Name is required';
@@ -116,5 +109,3 @@ export function EditApiKeyModal({ open, onOpenChange, apiKey, onApiKeyUpdated }:
     </div>
   );
 }
-
-export default null; // dummy comment to ensure newline

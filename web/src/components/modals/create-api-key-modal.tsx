@@ -12,7 +12,7 @@ interface CreateApiKeyModalProps {
   onApiKeyCreated?: () => void;
 }
 
-export function CreateApiKeyModal({ open, onOpenChange, onApiKeyCreated }: CreateApiKeyModalProps) {
+export default function CreateApiKeyModal({ open, onOpenChange, onApiKeyCreated }: CreateApiKeyModalProps) {
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

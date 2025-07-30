@@ -5,8 +5,8 @@ import { Key, Plus, Loader2, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { useApiKeys } from '@/hooks/use-api-keys';
 import type { APIKey } from '@lwshen/vault-hub-ts-fetch-client';
 import { apiKeyApi } from '@/apis/api';
-import { CreateApiKeyModal } from '@/components/modals/create-api-key-modal';
-import { EditApiKeyModal } from '@/components/modals/edit-api-key-modal';
+import CreateApiKeyModal from '@/components/modals/create-api-key-modal';
+import EditApiKeyModal from '@/components/modals/edit-api-key-modal';
 
 export default function ApiKeysContent() {
   const { apiKeys, isLoading, error, refetch } = useApiKeys();
@@ -113,9 +113,9 @@ export default function ApiKeysContent() {
                         )}
                       </h3>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                        <span>Created {new Date(key.createdAt as string).toLocaleDateString()}</span>
-                        {key.expiresAt && <span>Expires {new Date(key.expiresAt as string).toLocaleDateString()}</span>}
-                        {key.lastUsedAt && <span>Last Used {new Date(key.lastUsedAt as string).toLocaleDateString()}</span>}
+                        <span>Created {key.createdAt.toLocaleString()}</span>
+                        {key.expiresAt && <span>Expires {key.expiresAt.toLocaleString()}</span>}
+                        {key.lastUsedAt && <span>Last Used {key.lastUsedAt.toLocaleString()}</span>}
                       </div>
                     </div>
                   </div>
@@ -160,12 +160,14 @@ export default function ApiKeysContent() {
         onApiKeyCreated={handleKeyCreated}
       />
 
-      <EditApiKeyModal
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
-        apiKey={selectedApiKey}
-        onApiKeyUpdated={handleKeyCreated}
-      />
+      {selectedApiKey && (
+        <EditApiKeyModal
+          open={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+          apiKey={selectedApiKey}
+          onApiKeyUpdated={handleKeyCreated}
+        />
+      )}
     </>
   );
 }

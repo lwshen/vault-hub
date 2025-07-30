@@ -19,7 +19,7 @@ interface FormData {
   category: string;
 }
 
-export function CreateVaultModal({ open, onOpenChange, onVaultCreated }: CreateVaultModalProps) {
+export default function CreateVaultModal({ open, onOpenChange, onVaultCreated }: CreateVaultModalProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     value: '',
