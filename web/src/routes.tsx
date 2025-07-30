@@ -5,6 +5,7 @@ import Signup from '@/pages/auth/signup';
 import Dashboard from '@/pages/dashboard/dashboard';
 import Vaults from '@/pages/dashboard/vaults';
 import AuditLog from '@/pages/dashboard/audit-log';
+import ApiKeys from '@/pages/dashboard/api-keys';
 import Mock from '@/pages/mock';
 import { ProtectedRoute } from '@/components/protected-route';
 import { PATH } from '@/const/path';
@@ -41,6 +42,11 @@ export const AppRoutes = () => (
     <Route path={PATH.VAULTS}>
       <ProtectedRoute>
         <Vaults />
+      </ProtectedRoute>
+    </Route>
+    <Route path={PATH.API_KEYS}>
+      <ProtectedRoute>
+        <ApiKeys />
       </ProtectedRoute>
     </Route>
     <Route path={PATH.AUDIT_LOG}>

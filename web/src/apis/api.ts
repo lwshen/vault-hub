@@ -1,5 +1,5 @@
 import { PATH } from '@/const/path';
-import { AuditApi, AuthApi, Configuration, UserApi, VaultApi, type ResponseContext } from '@lwshen/vault-hub-ts-fetch-client';
+import { AuditApi, AuthApi, Configuration, UserApi, VaultApi, APIKeyApi, type ResponseContext } from '@lwshen/vault-hub-ts-fetch-client';
 import { navigate } from 'wouter/use-browser-location';
 
 interface ApiError extends Error {
@@ -72,5 +72,6 @@ const authApi = new AuthApi(config);
 const userApi = new UserApi(config);
 const vaultApi = new VaultApi(config);
 const auditApi = new AuditApi(config);
+const apiKeyApi = new APIKeyApi(config);
 
-export { auditApi, authApi, userApi, vaultApi };
+export { auditApi, authApi, userApi, vaultApi, apiKeyApi };

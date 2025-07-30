@@ -79,16 +79,7 @@ func (params *CreateAPIKeyParams) Validate() map[string]string {
 		errors["name"] = "name must be less than 255 characters"
 	}
 
-	// Check name uniqueness for the user
-	if name != "" && params.UserID != 0 {
-		var count int64
-		err := DB.Model(&APIKey{}).Where("user_id = ? AND name = ?", params.UserID, name).Count(&count).Error
-		if err != nil {
-			errors["name"] = "failed to validate name uniqueness"
-		} else if count > 0 {
-			errors["name"] = "API key name already exists"
-		}
-	}
+	// Allow duplicate names – uniqueness check removed as per new requirements
 
 	if params.ExpiresAt != nil && params.ExpiresAt.Before(time.Now()) {
 		errors["expires_at"] = "expiration date must be in the future"

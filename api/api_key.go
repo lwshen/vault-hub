@@ -97,8 +97,8 @@ func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to get API keys")
 	}
 
-	// Convert to API format
-	var apiKeyList []APIKey
+	// Convert to API format - initialize with empty slice to ensure [] in JSON
+	apiKeyList := make([]APIKey, 0)
 	for _, apiKey := range apiKeys {
 		apiAPIKey, err := convertToApiAPIKey(&apiKey)
 		if err != nil {

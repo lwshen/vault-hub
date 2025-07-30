@@ -9,7 +9,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useVaults } from '@/hooks/use-vaults';
-import { CreateVaultModal } from '@/components/modals/create-vault-modal';
+import CreateVaultModal from '@/components/modals/create-vault-modal';
 
 export default function VaultsContent() {
   const { vaults, isLoading, error, refetch } = useVaults();

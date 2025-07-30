@@ -4,6 +4,7 @@ import { PATH } from '@/const/path';
 import {
   Vault,
   Activity,
+  Key,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -37,6 +38,19 @@ export default function Sidebar() {
           >
             <Vault className="h-4 w-4 mr-3" />
             Vaults
+          </Button>
+        </Link>
+        <Link href={PATH.API_KEYS}>
+          <Button
+            variant={pathname === PATH.API_KEYS ? 'default' : 'ghost'}
+            className={`w-full justify-start ${
+              pathname === PATH.API_KEYS
+                ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                : ''
+            }`}
+          >
+            <Key className="h-4 w-4 mr-3" />
+            API Keys
           </Button>
         </Link>
         <Link href={PATH.AUDIT_LOG}>
