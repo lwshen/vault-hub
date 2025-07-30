@@ -110,9 +110,9 @@ export default function ApiKeysContent() {
                     )}
                   </p>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                    <span>Created {new Date(key.createdAt as any).toLocaleDateString()}</span>
-                    {key.expiresAt && <span>Expires {new Date(key.expiresAt as any).toLocaleDateString()}</span>}
-                    {key.lastUsedAt && <span>Last Used {new Date(key.lastUsedAt as any).toLocaleDateString()}</span>}
+                    <span>Created {new Date(key.createdAt as string).toLocaleDateString()}</span>
+                    {key.expiresAt && <span>Expires {new Date(key.expiresAt as string).toLocaleDateString()}</span>}
+                    {key.lastUsedAt && <span>Last Used {new Date(key.lastUsedAt as string).toLocaleDateString()}</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ export default function ApiKeysContent() {
         onApiKeyCreated={handleKeyCreated}
       />
 
-     <EditApiKeyModal
+      <EditApiKeyModal
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         apiKey={selectedApiKey}

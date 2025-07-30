@@ -20,14 +20,17 @@ export const useApiKeys = (): UseApiKeysReturn => {
       setError(null);
       // Fetch first page with a large pageSize to simplify UI for now
       const response = await apiKeyApi.getAPIKeys(100, 1);
-      // If the API returns an object with apiKeys array
-      if (Array.isArray((response as any).apiKeys)) {
-        setApiKeys((response as any).apiKeys);
+
+      let list: APIKey[] | undefined;
+
+      if (typeof response === 'object' && response !== null && 'apiKeys' in response) {
+        // The response is APIKeysResponse
+        list = (response as { apiKeys?: APIKey[]; }).apiKeys;
       } else if (Array.isArray(response)) {
-        setApiKeys(response as APIKey[]);
-      } else {
-        setApiKeys([]);
+        list = response as APIKey[];
       }
+
+      setApiKeys(list ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch API keys');
     } finally {

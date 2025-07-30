@@ -35,9 +35,8 @@ export function CreateApiKeyModal({ open, onOpenChange, onApiKeyCreated }: Creat
     setIsLoading(true);
     setError(null);
     try {
-      const response: any = await apiKeyApi.createAPIKey({ name: name.trim() });
-      // Response expected { apiKey: ..., key: 'plainKey' }
-      const plainKey = response?.key ?? null;
+      const response = await apiKeyApi.createAPIKey({ name: name.trim() });
+      const plainKey = (response as { key?: string; }).key ?? null;
       setGeneratedKey(plainKey);
       if (!plainKey) {
         setError('API key created but key not returned');
