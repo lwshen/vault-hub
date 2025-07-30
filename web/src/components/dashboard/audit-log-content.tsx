@@ -175,24 +175,10 @@ export default function AuditLogContent() {
         <header className="bg-card border-b border-border p-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Activity Log</h1>
+              <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
               <p className="text-muted-foreground">
-                Monitor all system audits and user actions
+                Monitor audit logs
               </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Button>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
             </div>
           </div>
         </header>
@@ -220,24 +206,10 @@ export default function AuditLogContent() {
       <header className="bg-card border-b border-border p-6 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Activity Log</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
             <p className="text-muted-foreground">
-              Monitor all system audits and user actions
+              Monitor audit logs
             </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
           </div>
         </div>
       </header>
