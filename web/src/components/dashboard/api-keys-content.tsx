@@ -99,49 +99,54 @@ export default function ApiKeysContent() {
         ) : (
           <div className="grid gap-4">
             {apiKeys.map((key) => (
-              <Card key={key.id} className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="font-medium flex items-center gap-2">
-                    <Key className="h-4 w-4 text-blue-500" /> {key.name}
-                    {key.isActive === false && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300">
-                        Disabled
-                      </span>
-                    )}
-                  </p>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                    <span>Created {new Date(key.createdAt as string).toLocaleDateString()}</span>
-                    {key.expiresAt && <span>Expires {new Date(key.expiresAt as string).toLocaleDateString()}</span>}
-                    {key.lastUsedAt && <span>Last Used {new Date(key.lastUsedAt as string).toLocaleDateString()}</span>}
+              <Card key={key.id} className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Key className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        {key.name}
+                        {key.isActive === false && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                            Disabled
+                          </span>
+                        )}
+                      </h3>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                        <span>Created {new Date(key.createdAt as string).toLocaleDateString()}</span>
+                        {key.expiresAt && <span>Expires {new Date(key.expiresAt as string).toLocaleDateString()}</span>}
+                        {key.lastUsedAt && <span>Last Used {new Date(key.lastUsedAt as string).toLocaleDateString()}</span>}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      setSelectedApiKey(key);
-                      setIsEditModalOpen(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={async () => {
-                      const confirmed = confirm('Delete this API key? This action cannot be undone.');
-                      if (!confirmed) return;
-                      try {
-                        await apiKeyApi.deleteAPIKey(key.id);
-                        refetch();
-                      } catch (err) {
-                        alert(err instanceof Error ? err.message : 'Failed to delete API key');
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-600" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedApiKey(key);
+                        setIsEditModalOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={async () => {
+                        const confirmed = confirm('Delete this API key? This action cannot be undone.');
+                        if (!confirmed) return;
+                        try {
+                          await apiKeyApi.deleteAPIKey(key.id);
+                          refetch();
+                        } catch (err) {
+                          alert(err instanceof Error ? err.message : 'Failed to delete API key');
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
