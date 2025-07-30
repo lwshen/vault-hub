@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Key, Plus, Loader2, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { useApiKeys } from '@/hooks/use-api-keys';
 import type { APIKey } from '@lwshen/vault-hub-ts-fetch-client';
+import { apiKeyApi } from '@/apis/api';
 import { CreateApiKeyModal } from '@/components/modals/create-api-key-modal';
 import { EditApiKeyModal } from '@/components/modals/edit-api-key-modal';
 
