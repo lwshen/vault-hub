@@ -26,7 +26,7 @@ export default function ApiKeysContent() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">API Keys</h1>
-              <p className="text-muted-foreground">Manage and create API keys for programmatic access</p>
+              <p className="text-muted-foreground">Manage and create API keys</p>
             </div>
             <div className="flex items-center gap-3">
               <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
@@ -67,7 +67,7 @@ export default function ApiKeysContent() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">API Keys</h1>
-            <p className="text-muted-foreground">Manage and create API keys for programmatic access</p>
+            <p className="text-muted-foreground">Manage and create API keys</p>
           </div>
           <div className="flex items-center gap-3">
             <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
