@@ -20,12 +20,20 @@ export const useApiKeys = (): UseApiKeysReturn => {
       setError(null);
       // Fetch first page with a large pageSize to simplify UI for now
       const response = await apiKeyApi.getAPIKeys(100, 1);
-      // If the API returns an object with apiKeys array
-      if (Array.isArray((response as any).apiKeys)) {
-        setApiKeys((response as any).apiKeys);
-      } else if (Array.isArray(response)) {
-        setApiKeys(response as APIKey[]);
+
+      let list: unknown = null;
+
+      if (response && typeof response === 'object' && 'apiKeys' in response) {
+        // @ts-ignore dynamic
+        list = (response as any).apiKeys;
       } else {
+        list = response;
+      }
+
+      if (Array.isArray(list)) {
+        setApiKeys(list as APIKey[]);
+      } else {
+        // response may include null, undefined or other structure
         setApiKeys([]);
       }
     } catch (err) {
