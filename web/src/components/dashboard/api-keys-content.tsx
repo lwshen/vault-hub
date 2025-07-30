@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Key, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Key, Plus, Loader2, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { useApiKeys } from '@/hooks/use-api-keys';
+import type { APIKey } from '@lwshen/vault-hub-ts-fetch-client';
 import { CreateApiKeyModal } from '@/components/modals/create-api-key-modal';
+import { EditApiKeyModal } from '@/components/modals/edit-api-key-modal';
 
 export default function ApiKeysContent() {
   const { apiKeys, isLoading, error, refetch } = useApiKeys();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedApiKey, setSelectedApiKey] = useState<APIKey | null>(null);
 
   const handleKeyCreated = () => {
     refetch();
@@ -103,7 +107,34 @@ export default function ApiKeysContent() {
                     Created {new Date(key.createdAt as any).toLocaleDateString()}
                   </p>
                 </div>
-                {/* Placeholder for future revoke/scope */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedApiKey(key);
+                      setIsEditModalOpen(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={async () => {
+                      const confirmed = confirm('Delete this API key? This action cannot be undone.');
+                      if (!confirmed) return;
+                      try {
+                        await apiKeyApi.deleteAPIKey(key.id);
+                        refetch();
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : 'Failed to delete API key');
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>
@@ -114,6 +145,13 @@ export default function ApiKeysContent() {
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
         onApiKeyCreated={handleKeyCreated}
+      />
+
+     <EditApiKeyModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        apiKey={selectedApiKey}
+        onApiKeyUpdated={handleKeyCreated}
       />
     </>
   );
