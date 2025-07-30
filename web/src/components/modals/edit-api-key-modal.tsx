@@ -21,6 +21,7 @@ export function EditApiKeyModal({ open, onOpenChange, apiKey, onApiKeyUpdated }:
 
   useEffect(() => {
     if (apiKey) {
+      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
       setName(apiKey.name ?? '');
     }
   }, [apiKey]);
