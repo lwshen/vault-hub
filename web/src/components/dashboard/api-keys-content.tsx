@@ -101,11 +101,18 @@ export default function ApiKeysContent() {
               <Card key={key.id} className="p-6 flex items-center justify-between">
                 <div>
                   <p className="font-medium flex items-center gap-2">
-                    <Key className="h-4 w-4" /> {key.name}
+                    <Key className="h-4 w-4 text-blue-500" /> {key.name}
+                    {key.isActive === false && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300">
+                        Disabled
+                      </span>
+                    )}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Created {new Date(key.createdAt as any).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                    <span>Created {new Date(key.createdAt as any).toLocaleDateString()}</span>
+                    {key.expiresAt && <span>Expires {new Date(key.expiresAt as any).toLocaleDateString()}</span>}
+                    {key.lastUsedAt && <span>Last Used {new Date(key.lastUsedAt as any).toLocaleDateString()}</span>}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
