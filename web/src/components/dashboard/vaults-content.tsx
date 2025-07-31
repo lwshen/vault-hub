@@ -1,6 +1,7 @@
 import CreateVaultModal from '@/components/modals/create-vault-modal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import DashboardHeader from '@/components/layout/dashboard-header';
 import { useVaults } from '@/hooks/use-vaults';
 import {
   AlertCircle,
@@ -11,24 +12,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
-const VaultsHeader = ({ onCreateClick }: { onCreateClick: () => void; }) => (
-  <header className="bg-card border-b border-border p-6 flex-shrink-0">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Vaults</h1>
-        <p className="text-muted-foreground">
-          Manage and organize your secret vaults
-        </p>
-      </div>
-      <div className="flex items-center gap-3">
-        <Button size="sm" onClick={onCreateClick}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Vault
-        </Button>
-      </div>
-    </div>
-  </header>
-);
 
 export default function VaultsContent() {
   const { vaults, isLoading, error, refetch } = useVaults();
@@ -41,7 +24,16 @@ export default function VaultsContent() {
   if (error) {
     return (
       <>
-        <VaultsHeader onCreateClick={() => setIsCreateModalOpen(true)} />
+        <DashboardHeader 
+          title="Vaults" 
+          description="Manage and organize your secret vaults"
+          actions={
+            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Vault
+            </Button>
+          }
+        />
         {/* Error State */}
         <main className="flex-1 overflow-y-auto p-6">
           <Card className="p-6">
@@ -67,7 +59,16 @@ export default function VaultsContent() {
 
   return (
     <>
-      <VaultsHeader onCreateClick={() => setIsCreateModalOpen(true)} />
+      <DashboardHeader 
+        title="Vaults" 
+        description="Manage and organize your secret vaults"
+        actions={
+          <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Vault
+          </Button>
+        }
+      />
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
         {isLoading ? (

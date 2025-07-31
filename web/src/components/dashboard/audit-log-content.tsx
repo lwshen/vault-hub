@@ -1,6 +1,7 @@
 import { auditApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import DashboardHeader from '@/components/layout/dashboard-header';
 import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
@@ -89,18 +90,6 @@ const formatTimestamp = (timestamp: string | Date) => {
   }
 };
 
-const AuditLogHeader = () => (
-  <header className="bg-card border-b border-border p-6 flex-shrink-0">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
-        <p className="text-muted-foreground">
-          Monitor audit logs
-        </p>
-      </div>
-    </div>
-  </header>
-);
 
 export default function AuditLogContent() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -181,7 +170,10 @@ export default function AuditLogContent() {
   if (error) {
     return (
       <>
-        <AuditLogHeader />
+        <DashboardHeader 
+          title="Audit Log" 
+          description="Monitor audit logs" 
+        />
         {/* Error State */}
         <main className="flex-1 overflow-y-auto p-6">
           <Card className="p-6">
@@ -201,7 +193,10 @@ export default function AuditLogContent() {
 
   return (
     <>
-      <AuditLogHeader />
+      <DashboardHeader 
+        title="Audit Log" 
+        description="Monitor audit logs" 
+      />
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
         <div className="space-y-4">
