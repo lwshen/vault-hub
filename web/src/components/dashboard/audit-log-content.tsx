@@ -92,6 +92,19 @@ const formatTimestamp = (timestamp: string | Date) => {
   }
 };
 
+const AuditLogHeader = () => (
+  <header className="bg-card border-b border-border p-6 flex-shrink-0">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
+        <p className="text-muted-foreground">
+          Monitor audit logs
+        </p>
+      </div>
+    </div>
+  </header>
+);
+
 export default function AuditLogContent() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -171,18 +184,7 @@ export default function AuditLogContent() {
   if (error) {
     return (
       <>
-        {/* Top Header */}
-        <header className="bg-card border-b border-border p-6 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
-              <p className="text-muted-foreground">
-                Monitor audit logs
-              </p>
-            </div>
-          </div>
-        </header>
-
+        <AuditLogHeader />
         {/* Error State */}
         <main className="flex-1 overflow-y-auto p-6">
           <Card className="p-6">
@@ -202,18 +204,7 @@ export default function AuditLogContent() {
 
   return (
     <>
-      {/* Top Header */}
-      <header className="bg-card border-b border-border p-6 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
-            <p className="text-muted-foreground">
-              Monitor audit logs
-            </p>
-          </div>
-        </div>
-      </header>
-
+      <AuditLogHeader />
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
         <div className="space-y-4">
