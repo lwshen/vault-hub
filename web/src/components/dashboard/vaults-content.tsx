@@ -21,20 +21,9 @@ export default function VaultsContent() {
     refetch(); // Refresh the vault list after creation
   };
 
-  if (error) {
-    return (
-      <>
-        <DashboardHeader 
-          title="Vaults" 
-          description="Manage and organize your secret vaults"
-          actions={
-            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Vault
-            </Button>
-          }
-        />
-        {/* Error State */}
+  const renderContent = () => {
+    if (error) {
+      return (
         <main className="flex-1 overflow-y-auto p-6">
           <Card className="p-6">
             <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
@@ -47,29 +36,10 @@ export default function VaultsContent() {
             </div>
           </Card>
         </main>
+      );
+    }
 
-        <CreateVaultModal
-          open={isCreateModalOpen}
-          onOpenChange={setIsCreateModalOpen}
-          onVaultCreated={handleVaultCreated}
-        />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <DashboardHeader 
-        title="Vaults" 
-        description="Manage and organize your secret vaults"
-        actions={
-          <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Vault
-          </Button>
-        }
-      />
-      {/* Main Content */}
+    return (
       <main className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
           <Card className="p-6">
@@ -129,6 +99,22 @@ export default function VaultsContent() {
           </div>
         )}
       </main>
+    );
+  };
+
+  return (
+    <>
+      <DashboardHeader
+        title="Vaults"
+        description="Manage and organize your secret vaults"
+        actions={
+          <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Vault
+          </Button>
+        }
+      />
+      {renderContent()}
 
       <CreateVaultModal
         open={isCreateModalOpen}

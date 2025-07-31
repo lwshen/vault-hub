@@ -167,14 +167,9 @@ export default function AuditLogContent() {
     return labels[action] || 'System';
   };
 
-  if (error) {
-    return (
-      <>
-        <DashboardHeader 
-          title="Audit Log" 
-          description="Monitor audit logs" 
-        />
-        {/* Error State */}
+  const renderContent = () => {
+    if (error) {
+      return (
         <main className="flex-1 overflow-y-auto p-6">
           <Card className="p-6">
             <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
@@ -187,17 +182,10 @@ export default function AuditLogContent() {
             </div>
           </Card>
         </main>
-      </>
-    );
-  }
+      );
+    }
 
-  return (
-    <>
-      <DashboardHeader 
-        title="Audit Log" 
-        description="Monitor audit logs" 
-      />
-      {/* Main Content */}
+    return (
       <main className="flex-1 overflow-y-auto p-6">
         <div className="space-y-4">
           {/* Audit Stats */}
@@ -335,6 +323,16 @@ export default function AuditLogContent() {
           </Card>
         </div>
       </main>
+    );
+  };
+
+  return (
+    <>
+      <DashboardHeader
+        title="Audit Log"
+        description="Monitor audit logs"
+      />
+      {renderContent()}
     </>
   );
 }

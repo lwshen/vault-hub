@@ -20,20 +20,9 @@ export default function ApiKeysContent() {
     refetch();
   };
 
-  if (error) {
-    return (
-      <>
-        <DashboardHeader 
-          title="API Keys" 
-          description="Manage and create API keys"
-          actions={
-            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Key
-            </Button>
-          }
-        />
-        {/* Error State */}
+  const renderContent = () => {
+    if (error) {
+      return (
         <main className="flex-1 overflow-y-auto p-6">
           <Card className="p-6">
             <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
@@ -46,29 +35,10 @@ export default function ApiKeysContent() {
             </div>
           </Card>
         </main>
+      );
+    }
 
-        <CreateApiKeyModal
-          open={isCreateModalOpen}
-          onOpenChange={setIsCreateModalOpen}
-          onApiKeyCreated={handleKeyCreated}
-        />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <DashboardHeader 
-        title="API Keys" 
-        description="Manage and create API keys"
-        actions={
-          <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Key
-          </Button>
-        }
-      />
-      {/* Main Content */}
+    return (
       <main className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
           <Card className="p-6 flex items-center justify-center">
@@ -143,6 +113,22 @@ export default function ApiKeysContent() {
           </div>
         )}
       </main>
+    );
+  };
+
+  return (
+    <>
+      <DashboardHeader
+        title="API Keys"
+        description="Manage and create API keys"
+        actions={
+          <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Key
+          </Button>
+        }
+      />
+      {renderContent()}
 
       <CreateApiKeyModal
         open={isCreateModalOpen}
