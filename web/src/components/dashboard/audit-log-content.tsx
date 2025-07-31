@@ -1,25 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
+import { auditApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import DashboardHeader from '@/components/layout/dashboard-header';
+import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
 import {
-  Search,
-  Filter,
-  Download,
   Activity,
-  Plus,
-  Users,
-  Lock,
-  Key,
-  Trash2,
+  AlertCircle,
   Edit,
-  UserPlus,
+  Key,
+  Loader2,
+  Lock,
   LogIn,
   LogOut,
-  Loader2,
-  AlertCircle,
+  Plus,
+  Trash2,
+  UserPlus,
+  Users,
 } from 'lucide-react';
-import { auditApi } from '@/apis/api';
-import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
+import { useCallback, useEffect, useState } from 'react';
 
 // Icon mapping for different audit actions - using correct enum values
 const getIconForAction = (action: AuditLogActionEnum) => {
@@ -91,6 +89,7 @@ const formatTimestamp = (timestamp: string | Date) => {
     return `${dateString} ${timeString}`;
   }
 };
+
 
 export default function AuditLogContent() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -168,36 +167,9 @@ export default function AuditLogContent() {
     return labels[action] || 'System';
   };
 
-  if (error) {
-    return (
-      <>
-        {/* Top Header */}
-        <header className="bg-card border-b border-border p-6 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Activity Log</h1>
-              <p className="text-muted-foreground">
-                Monitor all system audits and user actions
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Button>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Error State */}
+  const renderContent = () => {
+    if (error) {
+      return (
         <main className="flex-1 overflow-y-auto p-6">
           <Card className="p-6">
             <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
@@ -210,39 +182,10 @@ export default function AuditLogContent() {
             </div>
           </Card>
         </main>
-      </>
-    );
-  }
+      );
+    }
 
-  return (
-    <>
-      {/* Top Header */}
-      <header className="bg-card border-b border-border p-6 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Activity Log</h1>
-            <p className="text-muted-foreground">
-              Monitor all system audits and user actions
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    return (
       <main className="flex-1 overflow-y-auto p-6">
         <div className="space-y-4">
           {/* Audit Stats */}
@@ -380,6 +323,16 @@ export default function AuditLogContent() {
           </Card>
         </div>
       </main>
+    );
+  };
+
+  return (
+    <>
+      <DashboardHeader
+        title="Audit Log"
+        description="Monitor audit logs"
+      />
+      {renderContent()}
     </>
   );
 }

@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Key, Plus, Loader2, AlertCircle, Pencil, Trash2 } from 'lucide-react';
-import { useApiKeys } from '@/hooks/use-api-keys';
-import type { APIKey } from '@lwshen/vault-hub-ts-fetch-client';
 import { apiKeyApi } from '@/apis/api';
 import CreateApiKeyModal from '@/components/modals/create-api-key-modal';
 import EditApiKeyModal from '@/components/modals/edit-api-key-modal';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import DashboardHeader from '@/components/layout/dashboard-header';
+import { useApiKeys } from '@/hooks/use-api-keys';
+import type { APIKey } from '@lwshen/vault-hub-ts-fetch-client';
+import { AlertCircle, Key, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+
 
 export default function ApiKeysContent() {
   const { apiKeys, isLoading, error, refetch } = useApiKeys();
@@ -18,26 +20,9 @@ export default function ApiKeysContent() {
     refetch();
   };
 
-  if (error) {
-    return (
-      <>
-        {/* Top Header */}
-        <header className="bg-card border-b border-border p-6 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">API Keys</h1>
-              <p className="text-muted-foreground">Manage and create API keys</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Key
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Error State */}
+  const renderContent = () => {
+    if (error) {
+      return (
         <main className="flex-1 overflow-y-auto p-6">
           <Card className="p-6">
             <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
@@ -50,35 +35,10 @@ export default function ApiKeysContent() {
             </div>
           </Card>
         </main>
+      );
+    }
 
-        <CreateApiKeyModal
-          open={isCreateModalOpen}
-          onOpenChange={setIsCreateModalOpen}
-          onApiKeyCreated={handleKeyCreated}
-        />
-      </>
-    );
-  }
-
-  return (
-    <>
-      {/* Top Header */}
-      <header className="bg-card border-b border-border p-6 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">API Keys</h1>
-            <p className="text-muted-foreground">Manage and create API keys</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Key
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    return (
       <main className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
           <Card className="p-6 flex items-center justify-center">
@@ -153,6 +113,22 @@ export default function ApiKeysContent() {
           </div>
         )}
       </main>
+    );
+  };
+
+  return (
+    <>
+      <DashboardHeader
+        title="API Keys"
+        description="Manage and create API keys"
+        actions={
+          <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Key
+          </Button>
+        }
+      />
+      {renderContent()}
 
       <CreateApiKeyModal
         open={isCreateModalOpen}

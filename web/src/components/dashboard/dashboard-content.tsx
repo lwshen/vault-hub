@@ -1,15 +1,15 @@
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
-  Vault,
-  Users,
-  Key,
   Activity,
-  Search,
-  MoreVertical,
+  Key,
   Lock,
-  Unlock,
+  MoreVertical,
   Plus,
+  Search,
+  Unlock,
+  Users,
+  Vault,
 } from 'lucide-react';
 
 export default function DashboardContent() {

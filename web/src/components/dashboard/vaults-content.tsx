@@ -1,15 +1,17 @@
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  Plus,
-  MoreVertical,
-  Lock,
-  Loader2,
-  AlertCircle,
-} from 'lucide-react';
-import { useVaults } from '@/hooks/use-vaults';
 import CreateVaultModal from '@/components/modals/create-vault-modal';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import DashboardHeader from '@/components/layout/dashboard-header';
+import { useVaults } from '@/hooks/use-vaults';
+import {
+  AlertCircle,
+  Loader2,
+  Lock,
+  MoreVertical,
+  Plus,
+} from 'lucide-react';
+import { useState } from 'react';
+
 
 export default function VaultsContent() {
   const { vaults, isLoading, error, refetch } = useVaults();
@@ -19,28 +21,9 @@ export default function VaultsContent() {
     refetch(); // Refresh the vault list after creation
   };
 
-  if (error) {
-    return (
-      <>
-        {/* Top Header */}
-        <header className="bg-card border-b border-border p-6 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Vaults</h1>
-              <p className="text-muted-foreground">
-                Manage and organize your secret vaults
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Vault
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Error State */}
+  const renderContent = () => {
+    if (error) {
+      return (
         <main className="flex-1 overflow-y-auto p-6">
           <Card className="p-6">
             <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
@@ -53,37 +36,10 @@ export default function VaultsContent() {
             </div>
           </Card>
         </main>
+      );
+    }
 
-        <CreateVaultModal
-          open={isCreateModalOpen}
-          onOpenChange={setIsCreateModalOpen}
-          onVaultCreated={handleVaultCreated}
-        />
-      </>
-    );
-  }
-
-  return (
-    <>
-      {/* Top Header */}
-      <header className="bg-card border-b border-border p-6 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Vaults</h1>
-            <p className="text-muted-foreground">
-              Manage and organize your secret vaults
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Vault
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
+    return (
       <main className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
           <Card className="p-6">
@@ -143,6 +99,22 @@ export default function VaultsContent() {
           </div>
         )}
       </main>
+    );
+  };
+
+  return (
+    <>
+      <DashboardHeader
+        title="Vaults"
+        description="Manage and organize your secret vaults"
+        actions={
+          <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Vault
+          </Button>
+        }
+      />
+      {renderContent()}
 
       <CreateVaultModal
         open={isCreateModalOpen}
