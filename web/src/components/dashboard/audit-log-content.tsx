@@ -1,25 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
+import { auditApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
 import {
-  Search,
-  Filter,
-  Download,
   Activity,
-  Plus,
-  Users,
-  Lock,
-  Key,
-  Trash2,
+  AlertCircle,
   Edit,
-  UserPlus,
+  Key,
+  Loader2,
+  Lock,
   LogIn,
   LogOut,
-  Loader2,
-  AlertCircle,
+  Plus,
+  Trash2,
+  UserPlus,
+  Users,
 } from 'lucide-react';
-import { auditApi } from '@/apis/api';
-import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
+import { useCallback, useEffect, useState } from 'react';
 
 // Icon mapping for different audit actions - using correct enum values
 const getIconForAction = (action: AuditLogActionEnum) => {

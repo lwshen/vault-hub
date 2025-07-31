@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  Plus,
-  MoreVertical,
-  Lock,
-  Loader2,
-  AlertCircle,
-} from 'lucide-react';
-import { useVaults } from '@/hooks/use-vaults';
 import CreateVaultModal from '@/components/modals/create-vault-modal';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useVaults } from '@/hooks/use-vaults';
+import {
+  AlertCircle,
+  Loader2,
+  Lock,
+  MoreVertical,
+  Plus,
+} from 'lucide-react';
+import { useState } from 'react';
 
-const VaultsHeader = ({ onCreateClick }: { onCreateClick: () => void }) => (
+const VaultsHeader = ({ onCreateClick }: { onCreateClick: () => void; }) => (
   <header className="bg-card border-b border-border p-6 flex-shrink-0">
     <div className="flex items-center justify-between">
       <div>
