@@ -1,0 +1,92 @@
+/api/api-keys:
+  get:
+    description: Get API keys for the current user with pagination
+    tags:
+      - APIKey
+    operationId: getAPIKeys
+    parameters:
+      - name: pageSize
+        in: query
+        required: true
+        description: Number of API keys per page (default 20, max 1000)
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 20
+      - name: pageIndex
+        in: query
+        required: true
+        description: Page index, starting from 1 (default 1)
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+    responses:
+      '200':
+        description: List of API keys
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/api-key.yaml#/APIKeysResponse'
+  post:
+    description: Create a new API key
+    tags:
+      - APIKey
+    operationId: createAPIKey
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/api-key.yaml#/CreateAPIKeyRequest"
+    responses:
+      '201':
+        description: API key created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/api-key.yaml#/CreateAPIKeyResponse'
+/api/api-keys/{id}:
+  patch:
+    description: Update an API key (enable/disable or modify properties)
+    tags:
+      - APIKey
+    operationId: updateAPIKey
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: API Key ID
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/api-key.yaml#/UpdateAPIKeyRequest"
+    responses:
+      '200':
+        description: API key updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/api-key.yaml#/APIKey'
+  delete:
+    description: Delete an API key
+    tags:
+      - APIKey
+    operationId: deleteAPIKey
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: API Key ID
+        schema:
+          type: integer
+          format: int64
+    responses:
+      '204':
+        description: API key deleted successfully

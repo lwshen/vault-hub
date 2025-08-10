@@ -2,9 +2,7 @@ openapi: 3.0.0
 info:
   version: 1.0.0
   title: Vault Hub Server
-
 paths:
-  # Health endpoints
   /api/health:
     get:
       description: Check the health status of backend
@@ -16,8 +14,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheckResponse'
-  
-  # Authentication endpoints
   /api/auth/login:
     post:
       description: Login with email and password
@@ -65,8 +61,6 @@ paths:
       responses:
         '200':
           description: OK
-  
-  # User endpoints
   /api/user:
     get:
       description: Get current user by credential
@@ -80,8 +74,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetUserResponse'
-  
-  # Vault endpoints
   /api/vaults:
     get:
       description: Get all vaults for the current user
@@ -175,8 +167,6 @@ paths:
       responses:
         '204':
           description: Vault deleted successfully
-  
-  # Audit endpoints
   /api/audit-logs:
     get:
       description: Get audit logs with optional filtering and pagination
@@ -228,8 +218,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuditLogsResponse'
-  
-  # API Key endpoints
   /api/api-keys:
     get:
       description: Get API keys for the current user with pagination
@@ -325,9 +313,6 @@ paths:
 
 components:
   schemas:
-    # ========================================
-    # Health Schemas - see ./schemas/health.yaml
-    # ========================================
     HealthCheckResponse:
       type: object
       properties:
@@ -339,9 +324,6 @@ components:
           format: date-time
           example: "2023-10-11T12:34:56Z"
 
-    # ========================================
-    # Auth Schemas - see ./schemas/auth.yaml
-    # ========================================
     LoginRequest:
       type: object
       required:
@@ -385,9 +367,6 @@ components:
         token:
           type: string
 
-    # ========================================
-    # User Schemas - see ./schemas/user.yaml
-    # ========================================
     GetUserResponse:
       type: object
       required:
@@ -401,9 +380,6 @@ components:
         avatar:
           type: string
 
-    # ========================================
-    # Vault Schemas - see ./schemas/vault.yaml
-    # ========================================
     VaultLite:
       type: object
       required:
@@ -504,9 +480,6 @@ components:
           description: Category/type of vault
           maxLength: 100
 
-    # ========================================
-    # Audit Schemas - see ./schemas/audit.yaml
-    # ========================================
     AuditLogsResponse:
       type: object
       required:
@@ -528,6 +501,28 @@ components:
         pageIndex:
           type: integer
           description: Current page index (starting from 0)
+
+    APIKeysResponse:
+      type: object
+      required:
+        - apiKeys
+        - totalCount
+        - pageSize
+        - pageIndex
+      properties:
+        apiKeys:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIKey'
+        totalCount:
+          type: integer
+          description: Total number of API keys
+        pageSize:
+          type: integer
+          description: Number of API keys per page
+        pageIndex:
+          type: integer
+          description: Current page index (starting from 1)
 
     AuditLog:
       type: object
@@ -554,31 +549,6 @@ components:
         userAgent:
           type: string
           description: User agent string from the client
-
-    # ========================================
-    # API Key Schemas - see ./schemas/api-key.yaml
-    # ========================================
-    APIKeysResponse:
-      type: object
-      required:
-        - apiKeys
-        - totalCount
-        - pageSize
-        - pageIndex
-      properties:
-        apiKeys:
-          type: array
-          items:
-            $ref: '#/components/schemas/APIKey'
-        totalCount:
-          type: integer
-          description: Total number of API keys
-        pageSize:
-          type: integer
-          description: Number of API keys per page
-        pageIndex:
-          type: integer
-          description: Current page index (starting from 1)
 
     APIKey:
       type: object

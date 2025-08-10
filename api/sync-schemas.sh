@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# sync-schemas.sh - Script to help maintain synchronization between separated schema files and main api.yaml
+# This script is for documentation and maintenance purposes
+
+echo "Schema file organization:"
+echo "========================"
+echo "Main file: api.yaml (contains all schemas inline for oapi-codegen compatibility)"
+echo ""
+echo "Reference files (for organization and documentation):"
+echo "- schemas/health.yaml    - Health check related schemas"
+echo "- schemas/auth.yaml      - Authentication related schemas"  
+echo "- schemas/user.yaml      - User related schemas"
+echo "- schemas/vault.yaml     - Vault related schemas"
+echo "- schemas/audit.yaml     - Audit log related schemas"
+echo "- schemas/api-key.yaml   - API key related schemas"
+echo ""
+echo "- paths/health.yaml      - Health check endpoints"
+echo "- paths/auth.yaml        - Authentication endpoints"
+echo "- paths/user.yaml        - User endpoints"
+echo "- paths/vault.yaml       - Vault endpoints"
+echo "- paths/audit.yaml       - Audit log endpoints"
+echo "- paths/api-key.yaml     - API key endpoints"
+echo ""
+echo "When making changes:"
+echo "1. Edit the relevant schema or path file for organization"
+echo "2. Update the corresponding section in api.yaml"
+echo "3. Run 'go generate tool.go' to regenerate the Go code"
+echo ""
+echo "Note: The separate files are for organization only."
+echo "The main api.yaml contains all definitions inline for oapi-codegen compatibility."
