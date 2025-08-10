@@ -1,0 +1,18 @@
+post:
+  description: Sign up a new user
+  tags:
+    - Auth
+  operationId: signup
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/SignupRequest"
+  responses:
+    '200':
+      description: Sign up successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SignupResponse'

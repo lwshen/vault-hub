@@ -1,0 +1,18 @@
+post:
+  description: Login with email and password
+  tags:
+    - Auth
+  operationId: login
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/LoginRequest"
+  responses:
+    '200':
+      description: Login successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LoginResponse'

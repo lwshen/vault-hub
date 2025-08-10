@@ -1,29 +1,3 @@
-openapi: 3.0.0
-info:
-  version: 1.0.0
-  title: Vault Hub Server
-paths:
-  /api/health:
-    $ref: './paths/health.yaml'
-  /api/auth/login:
-    $ref: './paths/auth_login.yaml'
-  /api/auth/signup:
-    $ref: './paths/auth_signup.yaml'
-  /api/auth/logout:
-    $ref: './paths/auth_logout.yaml'
-  /api/user:
-    $ref: './paths/user.yaml'
-  /api/vaults:
-    $ref: './paths/vaults.yaml'
-  /api/vaults/{uniqueId}:
-    $ref: './paths/vaults_uniqueId.yaml'
-  /api/audit-logs:
-    $ref: './paths/audit_logs.yaml'
-  /api/api-keys:
-    $ref: './paths/api_keys.yaml'
-  /api/api-keys/{id}:
-    $ref: './paths/api_keys_id.yaml'
-
 components:
   schemas:
     HealthCheckResponse:

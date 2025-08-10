@@ -1,0 +1,59 @@
+get:
+  description: Get a specific vault by Unique ID
+  tags:
+    - Vault
+  operationId: getVault
+  parameters:
+    - name: uniqueId
+      in: path
+      required: true
+      description: Vault Unique ID
+      schema:
+        type: string
+  responses:
+    '200':
+      description: Vault details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Vault'
+put:
+  description: Update a vault
+  tags:
+    - Vault
+  operationId: updateVault
+  parameters:
+    - name: uniqueId
+      in: path
+      required: true
+      description: Vault Unique ID
+      schema:
+        type: string
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/UpdateVaultRequest"
+  responses:
+    '200':
+      description: Vault updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Vault'
+delete:
+  description: Delete a vault
+  tags:
+    - Vault
+  operationId: deleteVault
+  parameters:
+    - name: uniqueId
+      in: path
+      required: true
+      description: Vault Unique ID
+      schema:
+        type: string
+  responses:
+    '204':
+      description: Vault deleted successfully

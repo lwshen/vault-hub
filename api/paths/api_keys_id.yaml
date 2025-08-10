@@ -1,0 +1,43 @@
+patch:
+  description: Update an API key (enable/disable or modify properties)
+  tags:
+    - APIKey
+  operationId: updateAPIKey
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: API Key ID
+      schema:
+        type: integer
+        format: int64
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/UpdateAPIKeyRequest"
+  responses:
+    '200':
+      description: API key updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIKey'
+
+delete:
+  description: Delete an API key
+  tags:
+    - APIKey
+  operationId: deleteAPIKey
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: API Key ID
+      schema:
+        type: integer
+        format: int64
+  responses:
+    '204':
+      description: API key deleted successfully

@@ -1,0 +1,8 @@
+get:
+  description: Logout
+  tags:
+    - Auth
+  operationId: logout
+  responses:
+    '200':
+      description: OK
