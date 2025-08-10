@@ -1,0 +1,45 @@
+/api/audit-logs:
+  get:
+    description: Get audit logs for the current user
+    tags:
+      - Audit Logs
+    operationId: getAuditLogs
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+        description: Page number
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
+        description: Number of items per page
+      - name: action
+        in: query
+        schema:
+          type: string
+        description: Filter by action type
+      - name: startDate
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: Start date for filtering
+      - name: endDate
+        in: query
+        schema:
+          type: string
+          format: date-time
+        description: End date for filtering
+    responses:
+      '200':
+        description: List of audit logs
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/audit_log.yaml#/AuditLog'

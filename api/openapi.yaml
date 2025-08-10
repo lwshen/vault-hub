@@ -1,0 +1,328 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Vault Hub Server
+
+paths:
+  /api/health:
+    get:
+      description: Check the health status of backend
+      operationId: health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/common.yaml#/HealthCheckResponse'
+
+  /api/auth/login:
+    post:
+      description: Login with email and password
+      tags:
+        - Auth
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas/auth.yaml#/LoginRequest"
+      responses:
+        '200':
+          description: Login successfully
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/auth.yaml#/LoginResponse'
+
+  /api/auth/signup:
+    post:
+      description: Sign up a new user
+      tags:
+        - Auth
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./schemas/auth.yaml#/SignupRequest"
+      responses:
+        '200':
+          description: Sign up successfully
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/auth.yaml#/SignupResponse'
+
+  /api/auth/logout:
+    get:
+      description: Logout
+      tags:
+        - Auth
+      operationId: logout
+      responses:
+        '200':
+          description: OK
+
+  /api/user:
+    get:
+      description: Get current user by credential
+      tags:
+        - User
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: User Info
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/user.yaml#/GetUserResponse'
+
+  /api/vaults:
+    get:
+      description: Get all vaults for the current user
+      tags:
+        - Vault
+      operationId: getVaults
+      responses:
+        '200':
+          description: List of vaults
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/vault.yaml#/VaultLite'
+    post:
+      description: Create a new vault
+      tags:
+        - Vault
+      operationId: createVault
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/vault.yaml#/CreateVaultRequest'
+      responses:
+        '201':
+          description: Vault created successfully
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/vault.yaml#/Vault'
+
+  /api/vaults/{uniqueId}:
+    get:
+      description: Get a specific vault by unique ID
+      tags:
+        - Vault
+      operationId: getVault
+      parameters:
+        - name: uniqueId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vault details
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/vault.yaml#/Vault'
+    put:
+      description: Update a vault
+      tags:
+        - Vault
+      operationId: updateVault
+      parameters:
+        - name: uniqueId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/vault.yaml#/UpdateVaultRequest'
+      responses:
+        '200':
+          description: Vault updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/vault.yaml#/Vault'
+    delete:
+      description: Delete a vault
+      tags:
+        - Vault
+      operationId: deleteVault
+      parameters:
+        - name: uniqueId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Vault deleted successfully
+
+  /api/keys:
+    get:
+      description: Get all API keys for the current user
+      tags:
+        - API Keys
+      operationId: getAPIKeys
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/api_key.yaml#/APIKey'
+    post:
+      description: Create a new API key
+      tags:
+        - API Keys
+      operationId: createAPIKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/api_key.yaml#/CreateAPIKeyRequest'
+      responses:
+        '201':
+          description: API key created successfully
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/api_key.yaml#/CreateAPIKeyResponse'
+
+  /api/keys/{id}:
+    put:
+      description: Update an API key
+      tags:
+        - API Keys
+      operationId: updateAPIKey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/api_key.yaml#/UpdateAPIKeyRequest'
+      responses:
+        '200':
+          description: API key updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/api_key.yaml#/APIKey'
+    delete:
+      description: Delete an API key
+      tags:
+        - API Keys
+      operationId: deleteAPIKey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: API key deleted successfully
+
+  /api/audit-logs:
+    get:
+      description: Get audit logs for the current user
+      tags:
+        - Audit Logs
+      operationId: getAuditLogs
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Number of items per page
+        - name: action
+          in: query
+          schema:
+            type: string
+          description: Filter by action type
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start date for filtering
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End date for filtering
+      responses:
+        '200':
+          description: List of audit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: './schemas/audit_log.yaml#/AuditLog'
+
+components:
+  schemas:
+    HealthCheckResponse:
+      $ref: './schemas/common.yaml#/HealthCheckResponse'
+    LoginRequest:
+      $ref: './schemas/auth.yaml#/LoginRequest'
+    LoginResponse:
+      $ref: './schemas/auth.yaml#/LoginResponse'
+    SignupRequest:
+      $ref: './schemas/auth.yaml#/SignupRequest'
+    SignupResponse:
+      $ref: './schemas/auth.yaml#/SignupResponse'
+    GetUserResponse:
+      $ref: './schemas/user.yaml#/GetUserResponse'
+    VaultLite:
+      $ref: './schemas/vault.yaml#/VaultLite'
+    Vault:
+      $ref: './schemas/vault.yaml#/Vault'
+    CreateVaultRequest:
+      $ref: './schemas/vault.yaml#/CreateVaultRequest'
+    UpdateVaultRequest:
+      $ref: './schemas/vault.yaml#/UpdateVaultRequest'
+    APIKey:
+      $ref: './schemas/api_key.yaml#/APIKey'
+    CreateAPIKeyRequest:
+      $ref: './schemas/api_key.yaml#/CreateAPIKeyRequest'
+    CreateAPIKeyResponse:
+      $ref: './schemas/api_key.yaml#/CreateAPIKeyResponse'
+    UpdateAPIKeyRequest:
+      $ref: './schemas/api_key.yaml#/UpdateAPIKeyRequest'
+    AuditLog:
+      $ref: './schemas/audit_log.yaml#/AuditLog'

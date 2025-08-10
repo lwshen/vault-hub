@@ -1,0 +1,40 @@
+AuditLog:
+  type: object
+  required:
+    - id
+    - action
+    - resourceType
+    - resourceId
+    - userId
+    - timestamp
+  properties:
+    id:
+      type: integer
+      format: int64
+      description: Unique audit log entry ID
+    action:
+      type: string
+      description: Action performed (e.g., CREATE, UPDATE, DELETE, LOGIN)
+    resourceType:
+      type: string
+      description: Type of resource affected (e.g., VAULT, API_KEY, USER)
+    resourceId:
+      type: string
+      description: ID of the resource affected
+    userId:
+      type: integer
+      format: int64
+      description: ID of the user who performed the action
+    details:
+      type: object
+      description: Additional details about the action
+    ipAddress:
+      type: string
+      description: IP address from which the action was performed
+    userAgent:
+      type: string
+      description: User agent string from the client
+    timestamp:
+      type: string
+      format: date-time
+      description: When the action was performed

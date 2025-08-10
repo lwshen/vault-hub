@@ -1,0 +1,85 @@
+VaultLite:
+  type: object
+  required:
+    - uniqueId
+    - name
+  properties:
+    uniqueId:
+      type: string
+      description: Unique identifier for the vault
+    name:
+      type: string
+      description: Human-readable name
+    description:
+      type: string
+      description: Human-readable description
+    category:
+      type: string
+      description: Category/type of vault
+    updatedAt:
+      type: string
+      format: date-time
+
+Vault:
+  type: object
+  required:
+    - uniqueId
+    - name
+  properties:
+    uniqueId:
+      type: string
+      description: Unique identifier for the vault
+    name:
+      type: string
+      description: Human-readable name
+    description:
+      type: string
+      description: Human-readable description
+    category:
+      type: string
+      description: Category/type of vault
+    data:
+      type: object
+      description: Encrypted vault data
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+CreateVaultRequest:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      description: Human-readable name
+      minLength: 1
+      maxLength: 255
+    description:
+      type: string
+      description: Human-readable description
+      maxLength: 1000
+    category:
+      type: string
+      description: Category/type of vault
+      maxLength: 100
+
+UpdateVaultRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Human-readable name
+      minLength: 1
+      maxLength: 255
+    description:
+      type: string
+      description: Human-readable description
+      maxLength: 1000
+    category:
+      type: string
+      description: Category/type of vault
+      maxLength: 100

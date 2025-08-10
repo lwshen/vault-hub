@@ -14,97 +14,39 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// Defines values for AuditLogAction.
-const (
-	CreateApiKey AuditLogAction = "create_api_key"
-	CreateVault  AuditLogAction = "create_vault"
-	DeleteApiKey AuditLogAction = "delete_api_key"
-	DeleteVault  AuditLogAction = "delete_vault"
-	LoginUser    AuditLogAction = "login_user"
-	LogoutUser   AuditLogAction = "logout_user"
-	ReadVault    AuditLogAction = "read_vault"
-	RegisterUser AuditLogAction = "register_user"
-	UpdateApiKey AuditLogAction = "update_api_key"
-	UpdateVault  AuditLogAction = "update_vault"
-)
+// GetAuditLogsParams defines parameters for GetAuditLogs.
+type GetAuditLogsParams struct {
+	// Page Page number
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
 
-// APIKey defines model for APIKey.
-type APIKey struct {
-	// CreatedAt When the key was created
-	CreatedAt time.Time `json:"createdAt"`
+	// Limit Number of items per page
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
-	// ExpiresAt Optional expiration date
-	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+	// Action Filter by action type
+	Action *string `form:"action,omitempty" json:"action,omitempty"`
 
-	// Id Unique API key ID
-	Id int64 `json:"id"`
+	// StartDate Start date for filtering
+	StartDate *time.Time `form:"startDate,omitempty" json:"startDate,omitempty"`
 
-	// IsActive Whether the key is currently active
-	IsActive bool `json:"isActive"`
-
-	// LastUsedAt When the key was last used
-	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
-
-	// Name Human-readable name for the API key
-	Name string `json:"name"`
-
-	// UpdatedAt When the key was last updated
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-
-	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
-	Vaults *[]VaultLite `json:"vaults,omitempty"`
+	// EndDate End date for filtering
+	EndDate *time.Time `form:"endDate,omitempty" json:"endDate,omitempty"`
 }
 
-// APIKeysResponse defines model for APIKeysResponse.
-type APIKeysResponse struct {
-	ApiKeys []APIKey `json:"apiKeys"`
-
-	// PageIndex Current page index (starting from 1)
-	PageIndex int `json:"pageIndex"`
-
-	// PageSize Number of API keys per page
-	PageSize int `json:"pageSize"`
-
-	// TotalCount Total number of API keys
-	TotalCount int `json:"totalCount"`
+// LoginJSONBody defines parameters for Login.
+type LoginJSONBody struct {
+	Email    openapi_types.Email `json:"email"`
+	Password string              `json:"password"`
 }
 
-// AuditLog defines model for AuditLog.
-type AuditLog struct {
-	// Action Type of action performed
-	Action AuditLogAction `json:"action"`
-	ApiKey *APIKey        `json:"apiKey,omitempty"`
-
-	// CreatedAt When the action occurred
-	CreatedAt time.Time `json:"createdAt"`
-
-	// IpAddress IP address from which the action was performed
-	IpAddress *string `json:"ipAddress,omitempty"`
-
-	// UserAgent User agent string from the client
-	UserAgent *string    `json:"userAgent,omitempty"`
-	Vault     *VaultLite `json:"vault,omitempty"`
+// SignupJSONBody defines parameters for Signup.
+type SignupJSONBody struct {
+	Email    openapi_types.Email `json:"email"`
+	Name     string              `json:"name"`
+	Password string              `json:"password"`
 }
 
-// AuditLogAction Type of action performed
-type AuditLogAction string
-
-// AuditLogsResponse defines model for AuditLogsResponse.
-type AuditLogsResponse struct {
-	AuditLogs []AuditLog `json:"auditLogs"`
-
-	// PageIndex Current page index (starting from 0)
-	PageIndex int `json:"pageIndex"`
-
-	// PageSize Number of logs per page
-	PageSize int `json:"pageSize"`
-
-	// TotalCount Total number of logs matching the filter criteria
-	TotalCount int `json:"totalCount"`
-}
-
-// CreateAPIKeyRequest defines model for CreateAPIKeyRequest.
-type CreateAPIKeyRequest struct {
+// CreateAPIKeyJSONBody defines parameters for CreateAPIKey.
+type CreateAPIKeyJSONBody struct {
 	// ExpiresAt Optional expiration date
 	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 
@@ -115,67 +57,8 @@ type CreateAPIKeyRequest struct {
 	VaultUniqueIds *[]string `json:"vaultUniqueIds,omitempty"`
 }
 
-// CreateAPIKeyResponse defines model for CreateAPIKeyResponse.
-type CreateAPIKeyResponse struct {
-	ApiKey APIKey `json:"apiKey"`
-
-	// Key The generated API key (only shown once)
-	Key string `json:"key"`
-}
-
-// CreateVaultRequest defines model for CreateVaultRequest.
-type CreateVaultRequest struct {
-	// Category Category/type of vault
-	Category *string `json:"category,omitempty"`
-
-	// Description Human-readable description
-	Description *string `json:"description,omitempty"`
-
-	// Name Human-readable name
-	Name string `json:"name"`
-
-	// Value Value to be encrypted and stored
-	Value string `json:"value"`
-}
-
-// GetUserResponse defines model for GetUserResponse.
-type GetUserResponse struct {
-	Avatar *string             `json:"avatar,omitempty"`
-	Email  openapi_types.Email `json:"email"`
-	Name   *string             `json:"name,omitempty"`
-}
-
-// HealthCheckResponse defines model for HealthCheckResponse.
-type HealthCheckResponse struct {
-	Status    *string    `json:"status,omitempty"`
-	Timestamp *time.Time `json:"timestamp,omitempty"`
-}
-
-// LoginRequest defines model for LoginRequest.
-type LoginRequest struct {
-	Email    openapi_types.Email `json:"email"`
-	Password string              `json:"password"`
-}
-
-// LoginResponse defines model for LoginResponse.
-type LoginResponse struct {
-	Token string `json:"token"`
-}
-
-// SignupRequest defines model for SignupRequest.
-type SignupRequest struct {
-	Email    openapi_types.Email `json:"email"`
-	Name     string              `json:"name"`
-	Password string              `json:"password"`
-}
-
-// SignupResponse defines model for SignupResponse.
-type SignupResponse struct {
-	Token string `json:"token"`
-}
-
-// UpdateAPIKeyRequest defines model for UpdateAPIKeyRequest.
-type UpdateAPIKeyRequest struct {
+// UpdateAPIKeyJSONBody defines parameters for UpdateAPIKey.
+type UpdateAPIKeyJSONBody struct {
 	// ExpiresAt Optional expiration date
 	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 
@@ -189,8 +72,20 @@ type UpdateAPIKeyRequest struct {
 	VaultUniqueIds *[]string `json:"vaultUniqueIds,omitempty"`
 }
 
-// UpdateVaultRequest defines model for UpdateVaultRequest.
-type UpdateVaultRequest struct {
+// CreateVaultJSONBody defines parameters for CreateVault.
+type CreateVaultJSONBody struct {
+	// Category Category/type of vault
+	Category *string `json:"category,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+
+	// Name Human-readable name
+	Name string `json:"name"`
+}
+
+// UpdateVaultJSONBody defines parameters for UpdateVault.
+type UpdateVaultJSONBody struct {
 	// Category Category/type of vault
 	Category *string `json:"category,omitempty"`
 
@@ -199,109 +94,28 @@ type UpdateVaultRequest struct {
 
 	// Name Human-readable name
 	Name *string `json:"name,omitempty"`
-
-	// Value Value to be encrypted and stored
-	Value *string `json:"value,omitempty"`
 }
-
-// Vault defines model for Vault.
-type Vault struct {
-	// Category Category/type of vault
-	Category  *string    `json:"category,omitempty"`
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
-
-	// Description Human-readable description
-	Description *string `json:"description,omitempty"`
-
-	// Name Human-readable name
-	Name string `json:"name"`
-
-	// UniqueId Unique identifier for the vault
-	UniqueId  string     `json:"uniqueId"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-
-	// UserId ID of the user who owns this vault
-	UserId *int64 `json:"userId,omitempty"`
-
-	// Value Encrypted value
-	Value string `json:"value"`
-}
-
-// VaultLite defines model for VaultLite.
-type VaultLite struct {
-	// Category Category/type of vault
-	Category *string `json:"category,omitempty"`
-
-	// Description Human-readable description
-	Description *string `json:"description,omitempty"`
-
-	// Name Human-readable name
-	Name string `json:"name"`
-
-	// UniqueId Unique identifier for the vault
-	UniqueId  string     `json:"uniqueId"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-}
-
-// GetAPIKeysParams defines parameters for GetAPIKeys.
-type GetAPIKeysParams struct {
-	// PageSize Number of API keys per page (default 20, max 1000)
-	PageSize int `form:"pageSize" json:"pageSize"`
-
-	// PageIndex Page index, starting from 1 (default 1)
-	PageIndex int `form:"pageIndex" json:"pageIndex"`
-}
-
-// GetAuditLogsParams defines parameters for GetAuditLogs.
-type GetAuditLogsParams struct {
-	// StartDate Filter logs from this date (ISO 8601 format)
-	StartDate *time.Time `form:"startDate,omitempty" json:"startDate,omitempty"`
-
-	// EndDate Filter logs until this date (ISO 8601 format)
-	EndDate *time.Time `form:"endDate,omitempty" json:"endDate,omitempty"`
-
-	// VaultUniqueId Filter logs by vault unique ID
-	VaultUniqueId *string `form:"vaultUniqueId,omitempty" json:"vaultUniqueId,omitempty"`
-
-	// PageSize Number of logs per page (default 100, max 1000)
-	PageSize int `form:"pageSize" json:"pageSize"`
-
-	// PageIndex Page index, starting from 0 (default 0)
-	PageIndex int `form:"pageIndex" json:"pageIndex"`
-}
-
-// CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
-type CreateAPIKeyJSONRequestBody = CreateAPIKeyRequest
-
-// UpdateAPIKeyJSONRequestBody defines body for UpdateAPIKey for application/json ContentType.
-type UpdateAPIKeyJSONRequestBody = UpdateAPIKeyRequest
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
-type LoginJSONRequestBody = LoginRequest
+type LoginJSONRequestBody LoginJSONBody
 
 // SignupJSONRequestBody defines body for Signup for application/json ContentType.
-type SignupJSONRequestBody = SignupRequest
+type SignupJSONRequestBody SignupJSONBody
+
+// CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
+type CreateAPIKeyJSONRequestBody CreateAPIKeyJSONBody
+
+// UpdateAPIKeyJSONRequestBody defines body for UpdateAPIKey for application/json ContentType.
+type UpdateAPIKeyJSONRequestBody UpdateAPIKeyJSONBody
 
 // CreateVaultJSONRequestBody defines body for CreateVault for application/json ContentType.
-type CreateVaultJSONRequestBody = CreateVaultRequest
+type CreateVaultJSONRequestBody CreateVaultJSONBody
 
 // UpdateVaultJSONRequestBody defines body for UpdateVault for application/json ContentType.
-type UpdateVaultJSONRequestBody = UpdateVaultRequest
+type UpdateVaultJSONRequestBody UpdateVaultJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-
-	// (GET /api/api-keys)
-	GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error
-
-	// (POST /api/api-keys)
-	CreateAPIKey(c *fiber.Ctx) error
-
-	// (DELETE /api/api-keys/{id})
-	DeleteAPIKey(c *fiber.Ctx, id int64) error
-
-	// (PATCH /api/api-keys/{id})
-	UpdateAPIKey(c *fiber.Ctx, id int64) error
 
 	// (GET /api/audit-logs)
 	GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error
@@ -317,6 +131,18 @@ type ServerInterface interface {
 
 	// (GET /api/health)
 	Health(c *fiber.Ctx) error
+
+	// (GET /api/keys)
+	GetAPIKeys(c *fiber.Ctx) error
+
+	// (POST /api/keys)
+	CreateAPIKey(c *fiber.Ctx) error
+
+	// (DELETE /api/keys/{id})
+	DeleteAPIKey(c *fiber.Ctx, id int64) error
+
+	// (PUT /api/keys/{id})
+	UpdateAPIKey(c *fiber.Ctx, id int64) error
 
 	// (GET /api/user)
 	GetCurrentUser(c *fiber.Ctx) error
@@ -344,13 +170,13 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc fiber.Handler
 
-// GetAPIKeys operation middleware
-func (siw *ServerInterfaceWrapper) GetAPIKeys(c *fiber.Ctx) error {
+// GetAuditLogs operation middleware
+func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
 
 	var err error
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetAPIKeysParams
+	var params GetAuditLogsParams
 
 	var query url.Values
 	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
@@ -358,37 +184,72 @@ func (siw *ServerInterfaceWrapper) GetAPIKeys(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
 	}
 
-	// ------------- Required query parameter "pageSize" -------------
+	// ------------- Optional query parameter "page" -------------
 
-	if paramValue := c.Query("pageSize"); paramValue != "" {
-
-	} else {
-		err = fmt.Errorf("Query argument pageSize is required, but not found")
-		c.Status(fiber.StatusBadRequest).JSON(err)
-		return err
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "pageSize", query, &params.PageSize)
+	err = runtime.BindQueryParameter("form", true, false, "page", query, &params.Page)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageSize: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter page: %w", err).Error())
 	}
 
-	// ------------- Required query parameter "pageIndex" -------------
+	// ------------- Optional query parameter "limit" -------------
 
-	if paramValue := c.Query("pageIndex"); paramValue != "" {
-
-	} else {
-		err = fmt.Errorf("Query argument pageIndex is required, but not found")
-		c.Status(fiber.StatusBadRequest).JSON(err)
-		return err
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "pageIndex", query, &params.PageIndex)
+	err = runtime.BindQueryParameter("form", true, false, "limit", query, &params.Limit)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageIndex: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter limit: %w", err).Error())
 	}
 
-	return siw.Handler.GetAPIKeys(c, params)
+	// ------------- Optional query parameter "action" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "action", query, &params.Action)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter action: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "startDate" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "startDate", query, &params.StartDate)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter startDate: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "endDate" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "endDate", query, &params.EndDate)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter endDate: %w", err).Error())
+	}
+
+	return siw.Handler.GetAuditLogs(c, params)
+}
+
+// Login operation middleware
+func (siw *ServerInterfaceWrapper) Login(c *fiber.Ctx) error {
+
+	return siw.Handler.Login(c)
+}
+
+// Logout operation middleware
+func (siw *ServerInterfaceWrapper) Logout(c *fiber.Ctx) error {
+
+	return siw.Handler.Logout(c)
+}
+
+// Signup operation middleware
+func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
+
+	return siw.Handler.Signup(c)
+}
+
+// Health operation middleware
+func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
+
+	return siw.Handler.Health(c)
+}
+
+// GetAPIKeys operation middleware
+func (siw *ServerInterfaceWrapper) GetAPIKeys(c *fiber.Ctx) error {
+
+	return siw.Handler.GetAPIKeys(c)
 }
 
 // CreateAPIKey operation middleware
@@ -427,98 +288,6 @@ func (siw *ServerInterfaceWrapper) UpdateAPIKey(c *fiber.Ctx) error {
 	}
 
 	return siw.Handler.UpdateAPIKey(c, id)
-}
-
-// GetAuditLogs operation middleware
-func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
-
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetAuditLogsParams
-
-	var query url.Values
-	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
-	}
-
-	// ------------- Optional query parameter "startDate" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "startDate", query, &params.StartDate)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter startDate: %w", err).Error())
-	}
-
-	// ------------- Optional query parameter "endDate" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "endDate", query, &params.EndDate)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter endDate: %w", err).Error())
-	}
-
-	// ------------- Optional query parameter "vaultUniqueId" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "vaultUniqueId", query, &params.VaultUniqueId)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter vaultUniqueId: %w", err).Error())
-	}
-
-	// ------------- Required query parameter "pageSize" -------------
-
-	if paramValue := c.Query("pageSize"); paramValue != "" {
-
-	} else {
-		err = fmt.Errorf("Query argument pageSize is required, but not found")
-		c.Status(fiber.StatusBadRequest).JSON(err)
-		return err
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "pageSize", query, &params.PageSize)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageSize: %w", err).Error())
-	}
-
-	// ------------- Required query parameter "pageIndex" -------------
-
-	if paramValue := c.Query("pageIndex"); paramValue != "" {
-
-	} else {
-		err = fmt.Errorf("Query argument pageIndex is required, but not found")
-		c.Status(fiber.StatusBadRequest).JSON(err)
-		return err
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "pageIndex", query, &params.PageIndex)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageIndex: %w", err).Error())
-	}
-
-	return siw.Handler.GetAuditLogs(c, params)
-}
-
-// Login operation middleware
-func (siw *ServerInterfaceWrapper) Login(c *fiber.Ctx) error {
-
-	return siw.Handler.Login(c)
-}
-
-// Logout operation middleware
-func (siw *ServerInterfaceWrapper) Logout(c *fiber.Ctx) error {
-
-	return siw.Handler.Logout(c)
-}
-
-// Signup operation middleware
-func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
-
-	return siw.Handler.Signup(c)
-}
-
-// Health operation middleware
-func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
-
-	return siw.Handler.Health(c)
 }
 
 // GetCurrentUser operation middleware
@@ -608,14 +377,6 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 		router.Use(fiber.Handler(m))
 	}
 
-	router.Get(options.BaseURL+"/api/api-keys", wrapper.GetAPIKeys)
-
-	router.Post(options.BaseURL+"/api/api-keys", wrapper.CreateAPIKey)
-
-	router.Delete(options.BaseURL+"/api/api-keys/:id", wrapper.DeleteAPIKey)
-
-	router.Patch(options.BaseURL+"/api/api-keys/:id", wrapper.UpdateAPIKey)
-
 	router.Get(options.BaseURL+"/api/audit-logs", wrapper.GetAuditLogs)
 
 	router.Post(options.BaseURL+"/api/auth/login", wrapper.Login)
@@ -625,6 +386,14 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
 
 	router.Get(options.BaseURL+"/api/health", wrapper.Health)
+
+	router.Get(options.BaseURL+"/api/keys", wrapper.GetAPIKeys)
+
+	router.Post(options.BaseURL+"/api/keys", wrapper.CreateAPIKey)
+
+	router.Delete(options.BaseURL+"/api/keys/:id", wrapper.DeleteAPIKey)
+
+	router.Put(options.BaseURL+"/api/keys/:id", wrapper.UpdateAPIKey)
 
 	router.Get(options.BaseURL+"/api/user", wrapper.GetCurrentUser)
 
@@ -640,15 +409,167 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 }
 
+type GetAuditLogsRequestObject struct {
+	Params GetAuditLogsParams
+}
+
+type GetAuditLogsResponseObject interface {
+	VisitGetAuditLogsResponse(ctx *fiber.Ctx) error
+}
+
+type GetAuditLogs200JSONResponse []struct {
+	// Action Action performed (e.g., CREATE, UPDATE, DELETE, LOGIN)
+	Action string `json:"action"`
+
+	// Details Additional details about the action
+	Details *map[string]interface{} `json:"details,omitempty"`
+
+	// Id Unique audit log entry ID
+	Id int64 `json:"id"`
+
+	// IpAddress IP address from which the action was performed
+	IpAddress *string `json:"ipAddress,omitempty"`
+
+	// ResourceId ID of the resource affected
+	ResourceId string `json:"resourceId"`
+
+	// ResourceType Type of resource affected (e.g., VAULT, API_KEY, USER)
+	ResourceType string `json:"resourceType"`
+
+	// Timestamp When the action was performed
+	Timestamp time.Time `json:"timestamp"`
+
+	// UserAgent User agent string from the client
+	UserAgent *string `json:"userAgent,omitempty"`
+
+	// UserId ID of the user who performed the action
+	UserId int64 `json:"userId"`
+}
+
+func (response GetAuditLogs200JSONResponse) VisitGetAuditLogsResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type LoginRequestObject struct {
+	Body *LoginJSONRequestBody
+}
+
+type LoginResponseObject interface {
+	VisitLoginResponse(ctx *fiber.Ctx) error
+}
+
+type Login200JSONResponse struct {
+	Token string `json:"token"`
+}
+
+func (response Login200JSONResponse) VisitLoginResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type LogoutRequestObject struct {
+}
+
+type LogoutResponseObject interface {
+	VisitLogoutResponse(ctx *fiber.Ctx) error
+}
+
+type Logout200Response struct {
+}
+
+func (response Logout200Response) VisitLogoutResponse(ctx *fiber.Ctx) error {
+	ctx.Status(200)
+	return nil
+}
+
+type SignupRequestObject struct {
+	Body *SignupJSONRequestBody
+}
+
+type SignupResponseObject interface {
+	VisitSignupResponse(ctx *fiber.Ctx) error
+}
+
+type Signup200JSONResponse struct {
+	Token string `json:"token"`
+}
+
+func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type HealthRequestObject struct {
+}
+
+type HealthResponseObject interface {
+	VisitHealthResponse(ctx *fiber.Ctx) error
+}
+
+type Health200JSONResponse struct {
+	Status    *string    `json:"status,omitempty"`
+	Timestamp *time.Time `json:"timestamp,omitempty"`
+}
+
+func (response Health200JSONResponse) VisitHealthResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 type GetAPIKeysRequestObject struct {
-	Params GetAPIKeysParams
 }
 
 type GetAPIKeysResponseObject interface {
 	VisitGetAPIKeysResponse(ctx *fiber.Ctx) error
 }
 
-type GetAPIKeys200JSONResponse APIKeysResponse
+type GetAPIKeys200JSONResponse []struct {
+	// CreatedAt When the key was created
+	CreatedAt time.Time `json:"createdAt"`
+
+	// ExpiresAt Optional expiration date
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+
+	// Id Unique API key ID
+	Id int64 `json:"id"`
+
+	// IsActive Whether the key is currently active
+	IsActive bool `json:"isActive"`
+
+	// LastUsedAt When the key was last used
+	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
+
+	// Name Human-readable name for the API key
+	Name string `json:"name"`
+
+	// UpdatedAt When the key was last updated
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+
+	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
+	Vaults *[]struct {
+		// Category Category/type of vault
+		Category *string `json:"category,omitempty"`
+
+		// Description Human-readable description
+		Description *string `json:"description,omitempty"`
+
+		// Name Human-readable name
+		Name string `json:"name"`
+
+		// UniqueId Unique identifier for the vault
+		UniqueId  string     `json:"uniqueId"`
+		UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	} `json:"vaults,omitempty"`
+}
 
 func (response GetAPIKeys200JSONResponse) VisitGetAPIKeysResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -665,7 +586,49 @@ type CreateAPIKeyResponseObject interface {
 	VisitCreateAPIKeyResponse(ctx *fiber.Ctx) error
 }
 
-type CreateAPIKey201JSONResponse CreateAPIKeyResponse
+type CreateAPIKey201JSONResponse struct {
+	ApiKey struct {
+		// CreatedAt When the key was created
+		CreatedAt time.Time `json:"createdAt"`
+
+		// ExpiresAt Optional expiration date
+		ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+
+		// Id Unique API key ID
+		Id int64 `json:"id"`
+
+		// IsActive Whether the key is currently active
+		IsActive bool `json:"isActive"`
+
+		// LastUsedAt When the key was last used
+		LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
+
+		// Name Human-readable name for the API key
+		Name string `json:"name"`
+
+		// UpdatedAt When the key was last updated
+		UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+
+		// Vaults Array of vaults this key can access (null/empty = all user's vaults)
+		Vaults *[]struct {
+			// Category Category/type of vault
+			Category *string `json:"category,omitempty"`
+
+			// Description Human-readable description
+			Description *string `json:"description,omitempty"`
+
+			// Name Human-readable name
+			Name string `json:"name"`
+
+			// UniqueId Unique identifier for the vault
+			UniqueId  string     `json:"uniqueId"`
+			UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+		} `json:"vaults,omitempty"`
+	} `json:"apiKey"`
+
+	// Key The generated API key (only shown once)
+	Key string `json:"key"`
+}
 
 func (response CreateAPIKey201JSONResponse) VisitCreateAPIKeyResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -699,91 +662,46 @@ type UpdateAPIKeyResponseObject interface {
 	VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error
 }
 
-type UpdateAPIKey200JSONResponse APIKey
+type UpdateAPIKey200JSONResponse struct {
+	// CreatedAt When the key was created
+	CreatedAt time.Time `json:"createdAt"`
+
+	// ExpiresAt Optional expiration date
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+
+	// Id Unique API key ID
+	Id int64 `json:"id"`
+
+	// IsActive Whether the key is currently active
+	IsActive bool `json:"isActive"`
+
+	// LastUsedAt When the key was last used
+	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
+
+	// Name Human-readable name for the API key
+	Name string `json:"name"`
+
+	// UpdatedAt When the key was last updated
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+
+	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
+	Vaults *[]struct {
+		// Category Category/type of vault
+		Category *string `json:"category,omitempty"`
+
+		// Description Human-readable description
+		Description *string `json:"description,omitempty"`
+
+		// Name Human-readable name
+		Name string `json:"name"`
+
+		// UniqueId Unique identifier for the vault
+		UniqueId  string     `json:"uniqueId"`
+		UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+	} `json:"vaults,omitempty"`
+}
 
 func (response UpdateAPIKey200JSONResponse) VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
-}
-
-type GetAuditLogsRequestObject struct {
-	Params GetAuditLogsParams
-}
-
-type GetAuditLogsResponseObject interface {
-	VisitGetAuditLogsResponse(ctx *fiber.Ctx) error
-}
-
-type GetAuditLogs200JSONResponse AuditLogsResponse
-
-func (response GetAuditLogs200JSONResponse) VisitGetAuditLogsResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
-}
-
-type LoginRequestObject struct {
-	Body *LoginJSONRequestBody
-}
-
-type LoginResponseObject interface {
-	VisitLoginResponse(ctx *fiber.Ctx) error
-}
-
-type Login200JSONResponse LoginResponse
-
-func (response Login200JSONResponse) VisitLoginResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
-}
-
-type LogoutRequestObject struct {
-}
-
-type LogoutResponseObject interface {
-	VisitLogoutResponse(ctx *fiber.Ctx) error
-}
-
-type Logout200Response struct {
-}
-
-func (response Logout200Response) VisitLogoutResponse(ctx *fiber.Ctx) error {
-	ctx.Status(200)
-	return nil
-}
-
-type SignupRequestObject struct {
-	Body *SignupJSONRequestBody
-}
-
-type SignupResponseObject interface {
-	VisitSignupResponse(ctx *fiber.Ctx) error
-}
-
-type Signup200JSONResponse SignupResponse
-
-func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
-}
-
-type HealthRequestObject struct {
-}
-
-type HealthResponseObject interface {
-	VisitHealthResponse(ctx *fiber.Ctx) error
-}
-
-type Health200JSONResponse HealthCheckResponse
-
-func (response Health200JSONResponse) VisitHealthResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -797,7 +715,11 @@ type GetCurrentUserResponseObject interface {
 	VisitGetCurrentUserResponse(ctx *fiber.Ctx) error
 }
 
-type GetCurrentUser200JSONResponse GetUserResponse
+type GetCurrentUser200JSONResponse struct {
+	Avatar *string             `json:"avatar,omitempty"`
+	Email  openapi_types.Email `json:"email"`
+	Name   *string             `json:"name,omitempty"`
+}
 
 func (response GetCurrentUser200JSONResponse) VisitGetCurrentUserResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -813,7 +735,20 @@ type GetVaultsResponseObject interface {
 	VisitGetVaultsResponse(ctx *fiber.Ctx) error
 }
 
-type GetVaults200JSONResponse []VaultLite
+type GetVaults200JSONResponse []struct {
+	// Category Category/type of vault
+	Category *string `json:"category,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+
+	// Name Human-readable name
+	Name string `json:"name"`
+
+	// UniqueId Unique identifier for the vault
+	UniqueId  string     `json:"uniqueId"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+}
 
 func (response GetVaults200JSONResponse) VisitGetVaultsResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -830,7 +765,24 @@ type CreateVaultResponseObject interface {
 	VisitCreateVaultResponse(ctx *fiber.Ctx) error
 }
 
-type CreateVault201JSONResponse Vault
+type CreateVault201JSONResponse struct {
+	// Category Category/type of vault
+	Category  *string    `json:"category,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+
+	// Data Encrypted vault data
+	Data *map[string]interface{} `json:"data,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+
+	// Name Human-readable name
+	Name string `json:"name"`
+
+	// UniqueId Unique identifier for the vault
+	UniqueId  string     `json:"uniqueId"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+}
 
 func (response CreateVault201JSONResponse) VisitCreateVaultResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -863,7 +815,24 @@ type GetVaultResponseObject interface {
 	VisitGetVaultResponse(ctx *fiber.Ctx) error
 }
 
-type GetVault200JSONResponse Vault
+type GetVault200JSONResponse struct {
+	// Category Category/type of vault
+	Category  *string    `json:"category,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+
+	// Data Encrypted vault data
+	Data *map[string]interface{} `json:"data,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+
+	// Name Human-readable name
+	Name string `json:"name"`
+
+	// UniqueId Unique identifier for the vault
+	UniqueId  string     `json:"uniqueId"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+}
 
 func (response GetVault200JSONResponse) VisitGetVaultResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -881,7 +850,24 @@ type UpdateVaultResponseObject interface {
 	VisitUpdateVaultResponse(ctx *fiber.Ctx) error
 }
 
-type UpdateVault200JSONResponse Vault
+type UpdateVault200JSONResponse struct {
+	// Category Category/type of vault
+	Category  *string    `json:"category,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+
+	// Data Encrypted vault data
+	Data *map[string]interface{} `json:"data,omitempty"`
+
+	// Description Human-readable description
+	Description *string `json:"description,omitempty"`
+
+	// Name Human-readable name
+	Name string `json:"name"`
+
+	// UniqueId Unique identifier for the vault
+	UniqueId  string     `json:"uniqueId"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+}
 
 func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -892,18 +878,6 @@ func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.C
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
-
-	// (GET /api/api-keys)
-	GetAPIKeys(ctx context.Context, request GetAPIKeysRequestObject) (GetAPIKeysResponseObject, error)
-
-	// (POST /api/api-keys)
-	CreateAPIKey(ctx context.Context, request CreateAPIKeyRequestObject) (CreateAPIKeyResponseObject, error)
-
-	// (DELETE /api/api-keys/{id})
-	DeleteAPIKey(ctx context.Context, request DeleteAPIKeyRequestObject) (DeleteAPIKeyResponseObject, error)
-
-	// (PATCH /api/api-keys/{id})
-	UpdateAPIKey(ctx context.Context, request UpdateAPIKeyRequestObject) (UpdateAPIKeyResponseObject, error)
 
 	// (GET /api/audit-logs)
 	GetAuditLogs(ctx context.Context, request GetAuditLogsRequestObject) (GetAuditLogsResponseObject, error)
@@ -919,6 +893,18 @@ type StrictServerInterface interface {
 
 	// (GET /api/health)
 	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
+
+	// (GET /api/keys)
+	GetAPIKeys(ctx context.Context, request GetAPIKeysRequestObject) (GetAPIKeysResponseObject, error)
+
+	// (POST /api/keys)
+	CreateAPIKey(ctx context.Context, request CreateAPIKeyRequestObject) (CreateAPIKeyResponseObject, error)
+
+	// (DELETE /api/keys/{id})
+	DeleteAPIKey(ctx context.Context, request DeleteAPIKeyRequestObject) (DeleteAPIKeyResponseObject, error)
+
+	// (PUT /api/keys/{id})
+	UpdateAPIKey(ctx context.Context, request UpdateAPIKeyRequestObject) (UpdateAPIKeyResponseObject, error)
 
 	// (GET /api/user)
 	GetCurrentUser(ctx context.Context, request GetCurrentUserRequestObject) (GetCurrentUserResponseObject, error)
@@ -950,124 +936,6 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
-}
-
-// GetAPIKeys operation middleware
-func (sh *strictHandler) GetAPIKeys(ctx *fiber.Ctx, params GetAPIKeysParams) error {
-	var request GetAPIKeysRequestObject
-
-	request.Params = params
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetAPIKeys(ctx.UserContext(), request.(GetAPIKeysRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetAPIKeys")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(GetAPIKeysResponseObject); ok {
-		if err := validResponse.VisitGetAPIKeysResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// CreateAPIKey operation middleware
-func (sh *strictHandler) CreateAPIKey(ctx *fiber.Ctx) error {
-	var request CreateAPIKeyRequestObject
-
-	var body CreateAPIKeyJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	request.Body = &body
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.CreateAPIKey(ctx.UserContext(), request.(CreateAPIKeyRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "CreateAPIKey")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(CreateAPIKeyResponseObject); ok {
-		if err := validResponse.VisitCreateAPIKeyResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// DeleteAPIKey operation middleware
-func (sh *strictHandler) DeleteAPIKey(ctx *fiber.Ctx, id int64) error {
-	var request DeleteAPIKeyRequestObject
-
-	request.Id = id
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.DeleteAPIKey(ctx.UserContext(), request.(DeleteAPIKeyRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "DeleteAPIKey")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(DeleteAPIKeyResponseObject); ok {
-		if err := validResponse.VisitDeleteAPIKeyResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// UpdateAPIKey operation middleware
-func (sh *strictHandler) UpdateAPIKey(ctx *fiber.Ctx, id int64) error {
-	var request UpdateAPIKeyRequestObject
-
-	request.Id = id
-
-	var body UpdateAPIKeyJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-	request.Body = &body
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.UpdateAPIKey(ctx.UserContext(), request.(UpdateAPIKeyRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "UpdateAPIKey")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(UpdateAPIKeyResponseObject); ok {
-		if err := validResponse.VisitUpdateAPIKeyResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
 }
 
 // GetAuditLogs operation middleware
@@ -1201,6 +1069,122 @@ func (sh *strictHandler) Health(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(HealthResponseObject); ok {
 		if err := validResponse.VisitHealthResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetAPIKeys operation middleware
+func (sh *strictHandler) GetAPIKeys(ctx *fiber.Ctx) error {
+	var request GetAPIKeysRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAPIKeys(ctx.UserContext(), request.(GetAPIKeysRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAPIKeys")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetAPIKeysResponseObject); ok {
+		if err := validResponse.VisitGetAPIKeysResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// CreateAPIKey operation middleware
+func (sh *strictHandler) CreateAPIKey(ctx *fiber.Ctx) error {
+	var request CreateAPIKeyRequestObject
+
+	var body CreateAPIKeyJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAPIKey(ctx.UserContext(), request.(CreateAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CreateAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(CreateAPIKeyResponseObject); ok {
+		if err := validResponse.VisitCreateAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteAPIKey operation middleware
+func (sh *strictHandler) DeleteAPIKey(ctx *fiber.Ctx, id int64) error {
+	var request DeleteAPIKeyRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAPIKey(ctx.UserContext(), request.(DeleteAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(DeleteAPIKeyResponseObject); ok {
+		if err := validResponse.VisitDeleteAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// UpdateAPIKey operation middleware
+func (sh *strictHandler) UpdateAPIKey(ctx *fiber.Ctx, id int64) error {
+	var request UpdateAPIKeyRequestObject
+
+	request.Id = id
+
+	var body UpdateAPIKeyJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAPIKey(ctx.UserContext(), request.(UpdateAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(UpdateAPIKeyResponseObject); ok {
+		if err := validResponse.VisitUpdateAPIKeyResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

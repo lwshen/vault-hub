@@ -1,0 +1,91 @@
+/api/vaults:
+  get:
+    description: Get all vaults for the current user
+    tags:
+      - Vault
+    operationId: getVaults
+    responses:
+      '200':
+        description: List of vaults
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/vault.yaml#/VaultLite'
+  post:
+    description: Create a new vault
+    tags:
+      - Vault
+    operationId: createVault
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/vault.yaml#/CreateVaultRequest'
+    responses:
+      '201':
+        description: Vault created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/vault.yaml#/Vault'
+
+/api/vaults/{uniqueId}:
+  get:
+    description: Get a specific vault by unique ID
+    tags:
+      - Vault
+    operationId: getVault
+    parameters:
+      - name: uniqueId
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Vault details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/vault.yaml#/Vault'
+  put:
+    description: Update a vault
+    tags:
+      - Vault
+    operationId: updateVault
+    parameters:
+      - name: uniqueId
+        in: path
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/vault.yaml#/UpdateVaultRequest'
+    responses:
+      '200':
+        description: Vault updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/vault.yaml#/Vault'
+  delete:
+    description: Delete a vault
+    tags:
+      - Vault
+    operationId: deleteVault
+    parameters:
+      - name: uniqueId
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      '204':
+        description: Vault deleted successfully
