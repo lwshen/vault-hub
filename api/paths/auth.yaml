@@ -1,0 +1,49 @@
+login:
+  post:
+    description: Login with email and password
+    tags:
+      - Auth
+    operationId: login
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/auth.yaml#/LoginRequest"
+    responses:
+      '200':
+        description: Login successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/LoginResponse'
+
+signup:
+  post:
+    description: Sign up a new user
+    tags:
+      - Auth
+    operationId: signup
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/auth.yaml#/SignupRequest"
+    responses:
+      '200':
+        description: Sign up successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/SignupResponse'
+
+logout:
+  get:
+    description: Logout
+    tags:
+      - Auth
+    operationId: logout
+    responses:
+      '200':
+        description: OK

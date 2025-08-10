@@ -1,0 +1,114 @@
+APIKeysResponse:
+  type: object
+  required:
+    - apiKeys
+    - totalCount
+    - pageSize
+    - pageIndex
+  properties:
+    apiKeys:
+      type: array
+      items:
+        $ref: '#/APIKey'
+    totalCount:
+      type: integer
+      description: Total number of API keys
+    pageSize:
+      type: integer
+      description: Number of API keys per page
+    pageIndex:
+      type: integer
+      description: Current page index (starting from 1)
+
+APIKey:
+  type: object
+  required:
+    - id
+    - name
+    - isActive
+    - createdAt
+  properties:
+    id:
+      type: integer
+      format: int64
+      description: Unique API key ID
+    name:
+      type: string
+      description: Human-readable name for the API key
+    vaults:
+      type: array
+      items:
+        $ref: '../vault.yaml#/VaultLite'
+      description: Array of vaults this key can access (null/empty = all user's vaults)
+    expiresAt:
+      type: string
+      format: date-time
+      description: Optional expiration date
+    lastUsedAt:
+      type: string
+      format: date-time
+      description: When the key was last used
+    isActive:
+      type: boolean
+      description: Whether the key is currently active
+    createdAt:
+      type: string
+      format: date-time
+      description: When the key was created
+    updatedAt:
+      type: string
+      format: date-time
+      description: When the key was last updated
+
+CreateAPIKeyRequest:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      description: Human-readable name for the API key
+      minLength: 1
+      maxLength: 255
+    vaultUniqueIds:
+      type: array
+      items:
+        type: string
+      description: Array of vault unique IDs this key can access (empty = all user's vaults)
+    expiresAt:
+      type: string
+      format: date-time
+      description: Optional expiration date
+
+CreateAPIKeyResponse:
+  type: object
+  required:
+    - apiKey
+    - key
+  properties:
+    apiKey:
+      $ref: '#/APIKey'
+    key:
+      type: string
+      description: The generated API key (only shown once)
+
+UpdateAPIKeyRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Human-readable name for the API key
+      minLength: 1
+      maxLength: 255
+    vaultUniqueIds:
+      type: array
+      items:
+        type: string
+      description: Array of vault unique IDs this key can access (empty = all user's vaults)
+    expiresAt:
+      type: string
+      format: date-time
+      description: Optional expiration date
+    isActive:
+      type: boolean
+      description: Enable or disable the API key
