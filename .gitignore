@@ -34,3 +34,6 @@ tmp/
 data.db
 
 .claude/settings.local.json
+
+# Generated OpenAPI bundle
+api/api.bundled.yaml
