@@ -1,0 +1,62 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Vault Hub Server
+paths:
+  /api/health:
+    $ref: './paths/health.yaml#/~1api~1health'
+  /api/auth/login:
+    $ref: './paths/auth.yaml#/~1api~1auth~1login'
+  /api/auth/signup:
+    $ref: './paths/auth.yaml#/~1api~1auth~1signup'
+  /api/auth/logout:
+    $ref: './paths/auth.yaml#/~1api~1auth~1logout'
+  /api/user:
+    $ref: './paths/user.yaml#/~1api~1user'
+  /api/vaults:
+    $ref: './paths/vault.yaml#/~1api~1vaults'
+  /api/vaults/{uniqueId}:
+    $ref: './paths/vault.yaml#/~1api~1vaults~1{uniqueId}'
+  /api/audit-logs:
+    $ref: './paths/audit.yaml#/~1api~1audit-logs'
+  /api/api-keys:
+    $ref: './paths/apikey.yaml#/~1api~1api-keys'
+  /api/api-keys/{id}:
+    $ref: './paths/apikey.yaml#/~1api~1api-keys~1{id}'
+
+components:
+  schemas:
+    HealthCheckResponse:
+      $ref: './schemas/health.yaml#/HealthCheckResponse'
+    LoginRequest:
+      $ref: './schemas/auth.yaml#/LoginRequest'
+    LoginResponse:
+      $ref: './schemas/auth.yaml#/LoginResponse'
+    SignupRequest:
+      $ref: './schemas/auth.yaml#/SignupRequest'
+    SignupResponse:
+      $ref: './schemas/auth.yaml#/SignupResponse'
+    GetUserResponse:
+      $ref: './schemas/user.yaml#/GetUserResponse'
+    VaultLite:
+      $ref: './schemas/vault.yaml#/VaultLite'
+    Vault:
+      $ref: './schemas/vault.yaml#/Vault'
+    CreateVaultRequest:
+      $ref: './schemas/vault.yaml#/CreateVaultRequest'
+    UpdateVaultRequest:
+      $ref: './schemas/vault.yaml#/UpdateVaultRequest'
+    AuditLogsResponse:
+      $ref: './schemas/audit.yaml#/AuditLogsResponse'
+    APIKeysResponse:
+      $ref: './schemas/apikey.yaml#/APIKeysResponse'
+    AuditLog:
+      $ref: './schemas/audit.yaml#/AuditLog'
+    APIKey:
+      $ref: './schemas/apikey.yaml#/APIKey'
+    CreateAPIKeyRequest:
+      $ref: './schemas/apikey.yaml#/CreateAPIKeyRequest'
+    CreateAPIKeyResponse:
+      $ref: './schemas/apikey.yaml#/CreateAPIKeyResponse'
+    UpdateAPIKeyRequest:
+      $ref: './schemas/apikey.yaml#/UpdateAPIKeyRequest'

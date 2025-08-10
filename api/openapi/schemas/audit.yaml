@@ -1,0 +1,47 @@
+AuditLogsResponse:
+  type: object
+  required:
+    - auditLogs
+    - totalCount
+    - pageSize
+    - pageIndex
+  properties:
+    auditLogs:
+      type: array
+      items:
+        $ref: '#/AuditLog'
+    totalCount:
+      type: integer
+      description: Total number of logs matching the filter criteria
+    pageSize:
+      type: integer
+      description: Number of logs per page
+    pageIndex:
+      type: integer
+      description: Current page index (starting from 0)
+
+AuditLog:
+  type: object
+  required:
+    - createdAt
+    - userId
+    - action
+  properties:
+    createdAt:
+      type: string
+      format: date-time
+      description: When the action occurred
+    vault:
+      $ref: 'vault.yaml#/VaultLite'
+    apiKey:
+      $ref: 'apikey.yaml#/APIKey'
+    action:
+      type: string
+      enum: [read_vault, update_vault, delete_vault, create_vault, login_user, register_user, logout_user, create_api_key, update_api_key, delete_api_key]
+      description: Type of action performed
+    ipAddress:
+      type: string
+      description: IP address from which the action was performed
+    userAgent:
+      type: string
+      description: User agent string from the client

@@ -1,0 +1,13 @@
+/api/user:
+  get:
+    description: Get current user by credential
+    tags:
+      - User
+    operationId: getCurrentUser
+    responses:
+      '200':
+        description: User Info
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/user.yaml#/GetUserResponse'

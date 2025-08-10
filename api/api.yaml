@@ -25,7 +25,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginRequest"
+              $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
           description: Login successfully
@@ -44,7 +44,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignupRequest"
+              $ref: '#/components/schemas/SignupRequest'
       responses:
         '200':
           description: Sign up successfully
@@ -99,7 +99,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateVaultRequest"
+              $ref: '#/components/schemas/CreateVaultRequest'
       responses:
         '201':
           description: Vault created successfully
@@ -144,7 +144,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateVaultRequest"
+              $ref: '#/components/schemas/UpdateVaultRequest'
       responses:
         '200':
           description: Vault updated successfully
@@ -259,7 +259,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateAPIKeyRequest"
+              $ref: '#/components/schemas/CreateAPIKeyRequest'
       responses:
         '201':
           description: API key created successfully
@@ -286,7 +286,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateAPIKeyRequest"
+              $ref: '#/components/schemas/UpdateAPIKeyRequest'
       responses:
         '200':
           description: API key updated successfully
@@ -310,7 +310,6 @@ paths:
       responses:
         '204':
           description: API key deleted successfully
-
 components:
   schemas:
     HealthCheckResponse:
@@ -318,12 +317,11 @@ components:
       properties:
         status:
           type: string
-          example: "ok"
+          example: ok
         timestamp:
           type: string
           format: date-time
-          example: "2023-10-11T12:34:56Z"
-
+          example: '2023-10-11T12:34:56Z'
     LoginRequest:
       type: object
       required:
@@ -335,7 +333,6 @@ components:
           format: email
         password:
           type: string
-
     LoginResponse:
       type: object
       required:
@@ -343,7 +340,6 @@ components:
       properties:
         token:
           type: string
-
     SignupRequest:
       type: object
       required:
@@ -358,7 +354,6 @@ components:
           type: string
         name:
           type: string
-
     SignupResponse:
       type: object
       required:
@@ -366,7 +361,6 @@ components:
       properties:
         token:
           type: string
-
     GetUserResponse:
       type: object
       required:
@@ -379,7 +373,6 @@ components:
           type: string
         avatar:
           type: string
-
     VaultLite:
       type: object
       required:
@@ -401,7 +394,6 @@ components:
         updatedAt:
           type: string
           format: date-time
-
     Vault:
       type: object
       required:
@@ -434,7 +426,6 @@ components:
         updatedAt:
           type: string
           format: date-time
-
     CreateVaultRequest:
       type: object
       required:
@@ -458,7 +449,6 @@ components:
           type: string
           description: Category/type of vault
           maxLength: 100
-
     UpdateVaultRequest:
       type: object
       properties:
@@ -479,7 +469,6 @@ components:
           type: string
           description: Category/type of vault
           maxLength: 100
-
     AuditLogsResponse:
       type: object
       required:
@@ -501,7 +490,6 @@ components:
         pageIndex:
           type: integer
           description: Current page index (starting from 0)
-
     APIKeysResponse:
       type: object
       required:
@@ -523,7 +511,6 @@ components:
         pageIndex:
           type: integer
           description: Current page index (starting from 1)
-
     AuditLog:
       type: object
       required:
@@ -541,7 +528,17 @@ components:
           $ref: '#/components/schemas/APIKey'
         action:
           type: string
-          enum: [read_vault, update_vault, delete_vault, create_vault, login_user, register_user, logout_user, create_api_key, update_api_key, delete_api_key]
+          enum:
+            - read_vault
+            - update_vault
+            - delete_vault
+            - create_vault
+            - login_user
+            - register_user
+            - logout_user
+            - create_api_key
+            - update_api_key
+            - delete_api_key
           description: Type of action performed
         ipAddress:
           type: string
@@ -549,7 +546,6 @@ components:
         userAgent:
           type: string
           description: User agent string from the client
-
     APIKey:
       type: object
       required:
@@ -589,7 +585,6 @@ components:
           type: string
           format: date-time
           description: When the key was last updated
-
     CreateAPIKeyRequest:
       type: object
       required:
@@ -609,7 +604,6 @@ components:
           type: string
           format: date-time
           description: Optional expiration date
-
     CreateAPIKeyResponse:
       type: object
       required:
@@ -621,7 +615,6 @@ components:
         key:
           type: string
           description: The generated API key (only shown once)
-
     UpdateAPIKeyRequest:
       type: object
       properties:

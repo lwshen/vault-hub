@@ -1,0 +1,99 @@
+VaultLite:
+  type: object
+  required:
+    - uniqueId
+    - name
+  properties:
+    uniqueId:
+      type: string
+      description: Unique identifier for the vault
+    name:
+      type: string
+      description: Human-readable name
+    description:
+      type: string
+      description: Human-readable description
+    category:
+      type: string
+      description: Category/type of vault
+    updatedAt:
+      type: string
+      format: date-time
+
+Vault:
+  type: object
+  required:
+    - uniqueId
+    - name
+    - value
+  properties:
+    uniqueId:
+      type: string
+      description: Unique identifier for the vault
+    userId:
+      type: integer
+      format: int64
+      description: ID of the user who owns this vault
+    name:
+      type: string
+      description: Human-readable name
+    value:
+      type: string
+      description: Encrypted value
+    description:
+      type: string
+      description: Human-readable description
+    category:
+      type: string
+      description: Category/type of vault
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+CreateVaultRequest:
+  type: object
+  required:
+    - name
+    - value
+  properties:
+    name:
+      type: string
+      description: Human-readable name
+      minLength: 1
+      maxLength: 255
+    value:
+      type: string
+      description: Value to be encrypted and stored
+      minLength: 1
+    description:
+      type: string
+      description: Human-readable description
+      maxLength: 500
+    category:
+      type: string
+      description: Category/type of vault
+      maxLength: 100
+
+UpdateVaultRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Human-readable name
+      minLength: 1
+      maxLength: 255
+    value:
+      type: string
+      description: Value to be encrypted and stored
+      minLength: 1
+    description:
+      type: string
+      description: Human-readable description
+      maxLength: 500
+    category:
+      type: string
+      description: Category/type of vault
+      maxLength: 100
