@@ -4,3 +4,5 @@ generate:
   fiber-server: true
   strict-server: true
 output: generated.go
+import-mapping:
+  ./components/components.yaml: github.com/lwshen/vault-hub/api

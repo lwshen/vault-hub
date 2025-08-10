@@ -10,238 +10,57 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	externalRef0 "github.com/lwshen/vault-hub/api"
 	"github.com/oapi-codegen/runtime"
-	openapi_types "github.com/oapi-codegen/runtime/types"
-)
-
-// Defines values for AuditLogAction.
-const (
-	CreateApiKey AuditLogAction = "create_api_key"
-	CreateVault  AuditLogAction = "create_vault"
-	DeleteApiKey AuditLogAction = "delete_api_key"
-	DeleteVault  AuditLogAction = "delete_vault"
-	LoginUser    AuditLogAction = "login_user"
-	LogoutUser   AuditLogAction = "logout_user"
-	ReadVault    AuditLogAction = "read_vault"
-	RegisterUser AuditLogAction = "register_user"
-	UpdateApiKey AuditLogAction = "update_api_key"
-	UpdateVault  AuditLogAction = "update_vault"
 )
 
 // APIKey defines model for APIKey.
-type APIKey struct {
-	// CreatedAt When the key was created
-	CreatedAt time.Time `json:"createdAt"`
-
-	// ExpiresAt Optional expiration date
-	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
-
-	// Id Unique API key ID
-	Id int64 `json:"id"`
-
-	// IsActive Whether the key is currently active
-	IsActive bool `json:"isActive"`
-
-	// LastUsedAt When the key was last used
-	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
-
-	// Name Human-readable name for the API key
-	Name string `json:"name"`
-
-	// UpdatedAt When the key was last updated
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-
-	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
-	Vaults *[]VaultLite `json:"vaults,omitempty"`
-}
+type APIKey = externalRef0.APIKey
 
 // APIKeysResponse defines model for APIKeysResponse.
-type APIKeysResponse struct {
-	ApiKeys []APIKey `json:"apiKeys"`
-
-	// PageIndex Current page index (starting from 1)
-	PageIndex int `json:"pageIndex"`
-
-	// PageSize Number of API keys per page
-	PageSize int `json:"pageSize"`
-
-	// TotalCount Total number of API keys
-	TotalCount int `json:"totalCount"`
-}
-
-// AuditLog defines model for AuditLog.
-type AuditLog struct {
-	// Action Type of action performed
-	Action AuditLogAction `json:"action"`
-	ApiKey *APIKey        `json:"apiKey,omitempty"`
-
-	// CreatedAt When the action occurred
-	CreatedAt time.Time `json:"createdAt"`
-
-	// IpAddress IP address from which the action was performed
-	IpAddress *string `json:"ipAddress,omitempty"`
-
-	// UserAgent User agent string from the client
-	UserAgent *string    `json:"userAgent,omitempty"`
-	Vault     *VaultLite `json:"vault,omitempty"`
-}
-
-// AuditLogAction Type of action performed
-type AuditLogAction string
+type APIKeysResponse = externalRef0.APIKeysResponse
 
 // AuditLogsResponse defines model for AuditLogsResponse.
-type AuditLogsResponse struct {
-	AuditLogs []AuditLog `json:"auditLogs"`
-
-	// PageIndex Current page index (starting from 0)
-	PageIndex int `json:"pageIndex"`
-
-	// PageSize Number of logs per page
-	PageSize int `json:"pageSize"`
-
-	// TotalCount Total number of logs matching the filter criteria
-	TotalCount int `json:"totalCount"`
-}
+type AuditLogsResponse = externalRef0.AuditLogsResponse
 
 // CreateAPIKeyRequest defines model for CreateAPIKeyRequest.
-type CreateAPIKeyRequest struct {
-	// ExpiresAt Optional expiration date
-	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
-
-	// Name Human-readable name for the API key
-	Name string `json:"name"`
-
-	// VaultUniqueIds Array of vault unique IDs this key can access (empty = all user's vaults)
-	VaultUniqueIds *[]string `json:"vaultUniqueIds,omitempty"`
-}
+type CreateAPIKeyRequest = externalRef0.CreateAPIKeyRequest
 
 // CreateAPIKeyResponse defines model for CreateAPIKeyResponse.
-type CreateAPIKeyResponse struct {
-	ApiKey APIKey `json:"apiKey"`
-
-	// Key The generated API key (only shown once)
-	Key string `json:"key"`
-}
+type CreateAPIKeyResponse = externalRef0.CreateAPIKeyResponse
 
 // CreateVaultRequest defines model for CreateVaultRequest.
-type CreateVaultRequest struct {
-	// Category Category/type of vault
-	Category *string `json:"category,omitempty"`
-
-	// Description Human-readable description
-	Description *string `json:"description,omitempty"`
-
-	// Name Human-readable name
-	Name string `json:"name"`
-
-	// Value Value to be encrypted and stored
-	Value string `json:"value"`
-}
+type CreateVaultRequest = externalRef0.CreateVaultRequest
 
 // GetUserResponse defines model for GetUserResponse.
-type GetUserResponse struct {
-	Avatar *string             `json:"avatar,omitempty"`
-	Email  openapi_types.Email `json:"email"`
-	Name   *string             `json:"name,omitempty"`
-}
+type GetUserResponse = externalRef0.GetUserResponse
 
 // HealthCheckResponse defines model for HealthCheckResponse.
-type HealthCheckResponse struct {
-	Status    *string    `json:"status,omitempty"`
-	Timestamp *time.Time `json:"timestamp,omitempty"`
-}
+type HealthCheckResponse = externalRef0.HealthCheckResponse
 
 // LoginRequest defines model for LoginRequest.
-type LoginRequest struct {
-	Email    openapi_types.Email `json:"email"`
-	Password string              `json:"password"`
-}
+type LoginRequest = externalRef0.LoginRequest
 
 // LoginResponse defines model for LoginResponse.
-type LoginResponse struct {
-	Token string `json:"token"`
-}
+type LoginResponse = externalRef0.LoginResponse
 
 // SignupRequest defines model for SignupRequest.
-type SignupRequest struct {
-	Email    openapi_types.Email `json:"email"`
-	Name     string              `json:"name"`
-	Password string              `json:"password"`
-}
+type SignupRequest = externalRef0.SignupRequest
 
 // SignupResponse defines model for SignupResponse.
-type SignupResponse struct {
-	Token string `json:"token"`
-}
+type SignupResponse = externalRef0.SignupResponse
 
 // UpdateAPIKeyRequest defines model for UpdateAPIKeyRequest.
-type UpdateAPIKeyRequest struct {
-	// ExpiresAt Optional expiration date
-	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
-
-	// IsActive Enable or disable the API key
-	IsActive *bool `json:"isActive,omitempty"`
-
-	// Name Human-readable name for the API key
-	Name *string `json:"name,omitempty"`
-
-	// VaultUniqueIds Array of vault unique IDs this key can access (empty = all user's vaults)
-	VaultUniqueIds *[]string `json:"vaultUniqueIds,omitempty"`
-}
+type UpdateAPIKeyRequest = externalRef0.UpdateAPIKeyRequest
 
 // UpdateVaultRequest defines model for UpdateVaultRequest.
-type UpdateVaultRequest struct {
-	// Category Category/type of vault
-	Category *string `json:"category,omitempty"`
-
-	// Description Human-readable description
-	Description *string `json:"description,omitempty"`
-
-	// Name Human-readable name
-	Name *string `json:"name,omitempty"`
-
-	// Value Value to be encrypted and stored
-	Value *string `json:"value,omitempty"`
-}
+type UpdateVaultRequest = externalRef0.UpdateVaultRequest
 
 // Vault defines model for Vault.
-type Vault struct {
-	// Category Category/type of vault
-	Category  *string    `json:"category,omitempty"`
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
-
-	// Description Human-readable description
-	Description *string `json:"description,omitempty"`
-
-	// Name Human-readable name
-	Name string `json:"name"`
-
-	// UniqueId Unique identifier for the vault
-	UniqueId  string     `json:"uniqueId"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-
-	// UserId ID of the user who owns this vault
-	UserId *int64 `json:"userId,omitempty"`
-
-	// Value Encrypted value
-	Value string `json:"value"`
-}
+type Vault = externalRef0.Vault
 
 // VaultLite defines model for VaultLite.
-type VaultLite struct {
-	// Category Category/type of vault
-	Category *string `json:"category,omitempty"`
-
-	// Description Human-readable description
-	Description *string `json:"description,omitempty"`
-
-	// Name Human-readable name
-	Name string `json:"name"`
-
-	// UniqueId Unique identifier for the vault
-	UniqueId  string     `json:"uniqueId"`
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-}
+type VaultLite = externalRef0.VaultLite
 
 // GetAPIKeysParams defines parameters for GetAPIKeys.
 type GetAPIKeysParams struct {
