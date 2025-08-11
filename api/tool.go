@@ -1,3 +1,4 @@
 package api
 
-//go:generate go tool oapi-codegen -config cfg.yaml api.yaml
+//go:generate sh bundle.sh
+//go:generate go tool oapi-codegen -config cfg.yaml api.bundled.yaml
