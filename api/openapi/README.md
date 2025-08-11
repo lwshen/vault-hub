@@ -23,6 +23,28 @@ openapi/
     └── apikey.yaml  # API key schemas
 ```
 
+## Path Reference Encoding
+
+When referencing paths in external files, OpenAPI uses JSON Pointer notation. You'll see references like:
+
+```yaml
+$ref: './paths/auth.yaml#/~1api~1auth~1login'
+```
+
+The `~1` is the encoded form of `/` in JSON Pointer. Here's how to decode these references:
+
+- `~1` → `/`
+- `~0` → `~`
+
+So the above reference points to the `/api/auth/login` path definition in the `auth.yaml` file.
+
+### Examples:
+- `#/~1api~1health` → references `/api/health`
+- `#/~1api~1auth~1login` → references `/api/auth/login`
+- `#/~1api~1vaults~1{uniqueId}` → references `/api/vaults/{uniqueId}`
+
+This encoding is required by the OpenAPI specification when referencing paths in external files.
+
 ## How it Works
 
 1. The main `api.yaml` file references the split files using `$ref` directives
