@@ -1,4 +1,5 @@
-/api/health:
+# Health endpoint definition
+health:
   get:
     description: Check the health status of backend
     operationId: health

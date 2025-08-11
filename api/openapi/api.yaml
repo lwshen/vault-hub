@@ -2,38 +2,40 @@ openapi: 3.0.0
 info:
   version: 1.0.0
   title: Vault Hub Server
+
+# Merge path definitions from separate files
 paths:
-  # Health endpoint
+  # Health endpoints
   /api/health:
-    $ref: './paths/health.yaml#/~1api~1health'
-  
+    $ref: './paths/health.yaml#/health'
+    
   # Auth endpoints
   /api/auth/login:
-    $ref: './paths/auth.yaml#/~1api~1auth~1login'
+    $ref: './paths/auth.yaml#/login'
   /api/auth/signup:
-    $ref: './paths/auth.yaml#/~1api~1auth~1signup'
+    $ref: './paths/auth.yaml#/signup'
   /api/auth/logout:
-    $ref: './paths/auth.yaml#/~1api~1auth~1logout'
-  
-  # User endpoint
+    $ref: './paths/auth.yaml#/logout'
+    
+  # User endpoints
   /api/user:
-    $ref: './paths/user.yaml#/~1api~1user'
-  
+    $ref: './paths/user.yaml#/getCurrentUser'
+    
   # Vault endpoints
   /api/vaults:
-    $ref: './paths/vault.yaml#/~1api~1vaults'
+    $ref: './paths/vault.yaml#/vaults'
   /api/vaults/{uniqueId}:
-    $ref: './paths/vault.yaml#/~1api~1vaults~1{uniqueId}'
-  
-  # Audit log endpoint
+    $ref: './paths/vault.yaml#/vaultById'
+    
+  # Audit endpoints
   /api/audit-logs:
-    $ref: './paths/audit.yaml#/~1api~1audit-logs'
-  
+    $ref: './paths/audit.yaml#/auditLogs'
+    
   # API Key endpoints
   /api/api-keys:
-    $ref: './paths/apikey.yaml#/~1api~1api-keys'
+    $ref: './paths/apikey.yaml#/apiKeys'
   /api/api-keys/{id}:
-    $ref: './paths/apikey.yaml#/~1api~1api-keys~1{id}'
+    $ref: './paths/apikey.yaml#/apiKeyById'
 
 components:
   schemas:

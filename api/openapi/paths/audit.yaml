@@ -1,4 +1,6 @@
-/api/audit-logs:
+# Audit log endpoint definition
+
+auditLogs:
   get:
     description: Get audit logs with optional filtering and pagination
     tags:

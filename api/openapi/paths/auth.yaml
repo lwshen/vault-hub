@@ -1,4 +1,6 @@
-/api/auth/login:
+# Authentication endpoint definitions
+
+login:
   post:
     description: Login with email and password
     tags:
@@ -18,7 +20,7 @@
             schema:
               $ref: '../schemas/auth.yaml#/LoginResponse'
 
-/api/auth/signup:
+signup:
   post:
     description: Sign up a new user
     tags:
@@ -38,7 +40,7 @@
             schema:
               $ref: '../schemas/auth.yaml#/SignupResponse'
 
-/api/auth/logout:
+logout:
   get:
     description: Logout
     tags:

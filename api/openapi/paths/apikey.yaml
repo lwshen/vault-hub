@@ -1,4 +1,6 @@
-/api/api-keys:
+# API Key endpoint definitions
+
+apiKeys:
   get:
     description: Get API keys for the current user with pagination
     tags:
@@ -48,7 +50,7 @@
             schema:
               $ref: '../schemas/apikey.yaml#/CreateAPIKeyResponse'
 
-/api/api-keys/{id}:
+apiKeyById:
   patch:
     description: Update an API key (enable/disable or modify properties)
     tags:

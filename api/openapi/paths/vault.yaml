@@ -1,4 +1,6 @@
-/api/vaults:
+# Vault endpoint definitions
+
+vaults:
   get:
     description: Get all vaults for the current user
     tags:
@@ -32,7 +34,7 @@
             schema:
               $ref: '../schemas/vault.yaml#/Vault'
 
-/api/vaults/{uniqueId}:
+vaultById:
   get:
     description: Get a specific vault by Unique ID
     tags:

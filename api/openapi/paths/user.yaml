@@ -1,4 +1,6 @@
-/api/user:
+# User endpoint definition
+
+getCurrentUser:
   get:
     description: Get current user by credential
     tags:
