@@ -29,7 +29,7 @@ jobs:
         uses: openapi-generators/openapitools-generator-action@v1
         with:
           generator: typescript-fetch
-          openapi-file: api/api.yaml
+          openapi-file: api/openapi/api.yaml
           generator-tag: v7.13.0
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ env.TAG }} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
 
@@ -63,7 +63,7 @@ jobs:
         uses: openapi-generators/openapitools-generator-action@v1
         with:
           generator: typescript-fetch
-          openapi-file: api/api.yaml
+          openapi-file: api/openapi/api.yaml
           generator-tag: v7.13.0
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=useSingleRequestParameter=false --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
 
