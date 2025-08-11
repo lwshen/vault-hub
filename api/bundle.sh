@@ -2,7 +2,7 @@
 
 # Bundle the split OpenAPI files into a single file
 echo "Bundling OpenAPI files..."
-redocly bundle api.yaml -o api.bundled.yaml
+redocly bundle openapi/api.yaml -o api.bundled.yaml
 
 # Check if bundling was successful
 if [ $? -eq 0 ]; then

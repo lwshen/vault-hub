@@ -6,6 +6,7 @@ This directory contains the OpenAPI specification split into multiple files for 
 
 ```
 openapi/
+├── api.yaml         # Main OpenAPI file with references to split files
 ├── paths/           # API endpoint definitions
 │   ├── health.yaml  # Health check endpoint
 │   ├── auth.yaml    # Authentication endpoints (login, signup, logout)
