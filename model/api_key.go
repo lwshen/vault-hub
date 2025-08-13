@@ -145,7 +145,6 @@ func GetAPIKeyByHash(keyHash string) (*APIKey, error) {
 	var apiKey APIKey
 	err := DB.Where("key_hash = ? AND is_active = ? AND (expires_at IS NULL OR expires_at > ?)",
 		keyHash, true, time.Now()).
-		Preload("User").
 		First(&apiKey).Error
 
 	if err != nil {
