@@ -1,0 +1,42 @@
+# API Key Vault endpoint definitions
+
+apiKeyVaults:
+  get:
+    description: Get all vaults accessible by API key
+    tags:
+      - API Key
+    operationId: getVaultsByAPIKey
+    security:
+      - ApiKeyAuth: []
+    responses:
+      '200':
+        description: List of vaults accessible by API key
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/vault.yaml#/VaultLite'
+
+apiKeyVaultById:
+  get:
+    description: Get a specific vault by Unique ID using API key
+    tags:
+      - API Key
+    operationId: getVaultByAPIKey
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - name: uniqueId
+        in: path
+        required: true
+        description: Vault Unique ID
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Vault details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/vault.yaml#/Vault'

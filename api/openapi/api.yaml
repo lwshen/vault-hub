@@ -37,7 +37,18 @@ paths:
   /api/api-keys/{id}:
     $ref: './paths/apikey.yaml#/apiKeyById'
 
+  /api/api-key/vaults:
+    $ref: './paths/apikey-vault.yaml#/apiKeyVaults'
+  /api/api-key/vault/{uniqueId}:
+    $ref: './paths/apikey-vault.yaml#/apiKeyVaultById'
+
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      
   schemas:
     # Health schemas
     HealthCheckResponse:
