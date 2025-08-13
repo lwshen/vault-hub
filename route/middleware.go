@@ -14,8 +14,8 @@ import (
 func jwtMiddleware(c *fiber.Ctx) error {
 	path := c.Path()
 
-	// Routes starting with /api/api-key MUST use API key authentication
-	if strings.HasPrefix(path, "/api/api-key") {
+	// Routes starting with /api/api-key/ MUST use API key authentication
+	if strings.HasPrefix(path, "/api/api-key/") {
 		return apiKeyOnlyMiddleware(c)
 	}
 
