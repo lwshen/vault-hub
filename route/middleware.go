@@ -14,14 +14,47 @@ import (
 func jwtMiddleware(c *fiber.Ctx) error {
 	path := c.Path()
 
+	// Public routes that don't need authentication
+	if isPublicRoute(path) {
+		return c.Next()
+	}
+
 	// Routes starting with /api/api-key/ MUST use API key authentication
 	if strings.HasPrefix(path, "/api/api-key/") {
 		return apiKeyOnlyMiddleware(c)
 	}
 
+	// All other /api/ routes require JWT authentication
+	if strings.HasPrefix(path, "/api/") {
+		return jwtOnlyMiddleware(c)
+	}
+
+	// Non-API routes (web assets, etc.) don't need auth
+	return c.Next()
+}
+
+// isPublicRoute checks if a route is public and doesn't need authentication
+func isPublicRoute(path string) bool {
+	publicRoutes := []string{
+		"/api/auth/login",
+		"/api/auth/register", 
+		"/api/auth/login/oidc",
+		"/api/auth/callback/oidc",
+	}
+	
+	for _, route := range publicRoutes {
+		if strings.HasPrefix(path, route) {
+			return true
+		}
+	}
+	return false
+}
+
+// jwtOnlyMiddleware ensures non-API-key routes only accept JWT authentication
+func jwtOnlyMiddleware(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
-		return c.Next()
+		return handler.SendError(c, fiber.StatusUnauthorized, "JWT token required")
 	}
 
 	tokenParts := strings.Split(authHeader, " ")
@@ -31,7 +64,11 @@ func jwtMiddleware(c *fiber.Ctx) error {
 
 	tokenString := tokenParts[1]
 
-	// Handle JWT token
+	// Reject API keys on JWT-only routes
+	if strings.HasPrefix(tokenString, "vhub_") {
+		return handler.SendError(c, fiber.StatusUnauthorized, "JWT token required for this endpoint")
+	}
+
 	return handleJWTAuth(c, tokenString)
 }
 
