@@ -1,11 +1,18 @@
 package api
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"io"
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
+	"golang.org/x/crypto/pbkdf2"
 	"gorm.io/gorm"
 )
 
@@ -59,5 +66,51 @@ func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
 	}
 
+	// Enhanced security: Apply additional client-side encryption if requested
+	enableClientEncryption := c.Get("X-Enable-Client-Encryption")
+	if enableClientEncryption == "true" {
+		// Get the original API key from the Authorization header to use for key derivation
+		authHeader := c.Get("Authorization")
+		originalAPIKey := authHeader[7:] // Remove "Bearer " prefix
+		
+		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, vault.UniqueID)
+		if err != nil {
+			return handler.SendError(c, fiber.StatusInternalServerError, "failed to encrypt value for client")
+		}
+		vault.Value = encryptedValue
+	}
+
 	return c.Status(fiber.StatusOK).JSON(convertToApiVault(&vault))
+}
+
+// encryptForClientWithDerivedKey encrypts the vault value using a key derived from the API key
+// This provides additional security without requiring key exchange
+func encryptForClientWithDerivedKey(plaintext, apiKey, salt string) (string, error) {
+	// Derive encryption key from API key + vault unique ID as salt
+	// This ensures each vault gets a different encryption key even with same API key
+	derivedKey := pbkdf2.Key([]byte(apiKey), []byte(salt), 100000, 32, sha256.New)
+
+	// Create AES cipher
+	block, err := aes.NewCipher(derivedKey)
+	if err != nil {
+		return "", err
+	}
+
+	// Create GCM mode
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	// Generate random nonce
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", err
+	}
+
+	// Encrypt the plaintext
+	ciphertext := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
+
+	// Return base64 encoded result
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }

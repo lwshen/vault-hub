@@ -123,7 +123,9 @@ The application enforces strict authentication rules via middleware (`route/midd
 - `GET /api/api-key/vault/{uniqueId}` - Get specific vault (full Vault format with decrypted value)
 - Implements proper access control via `APIKey.HasVaultAccess()`
 - Includes audit logging for vault read operations
-- **Enhanced Security**: Supports optional client-side encryption via `X-Client-Encryption-Key` header
+- **Enhanced Security**: Supports optional client-side encryption via `X-Enable-Client-Encryption: true` header
+  - Uses PBKDF2 key derivation from API key + vault unique ID as salt
+  - Provides per-vault encryption keys without key exchange complexity
 
 ## Testing Strategy
 
