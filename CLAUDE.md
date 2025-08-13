@@ -51,8 +51,10 @@ VaultHub is a secure environment variable and API key management system with AES
 
 - All vault values encrypted with AES-256-GCM before database storage
 - JWT-based authentication with optional OIDC support
+- API key authentication for programmatic access
 - Transparent encryption/decryption at model layer
 - Audit logging for all vault operations
+- Strict authentication middleware with route-based credential enforcement
 
 ## Required Environment Variables
 
@@ -83,6 +85,45 @@ The project uses OpenAPI 3.0 specification (`api/openapi/api.yaml`) with `oapi-c
 - TypeScript client library (published as npm package)
 
 **Important**: Always run `go generate api/tool.go` after modifying files in `api/openapi/*` to regenerate the Go types and interfaces. The API spec uses camelCase naming convention for all properties (e.g., `uniqueId`, `createdAt`, `isActive`).
+
+**NEVER EDIT**: Do not modify `api/generated.go` directly as it is auto-generated code. All API changes must be made in the OpenAPI specification files in `api/openapi/*`.
+
+## Authentication & Authorization
+
+### Authentication Middleware Rules
+
+The application enforces strict authentication rules via middleware (`route/middleware.go`):
+
+**Public Routes (No Authentication Required):**
+- `/api/auth/login` - User login
+- `/api/auth/register` - User registration  
+- `/api/auth/login/oidc` - OIDC login
+- `/api/auth/callback/oidc` - OIDC callback
+- Static web assets (`/`, `/*`)
+
+**API Key Only Routes:**
+- `/api/api-key/*` - Vault access via API keys (e.g., `/api/api-key/vaults`, `/api/api-key/vault/{id}`)
+- Must use `Authorization: Bearer vhub_xxx` header
+- Rejects JWT tokens with error message
+
+**JWT Only Routes:**
+- All other `/api/*` routes - User management, API key management, vault management via web UI
+- Must use `Authorization: Bearer <jwt_token>` header  
+- Rejects API keys with error message
+
+### Context Variables
+
+- **API Key Auth**: Sets `c.Locals("user_id", &key.UserID)` and `c.Locals("api_key", key)`
+- **JWT Auth**: Sets `c.Locals("user", &user)` (full User object)
+
+### API Endpoints
+
+**API Key Vault Access:**
+- `GET /api/api-key/vaults` - List accessible vaults (VaultLite format, no decrypted values)
+- `GET /api/api-key/vault/{uniqueId}` - Get specific vault (full Vault format with decrypted value)
+- Implements proper access control via `APIKey.HasVaultAccess()`
+- Includes audit logging for vault read operations
+- **Enhanced Security**: Supports optional client-side encryption via `X-Client-Encryption-Key` header
 
 ## Testing Strategy
 
