@@ -9,7 +9,7 @@ jobs:
   to_gitlab:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: keninkujovic/gitlab-sync@2.1.0
