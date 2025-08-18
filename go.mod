@@ -10,6 +10,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
+	github.com/lwshen/vault-hub-go-client v0.20250818.152615
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/orandin/slog-gorm v1.4.0
 	github.com/samber/slog-fiber v1.18.0
@@ -21,6 +22,8 @@ require (
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.1
 )
+
+replace github.com/lwshen/vault-hub-go-client => ./third_party/vault-hub-go-client
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
