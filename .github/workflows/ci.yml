@@ -35,7 +35,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          package_json_file: "./apps/web/package.json"
+          package_json_file: "./web/package.json"
           run_install: false
 
       - name: Set up Node.js
@@ -43,18 +43,18 @@ jobs:
         with:
           node-version: "22"
           cache: "pnpm"
-          cache-dependency-path: "./apps/web/pnpm-lock.yaml"
+          cache-dependency-path: "./web/pnpm-lock.yaml"
 
       - name: Install frontend dependencies
-        working-directory: ./apps/web
+        working-directory: ./web
         run: pnpm install
 
       - name: Check frontend format
-        working-directory: ./apps/web
+        working-directory: ./web
         run: pnpm typecheck && pnpm lint
 
       - name: Build frontend
-        working-directory: ./apps/web
+        working-directory: ./web
         run: pnpm build
 
       - name: Run tests
@@ -82,7 +82,7 @@ jobs:
           name: vault-hub-server
           path: |
             bin/
-            apps/web/dist
+            web/dist
 
   build-openapi-client:
     runs-on: ubuntu-latest

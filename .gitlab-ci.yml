@@ -11,7 +11,7 @@ build:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
       - .go-cache/
-      - apps/web/node_modules/
+      - web/node_modules/
   before_script:
     # Set up Go cache (tools are already installed in base image)
     - mkdir -p .go-cache
@@ -30,7 +30,7 @@ build:
     - golangci-lint run
 
     # Install frontend dependencies
-    - cd ./apps/web
+    - cd ./web
     - pnpm install
 
     # Check frontend format
