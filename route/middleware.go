@@ -6,9 +6,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/lwshen/vault-hub/handler"
+	"github.com/lwshen/vault-hub/packages/handler"
 	"github.com/lwshen/vault-hub/internal/config"
-	"github.com/lwshen/vault-hub/model"
+	"github.com/lwshen/vault-hub/packages/model"
 )
 
 func jwtMiddleware(c *fiber.Ctx) error {
