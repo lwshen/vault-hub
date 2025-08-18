@@ -319,6 +319,9 @@ type ServerInterface interface {
 	// (POST /api/auth/signup)
 	Signup(c *fiber.Ctx) error
 
+	// (GET /api/cli/vault/name/{name})
+	GetVaultByNameAPIKey(c *fiber.Ctx, name string) error
+
 	// (GET /api/cli/vault/{uniqueId})
 	GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error
 
@@ -525,6 +528,24 @@ func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
 	return siw.Handler.Signup(c)
 }
 
+// GetVaultByNameAPIKey operation middleware
+func (siw *ServerInterfaceWrapper) GetVaultByNameAPIKey(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", c.Params("name"), &name, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter name: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
+
+	return siw.Handler.GetVaultByNameAPIKey(c, name)
+}
+
 // GetVaultByAPIKey operation middleware
 func (siw *ServerInterfaceWrapper) GetVaultByAPIKey(c *fiber.Ctx) error {
 
@@ -659,6 +680,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/api/auth/logout", wrapper.Logout)
 
 	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
+
+	router.Get(options.BaseURL+"/api/cli/vault/name/:name", wrapper.GetVaultByNameAPIKey)
 
 	router.Get(options.BaseURL+"/api/cli/vault/:uniqueId", wrapper.GetVaultByAPIKey)
 
@@ -808,6 +831,23 @@ type SignupResponseObject interface {
 type Signup200JSONResponse SignupResponse
 
 func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type GetVaultByNameAPIKeyRequestObject struct {
+	Name string `json:"name"`
+}
+
+type GetVaultByNameAPIKeyResponseObject interface {
+	VisitGetVaultByNameAPIKeyResponse(ctx *fiber.Ctx) error
+}
+
+type GetVaultByNameAPIKey200JSONResponse Vault
+
+func (response GetVaultByNameAPIKey200JSONResponse) VisitGetVaultByNameAPIKeyResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -989,6 +1029,9 @@ type StrictServerInterface interface {
 
 	// (POST /api/auth/signup)
 	Signup(ctx context.Context, request SignupRequestObject) (SignupResponseObject, error)
+
+	// (GET /api/cli/vault/name/{name})
+	GetVaultByNameAPIKey(ctx context.Context, request GetVaultByNameAPIKeyRequestObject) (GetVaultByNameAPIKeyResponseObject, error)
 
 	// (GET /api/cli/vault/{uniqueId})
 	GetVaultByAPIKey(ctx context.Context, request GetVaultByAPIKeyRequestObject) (GetVaultByAPIKeyResponseObject, error)
@@ -1255,6 +1298,33 @@ func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(SignupResponseObject); ok {
 		if err := validResponse.VisitSignupResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetVaultByNameAPIKey operation middleware
+func (sh *strictHandler) GetVaultByNameAPIKey(ctx *fiber.Ctx, name string) error {
+	var request GetVaultByNameAPIKeyRequestObject
+
+	request.Name = name
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaultByNameAPIKey(ctx.UserContext(), request.(GetVaultByNameAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetVaultByNameAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetVaultByNameAPIKeyResponseObject); ok {
+		if err := validResponse.VisitGetVaultByNameAPIKeyResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

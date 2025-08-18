@@ -40,3 +40,26 @@ apiKeyVaultById:
           application/json:
             schema:
               $ref: '../schemas/vault.yaml#/Vault'
+
+apiKeyVaultByName:
+  get:
+    description: Get a specific vault by name using API key
+    tags:
+      - API Key
+    operationId: getVaultByNameAPIKey
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - name: name
+        in: path
+        required: true
+        description: Vault name
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Vault details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/vault.yaml#/Vault'

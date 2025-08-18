@@ -41,6 +41,8 @@ paths:
     $ref: './paths/apikey-vault.yaml#/apiKeyVaults'
   /api/cli/vault/{uniqueId}:
     $ref: './paths/apikey-vault.yaml#/apiKeyVaultById'
+  /api/cli/vault/name/{name}:
+    $ref: './paths/apikey-vault.yaml#/apiKeyVaultByName'
 
 components:
   securitySchemes:
