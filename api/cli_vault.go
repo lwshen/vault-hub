@@ -40,7 +40,7 @@ func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 
 // GetVaultByAPIKey - Get a single vault by unique ID for a given API key
 func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
-	return s.getVaultByAPIKey(c, func(apiKey *model.APIKey) (*model.Vault, error) {
+	return s.getVaultByAPIKey(c, uniqueId, func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByUniqueID(uniqueId, apiKey.UserID)
 		return &vault, err
@@ -49,7 +49,7 @@ func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 
 // GetVaultByNameAPIKey - Get a single vault by name for a given API key
 func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
-	return s.getVaultByAPIKey(c, func(apiKey *model.APIKey) (*model.Vault, error) {
+	return s.getVaultByAPIKey(c, name, func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByName(name, apiKey.UserID)
 		return &vault, err
@@ -57,7 +57,7 @@ func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
 }
 
 // getVaultByAPIKey - Common logic for getting a vault via API key
-func (s Server) getVaultByAPIKey(c *fiber.Ctx, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
+func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
 	apiKey, ok := c.Locals("api_key").(*model.APIKey)
 	if !ok {
 		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
@@ -90,7 +90,7 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, vaultGetter func(*model.APIKey) (
 		authHeader := c.Get("Authorization")
 		originalAPIKey := authHeader[7:] // Remove "Bearer " prefix
 
-		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, vault.UniqueID)
+		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, encryptSalt)
 		if err != nil {
 			return handler.SendError(c, fiber.StatusInternalServerError, "failed to encrypt value for client")
 		}
