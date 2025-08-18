@@ -36,7 +36,6 @@ jobs:
       - name: Initialize Go module and publish
         run: |
           cd go-client
-          go mod init github.com/lwshen/vault-hub-go-client
           go mod tidy
           
           # Create repository if it doesn't exist and push

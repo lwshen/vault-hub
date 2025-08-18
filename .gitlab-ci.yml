@@ -56,7 +56,7 @@ build:
     - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
     - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
 
-build-openapi-client:
+build-openapi-typescript-client:
   stage: build
   image: ${BASE_IMAGE}
   script:
@@ -72,3 +72,17 @@ build-openapi-client:
     - cat package.json
     - npm install
     - npm run build
+
+build-openapi-go-client:
+  stage: build
+  image: ${BASE_IMAGE}
+  script:
+    # Set environment variables
+    - export TAG=v0.$(date +'%Y%m%d.%H%M%S')
+
+    # Generate Go client
+    - openapi-generator generate -i packages/api/openapi/api.yaml -g go -o go-client --additional-properties=packageVersion=${TAG} --additional-properties=moduleName=github.com/lwshen/vault-hub-go-client --git-user-id lwshen --git-repo-id vault-hub-go-client
+    
+    # Initialize Go module
+    - cd go-client
+    - go mod tidy
