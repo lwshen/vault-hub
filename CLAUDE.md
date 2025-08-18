@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Test specific package**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./model -v`
 - **Generate API code**: `go generate api/tool.go` (run after modifying files in `api/openapi/*`)
 
-### React Frontend (web/)
+### React Frontend (apps/web/)
 
 - **Install dependencies**: `pnpm install` (uses pnpm as package manager)
 - **Development server**: `pnpm run dev`
