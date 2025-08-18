@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/lwshen/vault-hub/packages/handler"
-	"github.com/lwshen/vault-hub/packages/model"
+	"github.com/lwshen/vault-hub/handler"
+	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/gofiber/fiber/v2"

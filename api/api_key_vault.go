@@ -10,8 +10,8 @@ import (
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/lwshen/vault-hub/packages/handler"
-	"github.com/lwshen/vault-hub/packages/model"
+	"github.com/lwshen/vault-hub/handler"
+	"github.com/lwshen/vault-hub/model"
 	"golang.org/x/crypto/pbkdf2"
 	"gorm.io/gorm"
 )

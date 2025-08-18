@@ -7,7 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/internal/config"
-	"github.com/lwshen/vault-hub/packages/model"
+	"github.com/lwshen/vault-hub/model"
 	"github.com/lwshen/vault-hub/route"
 	slogfiber "github.com/samber/slog-fiber"
 )
