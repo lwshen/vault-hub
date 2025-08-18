@@ -163,6 +163,23 @@ func (v *Vault) GetByUniqueID(uniqueID string, userID uint) error {
 	return nil
 }
 
+// GetByName retrieves a vault by name for a specific user
+func (v *Vault) GetByName(name string, userID uint) error {
+	err := DB.Where("name = ? AND user_id = ?", name, userID).First(v).Error
+	if err != nil {
+		return err
+	}
+
+	// Decrypt the value
+	decryptedValue, err := encryption.Decrypt(v.Value)
+	if err != nil {
+		return fmt.Errorf("failed to decrypt value: %w", err)
+	}
+	v.Value = decryptedValue
+
+	return nil
+}
+
 // GetAllByUser retrieves all vaults for a user, optionally filtered by category
 func GetVaultsByUser(userID uint, decrypt bool) ([]Vault, error) {
 	var vaults []Vault
