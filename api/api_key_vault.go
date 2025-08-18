@@ -72,7 +72,7 @@ func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 		// Get the original API key from the Authorization header to use for key derivation
 		authHeader := c.Get("Authorization")
 		originalAPIKey := authHeader[7:] // Remove "Bearer " prefix
-		
+
 		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, vault.UniqueID)
 		if err != nil {
 			return handler.SendError(c, fiber.StatusInternalServerError, "failed to encrypt value for client")

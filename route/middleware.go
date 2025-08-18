@@ -37,11 +37,11 @@ func jwtMiddleware(c *fiber.Ctx) error {
 func isPublicRoute(path string) bool {
 	publicRoutes := []string{
 		"/api/auth/login",
-		"/api/auth/register", 
+		"/api/auth/register",
 		"/api/auth/login/oidc",
 		"/api/auth/callback/oidc",
 	}
-	
+
 	for _, route := range publicRoutes {
 		if strings.HasPrefix(path, route) {
 			return true
