@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Go Backend
 
-- **Build**: `go build -o tmp/main ./apps/server/main.go`
-- **Run**: `go run ./apps/server/main.go`
+- **Build**: `go build -o tmp/main ./cmd/main.go`
+- **Run**: `go run ./cmd/main.go`
 - **Test**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` (run all tests with required env vars)
 - **Test specific package**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./model -v`
 - **Generate API code**: `go generate api/tool.go` (run after modifying files in `api/openapi/*`)
@@ -27,7 +27,7 @@ VaultHub is a secure environment variable and API key management system with AES
 
 ### Backend (Go + Fiber)
 
-- **Entry point**: `apps/server/main.go` - Sets up Fiber web server
+- **Entry point**: `cmd/main.go` - Sets up Fiber web server
 - **Database**: GORM with support for SQLite, MySQL, PostgreSQL
 - **API**: OpenAPI 3.0 spec in `api/openapi/api.yaml`, generated code in `api/generated.go`
 - **Models**: `model/` - Database entities (User, Vault, AuditLog, APIKey)
