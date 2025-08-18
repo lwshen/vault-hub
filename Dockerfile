@@ -29,7 +29,7 @@ COPY --from=frontend-builder /app/dist ./web/dist
 
 RUN go mod download
 
-RUN go build -o vault-hub-server cmd/main.go
+RUN go build -o vault-hub-server apps/server/main.go
 
 FROM alpine:latest
 
