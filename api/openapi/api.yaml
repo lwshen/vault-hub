@@ -37,9 +37,9 @@ paths:
   /api/api-keys/{id}:
     $ref: './paths/apikey.yaml#/apiKeyById'
 
-  /api/api-key/vaults:
+  /api/cli/vaults:
     $ref: './paths/apikey-vault.yaml#/apiKeyVaults'
-  /api/api-key/vault/{uniqueId}:
+  /api/cli/vault/{uniqueId}:
     $ref: './paths/apikey-vault.yaml#/apiKeyVaultById'
 
 components:

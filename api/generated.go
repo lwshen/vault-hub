@@ -295,12 +295,6 @@ type UpdateVaultJSONRequestBody = UpdateVaultRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
-	// (GET /api/api-key/vault/{uniqueId})
-	GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error
-
-	// (GET /api/api-key/vaults)
-	GetVaultsByAPIKey(c *fiber.Ctx) error
-
 	// (GET /api/api-keys)
 	GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error
 
@@ -324,6 +318,12 @@ type ServerInterface interface {
 
 	// (POST /api/auth/signup)
 	Signup(c *fiber.Ctx) error
+
+	// (GET /api/cli/vault/{uniqueId})
+	GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error
+
+	// (GET /api/cli/vaults)
+	GetVaultsByAPIKey(c *fiber.Ctx) error
 
 	// (GET /api/health)
 	Health(c *fiber.Ctx) error
@@ -353,32 +353,6 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc fiber.Handler
-
-// GetVaultByAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) GetVaultByAPIKey(c *fiber.Ctx) error {
-
-	var err error
-
-	// ------------- Path parameter "uniqueId" -------------
-	var uniqueId string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "uniqueId", c.Params("uniqueId"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter uniqueId: %w", err).Error())
-	}
-
-	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
-
-	return siw.Handler.GetVaultByAPIKey(c, uniqueId)
-}
-
-// GetVaultsByAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) GetVaultsByAPIKey(c *fiber.Ctx) error {
-
-	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
-
-	return siw.Handler.GetVaultsByAPIKey(c)
-}
 
 // GetAPIKeys operation middleware
 func (siw *ServerInterfaceWrapper) GetAPIKeys(c *fiber.Ctx) error {
@@ -551,6 +525,32 @@ func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
 	return siw.Handler.Signup(c)
 }
 
+// GetVaultByAPIKey operation middleware
+func (siw *ServerInterfaceWrapper) GetVaultByAPIKey(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "uniqueId" -------------
+	var uniqueId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uniqueId", c.Params("uniqueId"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter uniqueId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
+
+	return siw.Handler.GetVaultByAPIKey(c, uniqueId)
+}
+
+// GetVaultsByAPIKey operation middleware
+func (siw *ServerInterfaceWrapper) GetVaultsByAPIKey(c *fiber.Ctx) error {
+
+	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
+
+	return siw.Handler.GetVaultsByAPIKey(c)
+}
+
 // Health operation middleware
 func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
 
@@ -644,10 +644,6 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 		router.Use(fiber.Handler(m))
 	}
 
-	router.Get(options.BaseURL+"/api/api-key/vault/:uniqueId", wrapper.GetVaultByAPIKey)
-
-	router.Get(options.BaseURL+"/api/api-key/vaults", wrapper.GetVaultsByAPIKey)
-
 	router.Get(options.BaseURL+"/api/api-keys", wrapper.GetAPIKeys)
 
 	router.Post(options.BaseURL+"/api/api-keys", wrapper.CreateAPIKey)
@@ -664,6 +660,10 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
 
+	router.Get(options.BaseURL+"/api/cli/vault/:uniqueId", wrapper.GetVaultByAPIKey)
+
+	router.Get(options.BaseURL+"/api/cli/vaults", wrapper.GetVaultsByAPIKey)
+
 	router.Get(options.BaseURL+"/api/health", wrapper.Health)
 
 	router.Get(options.BaseURL+"/api/user", wrapper.GetCurrentUser)
@@ -678,39 +678,6 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Put(options.BaseURL+"/api/vaults/:uniqueId", wrapper.UpdateVault)
 
-}
-
-type GetVaultByAPIKeyRequestObject struct {
-	UniqueId string `json:"uniqueId"`
-}
-
-type GetVaultByAPIKeyResponseObject interface {
-	VisitGetVaultByAPIKeyResponse(ctx *fiber.Ctx) error
-}
-
-type GetVaultByAPIKey200JSONResponse Vault
-
-func (response GetVaultByAPIKey200JSONResponse) VisitGetVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
-}
-
-type GetVaultsByAPIKeyRequestObject struct {
-}
-
-type GetVaultsByAPIKeyResponseObject interface {
-	VisitGetVaultsByAPIKeyResponse(ctx *fiber.Ctx) error
-}
-
-type GetVaultsByAPIKey200JSONResponse []VaultLite
-
-func (response GetVaultsByAPIKey200JSONResponse) VisitGetVaultsByAPIKeyResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
 }
 
 type GetAPIKeysRequestObject struct {
@@ -847,6 +814,39 @@ func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error 
 	return ctx.JSON(&response)
 }
 
+type GetVaultByAPIKeyRequestObject struct {
+	UniqueId string `json:"uniqueId"`
+}
+
+type GetVaultByAPIKeyResponseObject interface {
+	VisitGetVaultByAPIKeyResponse(ctx *fiber.Ctx) error
+}
+
+type GetVaultByAPIKey200JSONResponse Vault
+
+func (response GetVaultByAPIKey200JSONResponse) VisitGetVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type GetVaultsByAPIKeyRequestObject struct {
+}
+
+type GetVaultsByAPIKeyResponseObject interface {
+	VisitGetVaultsByAPIKeyResponse(ctx *fiber.Ctx) error
+}
+
+type GetVaultsByAPIKey200JSONResponse []VaultLite
+
+func (response GetVaultsByAPIKey200JSONResponse) VisitGetVaultsByAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 type HealthRequestObject struct {
 }
 
@@ -966,12 +966,6 @@ func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.C
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
-	// (GET /api/api-key/vault/{uniqueId})
-	GetVaultByAPIKey(ctx context.Context, request GetVaultByAPIKeyRequestObject) (GetVaultByAPIKeyResponseObject, error)
-
-	// (GET /api/api-key/vaults)
-	GetVaultsByAPIKey(ctx context.Context, request GetVaultsByAPIKeyRequestObject) (GetVaultsByAPIKeyResponseObject, error)
-
 	// (GET /api/api-keys)
 	GetAPIKeys(ctx context.Context, request GetAPIKeysRequestObject) (GetAPIKeysResponseObject, error)
 
@@ -995,6 +989,12 @@ type StrictServerInterface interface {
 
 	// (POST /api/auth/signup)
 	Signup(ctx context.Context, request SignupRequestObject) (SignupResponseObject, error)
+
+	// (GET /api/cli/vault/{uniqueId})
+	GetVaultByAPIKey(ctx context.Context, request GetVaultByAPIKeyRequestObject) (GetVaultByAPIKeyResponseObject, error)
+
+	// (GET /api/cli/vaults)
+	GetVaultsByAPIKey(ctx context.Context, request GetVaultsByAPIKeyRequestObject) (GetVaultsByAPIKeyResponseObject, error)
 
 	// (GET /api/health)
 	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
@@ -1029,58 +1029,6 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
-}
-
-// GetVaultByAPIKey operation middleware
-func (sh *strictHandler) GetVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) error {
-	var request GetVaultByAPIKeyRequestObject
-
-	request.UniqueId = uniqueId
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetVaultByAPIKey(ctx.UserContext(), request.(GetVaultByAPIKeyRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetVaultByAPIKey")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(GetVaultByAPIKeyResponseObject); ok {
-		if err := validResponse.VisitGetVaultByAPIKeyResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// GetVaultsByAPIKey operation middleware
-func (sh *strictHandler) GetVaultsByAPIKey(ctx *fiber.Ctx) error {
-	var request GetVaultsByAPIKeyRequestObject
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetVaultsByAPIKey(ctx.UserContext(), request.(GetVaultsByAPIKeyRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetVaultsByAPIKey")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(GetVaultsByAPIKeyResponseObject); ok {
-		if err := validResponse.VisitGetVaultsByAPIKeyResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
 }
 
 // GetAPIKeys operation middleware
@@ -1307,6 +1255,58 @@ func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(SignupResponseObject); ok {
 		if err := validResponse.VisitSignupResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetVaultByAPIKey operation middleware
+func (sh *strictHandler) GetVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) error {
+	var request GetVaultByAPIKeyRequestObject
+
+	request.UniqueId = uniqueId
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaultByAPIKey(ctx.UserContext(), request.(GetVaultByAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetVaultByAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetVaultByAPIKeyResponseObject); ok {
+		if err := validResponse.VisitGetVaultByAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetVaultsByAPIKey operation middleware
+func (sh *strictHandler) GetVaultsByAPIKey(ctx *fiber.Ctx) error {
+	var request GetVaultsByAPIKeyRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaultsByAPIKey(ctx.UserContext(), request.(GetVaultsByAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetVaultsByAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetVaultsByAPIKeyResponseObject); ok {
+		if err := validResponse.VisitGetVaultsByAPIKeyResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

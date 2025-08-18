@@ -102,7 +102,7 @@ The application enforces strict authentication rules via middleware (`route/midd
 - Static web assets (`/`, `/*`)
 
 **API Key Only Routes:**
-- `/api/api-key/*` - Vault access via API keys (e.g., `/api/api-key/vaults`, `/api/api-key/vault/{id}`)
+- `/api/cli/*` - Vault access via API keys (e.g., `/api/cli/vaults`, `/api/cli/vault/{id}`)
 - Must use `Authorization: Bearer vhub_xxx` header
 - Rejects JWT tokens with error message
 
@@ -118,9 +118,9 @@ The application enforces strict authentication rules via middleware (`route/midd
 
 ### API Endpoints
 
-**API Key Vault Access:**
-- `GET /api/api-key/vaults` - List accessible vaults (VaultLite format, no decrypted values)
-- `GET /api/api-key/vault/{uniqueId}` - Get specific vault (full Vault format with decrypted value)
+**CLI API Vault Access:**
+- `GET /api/cli/vaults` - List accessible vaults (VaultLite format, no decrypted values)
+- `GET /api/cli/vault/{uniqueId}` - Get specific vault (full Vault format with decrypted value)
 - Implements proper access control via `APIKey.HasVaultAccess()`
 - Includes audit logging for vault read operations
 - **Enhanced Security**: Supports optional client-side encryption via `X-Enable-Client-Encryption: true` header
