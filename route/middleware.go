@@ -12,9 +12,49 @@ import (
 )
 
 func jwtMiddleware(c *fiber.Ctx) error {
+	path := c.Path()
+
+	// Public routes that don't need authentication
+	if isPublicRoute(path) {
+		return c.Next()
+	}
+
+	// Routes starting with /api/cli/ MUST use API key authentication
+	if strings.HasPrefix(path, "/api/cli/") {
+		return apiKeyOnlyMiddleware(c)
+	}
+
+	// All other /api/ routes require JWT authentication
+	if strings.HasPrefix(path, "/api/") {
+		return jwtOnlyMiddleware(c)
+	}
+
+	// Non-API routes (web assets, etc.) don't need auth
+	return c.Next()
+}
+
+// isPublicRoute checks if a route is public and doesn't need authentication
+func isPublicRoute(path string) bool {
+	publicRoutes := []string{
+		"/api/auth/login",
+		"/api/auth/register",
+		"/api/auth/login/oidc",
+		"/api/auth/callback/oidc",
+	}
+
+	for _, route := range publicRoutes {
+		if strings.HasPrefix(path, route) {
+			return true
+		}
+	}
+	return false
+}
+
+// jwtOnlyMiddleware ensures non-API-key routes only accept JWT authentication
+func jwtOnlyMiddleware(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
-		return c.Next()
+		return handler.SendError(c, fiber.StatusUnauthorized, "JWT token required")
 	}
 
 	tokenParts := strings.Split(authHeader, " ")
@@ -24,13 +64,34 @@ func jwtMiddleware(c *fiber.Ctx) error {
 
 	tokenString := tokenParts[1]
 
-	// Check if it's an API key (starts with "vhub_")
+	// Reject API keys on JWT-only routes
 	if strings.HasPrefix(tokenString, "vhub_") {
-		return handleAPIKeyAuth(c, tokenString)
+		return handler.SendError(c, fiber.StatusUnauthorized, "JWT token required for this endpoint")
 	}
 
-	// Handle JWT token
 	return handleJWTAuth(c, tokenString)
+}
+
+// apiKeyOnlyMiddleware ensures API key routes only accept API key authentication
+func apiKeyOnlyMiddleware(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return handler.SendError(c, fiber.StatusUnauthorized, "API key required for this endpoint")
+	}
+
+	tokenParts := strings.Split(authHeader, " ")
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+		return handler.SendError(c, fiber.StatusUnauthorized, "invalid authorization header")
+	}
+
+	tokenString := tokenParts[1]
+
+	// Ensure it's an API key (starts with "vhub_")
+	if !strings.HasPrefix(tokenString, "vhub_") {
+		return handler.SendError(c, fiber.StatusUnauthorized, "API key required for this endpoint")
+	}
+
+	return handleAPIKeyAuth(c, tokenString)
 }
 
 func handleAPIKeyAuth(c *fiber.Ctx, apiKey string) error {

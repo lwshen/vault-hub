@@ -1,5 +1,5 @@
-#!/bin/bash
-set -euo pipefail  # Exit on error, undefined variables, pipe failures
+#!/bin/sh
+set -eu  # Exit on error, undefined variables
 
 # Bundle the split OpenAPI files into a single file
 echo "Bundling OpenAPI files..."
