@@ -2,8 +2,8 @@ package route
 
 import (
 	"github.com/gofiber/fiber/v2"
-	openapi "github.com/lwshen/vault-hub/packages/api"
 	"github.com/lwshen/vault-hub/handler"
+	openapi "github.com/lwshen/vault-hub/packages/api"
 )
 
 func SetupRoutes(app *fiber.App) {
