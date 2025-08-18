@@ -1,0 +1,51 @@
+name: Build and Publish Go Client
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Set env
+        run: echo "TAG=v0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
+
+      - name: Generate Go Client Library
+        uses: openapi-generators/openapitools-generator-action@v1
+        with:
+          generator: go
+          openapi-file: packages/api/openapi/api.yaml
+          generator-tag: v7.13.0
+          command-args: --additional-properties=packageVersion=${{ env.TAG }} --additional-properties=moduleName=github.com/lwshen/vault-hub-go-client --git-user-id lwshen --git-repo-id vault-hub-go-client
+
+      - name: Initialize Go module and publish
+        run: |
+          cd go-client
+          go mod tidy
+          
+          # Create repository if it doesn't exist and push
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git init -b main
+          git add .
+          git commit -m "Generated Go client library ${{ env.TAG }}"
+          git tag ${{ env.TAG }}
+          
+          # Push to separate repository (requires PUBLISH_TOKEN with repo permissions)
+          git remote add origin https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git
+          git push -f origin main
+          git push origin ${{ env.TAG }}
