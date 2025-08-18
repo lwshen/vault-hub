@@ -56,6 +56,18 @@ build:
     - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
     - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
 
+    # Build CLI
+    # Linux builds
+    - GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-cli-linux-amd64 apps/cli/main.go
+    - GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-cli-linux-arm64 apps/cli/main.go
+
+    # Windows builds
+    - GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-cli-windows-amd64.exe apps/cli/main.go
+
+    # macOS builds
+    - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-cli-darwin-amd64 apps/cli/main.go
+    - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-cli-darwin-arm64 apps/cli/main.go
+
 build-openapi-typescript-client:
   stage: build
   image: ${BASE_IMAGE}
