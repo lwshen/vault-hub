@@ -4,13 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build and Development Commands
 
-### Go Backend
+### Go Backend (apps/server/)
 
 - **Build**: `go build -o tmp/main ./apps/server/main.go`
 - **Run**: `go run ./apps/server/main.go`
 - **Test**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` (run all tests with required env vars)
 - **Test specific package**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./model -v`
 - **Generate API code**: `go generate packages/api/tool.go` (run after modifying files in `packages/api/openapi/*`)
+
+### Go CLI (apps/cli/)
+
+- **Build**: `go build -o vault-hub-cli ./apps/cli/main.go`
+- **Run**: `go run ./apps/cli/main.go`
+- **Commands**:
+  - `vault-hub list` or `vault-hub ls` - List all accessible vaults
+  - `vault-hub get <vault-name-or-id>` - Get a specific vault by name or unique ID
+- **Multi-platform builds**: See CI configuration for cross-compilation examples
 
 ### React Frontend (apps/web/)
 
@@ -23,7 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-VaultHub is a secure environment variable and API key management system with AES-256-GCM encryption.
+VaultHub is a comprehensive secure environment variable and API key management system with AES-256-GCM encryption, consisting of three main components:
 
 ### Backend (Go + Fiber)
 
@@ -40,12 +49,25 @@ VaultHub is a secure environment variable and API key management system with AES
 
 ### Frontend (React + TypeScript + Vite)
 
+- **Location**: `apps/web/`
 - **Framework**: React 19 with TypeScript
-- **Build tool**: Vite
+- **Build tool**: Vite with Lightning CSS
 - **Routing**: Wouter (lightweight router)
 - **UI**: Tailwind CSS + Radix UI components
 - **API client**: Custom generated TypeScript client (`@lwshen/vault-hub-ts-fetch-client`)
 - **State**: React Context for auth and theme management
+- **Components**: Organized into dashboard, layout, modals, and UI components
+
+### CLI (Go + Cobra)
+
+- **Location**: `apps/cli/`
+- **Framework**: Cobra for command-line interface
+- **Entry point**: `apps/cli/main.go` - Sets up Cobra CLI with vault management commands
+- **Commands**:
+  - `list` (alias: `ls`) - List all accessible vaults
+  - `get <vault-name-or-id>` - Get specific vault by name or unique ID
+- **API Integration**: Designed to work with `/api/cli/*` endpoints for API key authentication
+- **Cross-platform**: Built for Linux, Windows, and macOS (amd64, arm64)
 
 ### Key Security Features
 
@@ -144,3 +166,57 @@ ESLint configuration enforces:
 - Stylistic rules from `@stylistic/eslint-plugin`
 - React-specific rules and hooks validation
 - TypeScript strict mode
+
+## CI/CD Pipeline
+
+Both GitHub Actions and GitLab CI are configured for comprehensive builds:
+
+### GitHub Actions (`.github/workflows/ci.yml`)
+- **Triggers**: Push to main, pull requests to main
+- **Go Version**: 1.24 with module caching
+- **Frontend**: pnpm with Node.js 22, Lightning CSS
+- **Builds**: Cross-platform binaries for both server and CLI
+- **Artifacts**: Uploads server, CLI binaries, and frontend build
+- **Client Generation**: TypeScript Axios client from OpenAPI spec
+
+### GitLab CI (`.gitlab-ci.yml`)
+- **Base Image**: `shenlw/vault-hub-base:latest` (pre-configured with tools)
+- **Stages**: build, build-openapi-typescript-client, build-openapi-go-client
+- **Cross-compilation**: Same platforms as GitHub Actions
+- **Client Libraries**: Generates both TypeScript fetch and Go clients
+
+### Build Outputs
+
+**Server binaries**:
+- `vault-hub-server-linux-{amd64,arm64}`
+- `vault-hub-server-windows-amd64.exe`
+- `vault-hub-server-darwin-{amd64,arm64}`
+
+**CLI binaries**:
+- `vault-hub-cli-linux-{amd64,arm64}`
+- `vault-hub-cli-windows-amd64.exe`
+- `vault-hub-cli-darwin-{amd64,arm64}`
+
+## Project Structure
+
+```
+vault-hub/
+├── apps/
+│   ├── cli/              # Command-line interface (Go + Cobra)
+│   ├── server/           # Backend server (Go + Fiber)
+│   └── web/              # Frontend application (React + TypeScript)
+├── packages/
+│   └── api/              # OpenAPI specification and generated code
+│       ├── openapi/      # OpenAPI 3.0 specification files
+│       ├── generated.go  # Auto-generated Go server code
+│       └── *.go         # API implementation files
+├── model/               # Database models (GORM)
+├── handler/             # HTTP request handlers
+├── route/               # Routing and middleware
+├── internal/            # Internal packages
+│   ├── auth/           # Authentication (JWT, OIDC)
+│   ├── config/         # Configuration management
+│   └── encryption/     # AES-256-GCM encryption
+├── docker/             # Docker build files
+└── scripts/            # Build and utility scripts
+```
