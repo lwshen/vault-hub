@@ -1,0 +1,11 @@
+# VaultHub CLI Configuration
+# Copy this file to ~/.vault-hub/config.yaml and update the values
+
+# API key for authentication (required)
+api_key: "your-api-key-here"
+
+# Base URL of the VaultHub server (required)
+base_url: "https://your-vault-hub-server.com"
+
+# Request timeout (optional, default: 30s)
+timeout: "30s"
