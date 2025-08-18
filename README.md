@@ -63,20 +63,13 @@ go build -o vault-hub-cli ./apps/cli/main.go
 
 - All vault values encrypted with AES-256-GCM before database storage
 - JWT-based web authentication with optional OIDC support
-- API key authentication for CLI access with `vhub_` prefix
+- API key authentication for CLI access
 - Complete audit trail of all operations
 - Transparent encryption/decryption at model layer
 
 ## Environment Variables
 
-**Required**:
-- `JWT_SECRET` - JWT token signing secret
-- `ENCRYPTION_KEY` - AES encryption key
-
-**Optional**:
-- `APP_PORT` - Server port (default: 3000)
-- `DATABASE_TYPE` - sqlite|mysql|postgres (default: sqlite)
-- `DATABASE_URL` - Database connection (default: data.db)
+See [.env.example](.env.example) for detailed configuration options.
 
 ## License
 
