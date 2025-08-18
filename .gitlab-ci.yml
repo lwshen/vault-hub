@@ -38,7 +38,7 @@ build:
 
     # Build frontend
     - pnpm build
-    - cd ..
+    - cd ../..
 
     # Run tests
     - export JWT_SECRET=secret ENCRYPTION_KEY=test-encryption-key-for-ci
