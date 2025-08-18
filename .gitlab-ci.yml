@@ -30,7 +30,7 @@ build:
     - golangci-lint run
 
     # Install frontend dependencies
-    - cd ./web
+    - cd ./apps/web
     - pnpm install
 
     # Check frontend format
@@ -46,15 +46,15 @@ build:
 
     # Build backend
     # Linux builds
-    - GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-server-linux-amd64 cmd/main.go
-    - GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-server-linux-arm64 cmd/main.go
+    - GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-server-linux-amd64 apps/server/main.go
+    - GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-server-linux-arm64 apps/server/main.go
 
     # Windows builds
-    - GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-server-windows-amd64.exe cmd/main.go
+    - GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-server-windows-amd64.exe apps/server/main.go
 
     # macOS builds
-    - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 cmd/main.go
-    - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 cmd/main.go
+    - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
+    - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
 
 build-openapi-client:
   stage: build
@@ -64,7 +64,7 @@ build-openapi-client:
     - export TAG=0.$(date +'%Y%m%d.%H%M%S')
 
     # Generate TypeScript Fetch client
-    - openapi-generator generate -i api/openapi/api.yaml -g typescript-fetch -o typescript-fetch-client --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${TAG} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
+    - openapi-generator generate -i packages/api/openapi/api.yaml -g typescript-fetch -o typescript-fetch-client --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${TAG} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
 
     # Build TypeScript Fetch client
     - cd typescript-fetch-client

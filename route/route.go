@@ -2,8 +2,8 @@ package route
 
 import (
 	"github.com/gofiber/fiber/v2"
-	openapi "github.com/lwshen/vault-hub/api"
 	"github.com/lwshen/vault-hub/handler"
+	openapi "github.com/lwshen/vault-hub/packages/api"
 )
 
 func SetupRoutes(app *fiber.App) {
@@ -20,9 +20,9 @@ func SetupRoutes(app *fiber.App) {
 	auth.Get("/callback/oidc", handler.LoginOidcCallback)
 
 	// Web
-	app.Static("/", "./web/dist")
+	app.Static("/", "./apps/web/dist")
 	app.Get("/*", func(c *fiber.Ctx) error {
-		if err := c.SendFile("./web/dist/index.html"); err != nil {
+		if err := c.SendFile("./apps/web/dist/index.html"); err != nil {
 			return c.SendStatus(fiber.StatusInternalServerError)
 		}
 		return nil

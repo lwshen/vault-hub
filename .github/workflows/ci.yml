@@ -35,7 +35,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          package_json_file: "./web/package.json"
+          package_json_file: "./apps/web/package.json"
           run_install: false
 
       - name: Set up Node.js
@@ -43,18 +43,18 @@ jobs:
         with:
           node-version: "22"
           cache: "pnpm"
-          cache-dependency-path: "./web/pnpm-lock.yaml"
+          cache-dependency-path: "./apps/web/pnpm-lock.yaml"
 
       - name: Install frontend dependencies
-        working-directory: ./web
+        working-directory: ./apps/web
         run: pnpm install
 
       - name: Check frontend format
-        working-directory: ./web
+        working-directory: ./apps/web
         run: pnpm typecheck && pnpm lint
 
       - name: Build frontend
-        working-directory: ./web
+        working-directory: ./apps/web
         run: pnpm build
 
       - name: Run tests
@@ -66,15 +66,15 @@ jobs:
       - name: Build backend
         run: |
           # Linux builds
-          GOOS=linux GOARCH=amd64 go build --o bin/vault-hub-server-linux-amd64 cmd/main.go
-          GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-server-linux-arm64 cmd/main.go
+          GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-server-linux-amd64 apps/server/main.go
+          GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-server-linux-arm64 apps/server/main.go
 
           # Windows builds
-          GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-server-windows-amd64.exe cmd/main.go
+          GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-server-windows-amd64.exe apps/server/main.go
 
           # macOS builds
-          GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 cmd/main.go
-          GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 cmd/main.go
+          GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
+          GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -82,7 +82,7 @@ jobs:
           name: vault-hub-server
           path: |
             bin/
-            web/dist
+            apps/web/dist
 
   build-openapi-client:
     runs-on: ubuntu-latest
@@ -105,7 +105,7 @@ jobs:
         uses: openapi-generators/openapitools-generator-action@v1
         with:
           generator: typescript-axios
-          openapi-file: api/openapi/api.yaml
+          openapi-file: packages/api/openapi/api.yaml
           generator-tag: v7.13.0
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-axios-client --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
 

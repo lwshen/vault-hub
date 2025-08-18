@@ -5,7 +5,7 @@ FROM node:${NODE_VERSION}-alpine AS frontend-builder
 
 WORKDIR /app
 
-COPY web ./
+COPY apps/web ./
 
 RUN corepack enable
 
@@ -25,18 +25,18 @@ ENV GO111MODULE=on \
 
 COPY . .
 
-COPY --from=frontend-builder /app/dist ./web/dist
+COPY --from=frontend-builder /app/dist ./apps/web/dist
 
 RUN go mod download
 
-RUN go build -o vault-hub-server cmd/main.go
+RUN go build -o vault-hub-server apps/server/main.go
 
 FROM alpine:latest
 
 WORKDIR /app
 
 COPY --from=backend-builder /app/vault-hub-server ./
-COPY --from=backend-builder /app/web/dist ./web/dist
+COPY --from=backend-builder /app/apps/web/dist ./apps/web/dist
 
 EXPOSE 3000
 
