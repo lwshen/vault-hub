@@ -36,6 +36,7 @@ func jwtMiddleware(c *fiber.Ctx) error {
 // isPublicRoute checks if a route is public and doesn't need authentication
 func isPublicRoute(path string) bool {
 	publicRoutes := []string{
+		"/api/health",
 		"/api/auth/login",
 		"/api/auth/register",
 		"/api/auth/login/oidc",
