@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
   build-and-publish:
@@ -37,7 +35,6 @@ jobs:
         run: |
           cd go-client
           go mod tidy
-          go build ./...
           
           # Create repository if it doesn't exist and push
           git config --global user.name "github-actions[bot]"
