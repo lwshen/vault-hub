@@ -2,7 +2,7 @@ package route
 
 import (
 	"github.com/gofiber/fiber/v2"
-	openapi "github.com/lwshen/vault-hub/api"
+	openapi "github.com/lwshen/vault-hub/packages/api"
 	"github.com/lwshen/vault-hub/handler"
 )
 

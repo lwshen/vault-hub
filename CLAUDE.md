@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run**: `go run ./apps/server/main.go`
 - **Test**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` (run all tests with required env vars)
 - **Test specific package**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./model -v`
-- **Generate API code**: `go generate api/tool.go` (run after modifying files in `api/openapi/*`)
+- **Generate API code**: `go generate packages/api/tool.go` (run after modifying files in `packages/api/openapi/*`)
 
 ### React Frontend (apps/web/)
 
@@ -29,7 +29,7 @@ VaultHub is a secure environment variable and API key management system with AES
 
 - **Entry point**: `apps/server/main.go` - Sets up Fiber web server
 - **Database**: GORM with support for SQLite, MySQL, PostgreSQL
-- **API**: OpenAPI 3.0 spec in `api/openapi/api.yaml`, generated code in `api/generated.go`
+- **API**: OpenAPI 3.0 spec in `packages/api/openapi/api.yaml`, generated code in `packages/api/generated.go`
 - **Models**: `model/` - Database entities (User, Vault, AuditLog, APIKey)
 - **Routes**: `route/` - HTTP routing and middleware
 - **Handlers**: `handler/` - Request/response handling
@@ -79,14 +79,14 @@ Optional configuration:
 
 ## API Generation
 
-The project uses OpenAPI 3.0 specification (`api/openapi/api.yaml`) with `oapi-codegen` to generate:
+The project uses OpenAPI 3.0 specification (`packages/api/openapi/api.yaml`) with `oapi-codegen` to generate:
 
-- Go server stubs (`api/generated.go`)
+- Go server stubs (`packages/api/generated.go`)
 - TypeScript client library (published as npm package)
 
-**Important**: Always run `go generate api/tool.go` after modifying files in `api/openapi/*` to regenerate the Go types and interfaces. The API spec uses camelCase naming convention for all properties (e.g., `uniqueId`, `createdAt`, `isActive`).
+**Important**: Always run `go generate packages/api/tool.go` after modifying files in `packages/api/openapi/*` to regenerate the Go types and interfaces. The API spec uses camelCase naming convention for all properties (e.g., `uniqueId`, `createdAt`, `isActive`).
 
-**NEVER EDIT**: Do not modify `api/generated.go` directly as it is auto-generated code. All API changes must be made in the OpenAPI specification files in `api/openapi/*`.
+**NEVER EDIT**: Do not modify `packages/api/generated.go` directly as it is auto-generated code. All API changes must be made in the OpenAPI specification files in `packages/api/openapi/*`.
 
 ## Authentication & Authorization
 

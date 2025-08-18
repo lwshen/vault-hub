@@ -64,7 +64,7 @@ build-openapi-client:
     - export TAG=0.$(date +'%Y%m%d.%H%M%S')
 
     # Generate TypeScript Fetch client
-    - openapi-generator generate -i api/openapi/api.yaml -g typescript-fetch -o typescript-fetch-client --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${TAG} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
+    - openapi-generator generate -i packages/api/openapi/api.yaml -g typescript-fetch -o typescript-fetch-client --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${TAG} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
 
     # Build TypeScript Fetch client
     - cd typescript-fetch-client
