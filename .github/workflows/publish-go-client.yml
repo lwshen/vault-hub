@@ -57,3 +57,12 @@ jobs:
           else
             echo "Skipping push during pull_request event"
           fi
+
+      - name: Upload OpenAPI client artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-client-${{ env.TAG }}
+          path: go-client
+          if-no-files-found: error
+          retention-days: 14
