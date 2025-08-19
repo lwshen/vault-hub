@@ -25,6 +25,26 @@ func debugLog(format string, args ...interface{}) {
 	}
 }
 
+// getStringFlag is a helper function to extract string flag values with error handling
+func getStringFlag(cmd *cobra.Command, flag string) (string, error) {
+	value, err := cmd.Flags().GetString(flag)
+	if err != nil {
+		debugLog("Failed to get %s flag: %v", flag, err)
+		return "", fmt.Errorf("failed to get %s flag: %v", flag, err)
+	}
+	return value, nil
+}
+
+// mustGetStringFlag extracts string flag values and exits on error
+func mustGetStringFlag(cmd *cobra.Command, flag string) string {
+	value, err := getStringFlag(cmd, flag)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	return value
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "vault-hub",
 	Short: "VaultHub CLI - Secure environment variable and API key management",
@@ -38,6 +58,15 @@ This CLI allows you to list and retrieve vaults from your VaultHub instance.`,
 		baseURL = strings.TrimSuffix(baseURL, "/")
 		debugLog("Base URL: %s", baseURL)
 		debugLog("Debug mode: %v", debug)
+
+		if apiKey == "" {
+			fmt.Fprintf(os.Stderr, "Error: --api-key is required\n")
+			os.Exit(1)
+		}
+		if baseURL == "" {
+			fmt.Fprintf(os.Stderr, "Error: --base-url is required\n")
+			os.Exit(1)
+		}
 
 		cfg := openapi.NewConfiguration()
 		cfg.Debug = debug
@@ -151,24 +180,9 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		debugLog("Executing get command")
 
-		name, err := cmd.Flags().GetString("name")
-		if err != nil {
-			debugLog("Failed to get name flag: %v", err)
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
-		id, err := cmd.Flags().GetString("id")
-		if err != nil {
-			debugLog("Failed to get id flag: %v", err)
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
-		outputFile, err := cmd.Flags().GetString("output")
-		if err != nil {
-			debugLog("Failed to get output flag: %v", err)
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		name := mustGetStringFlag(cmd, "name")
+		id := mustGetStringFlag(cmd, "id")
+		outputFile := mustGetStringFlag(cmd, "output")
 
 		debugLog("Parameters - name: '%s', id: '%s', output: '%s'", name, id, outputFile)
 
