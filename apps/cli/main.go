@@ -38,7 +38,7 @@ This CLI allows you to list and retrieve vaults from your VaultHub instance.`,
 		baseURL = strings.TrimSuffix(baseURL, "/")
 		debugLog("Base URL: %s", baseURL)
 		debugLog("Debug mode: %v", debug)
-		
+
 		cfg := openapi.NewConfiguration()
 		cfg.Debug = debug
 		cfg.Servers = openapi.ServerConfigurations{
@@ -86,7 +86,7 @@ This command will display basic information about each vault including
 name, unique ID, and description.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		debugLog("Executing list command")
-		
+
 		ctx := context.Background()
 		debugLog("Making API request to get vaults by API key")
 		vaults, _, err := client.CliAPI.GetVaultsByAPIKey(ctx).Execute()
@@ -99,7 +99,7 @@ name, unique ID, and description.`,
 
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		debugLog("JSON output mode: %v", jsonOutput)
-		
+
 		if jsonOutput {
 			debugLog("Marshaling vaults to JSON")
 			output, err := json.MarshalIndent(vaults, "", "  ")
@@ -150,7 +150,7 @@ Examples:
   vault-hub get --name my-api-keys --output ./secrets.txt`,
 	Run: func(cmd *cobra.Command, args []string) {
 		debugLog("Executing get command")
-		
+
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
 			debugLog("Failed to get name flag: %v", err)
