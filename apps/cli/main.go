@@ -38,6 +38,7 @@ func init() {
 		},
 	}
 	client = openapi.NewAPIClient(cfg)
+	client.GetConfig().DefaultHeader["Authorization"] = "Bearer " + apiKey
 
 	// Add subcommands to root
 	rootCmd.AddCommand(listCmd)
