@@ -46,10 +46,9 @@ paths:
 
 components:
   securitySchemes:
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-API-Key
+    apiKeyAuth:
+      type: http
+      scheme: bearer
       
   schemas:
     # Health schemas
