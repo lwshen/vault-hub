@@ -63,11 +63,15 @@ jobs:
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=useSingleRequestParameter=false --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
       - name: Build package
         run: |
+          pwd
+          ls -al
           cd typescript-fetch-client
           npm install
           npm run build
       - name: Publish to npm registry
         run: |
+          pwd
+          ls -al
           # Push to separate repository only outside of pull_request events
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             cd typescript-fetch-client
