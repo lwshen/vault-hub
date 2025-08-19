@@ -1,31 +1,26 @@
 name: Build and Publish Client
-
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-
 jobs:
   build-and-publish-github:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
     steps:
       - uses: actions/checkout@v5
-
       - name: Set up Node for GitHub Packages
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@lwshen"
-
+          node-version: 22.x
+          registry-url: https://npm.pkg.github.com
+          scope: '@lwshen'
       - name: Set env
         run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
-
       - name: Generate Typescript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
@@ -33,7 +28,6 @@ jobs:
           openapi-file: packages/api/openapi/api.yaml
           generator-tag: v7.13.0
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ env.TAG }} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
-
       - name: Publish to GitHub Packages
         run: |
           # Push to separate repository only outside of pull_request events
@@ -49,22 +43,17 @@ jobs:
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-and-publish-npm:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v5
-
       - name: Set up Node for npm registry
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
-          registry-url: "https://registry.npmjs.org"
-
+          node-version: 22.x
+          registry-url: https://registry.npmjs.org
       - name: Set env
         run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
-
       - name: Generate Typescript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
@@ -72,13 +61,11 @@ jobs:
           openapi-file: packages/api/openapi/api.yaml
           generator-tag: v7.13.0
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=useSingleRequestParameter=false --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
-
       - name: Build package
         run: |
           cd typescript-fetch-client
           npm install
           npm run build
-
       - name: Publish to npm registry
         run: |
           # Push to separate repository only outside of pull_request events
@@ -90,7 +77,6 @@ jobs:
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Upload OpenAPI client artifact
         uses: actions/upload-artifact@v4
         with:
