@@ -58,6 +58,7 @@ jobs:
 #   - For API endpoints: Security, input validation, and error handling
 #   - For React components: Performance, accessibility, and best practices
 #   - For tests: Coverage, edge cases, and test quality
+
 # Optional: Different prompts for different authors
 # direct_prompt: |
 #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' &&
