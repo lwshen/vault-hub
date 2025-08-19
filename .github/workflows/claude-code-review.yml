@@ -1,15 +1,15 @@
 name: Claude Code Review
-
 on:
   pull_request:
-    types: [opened, synchronize]
+    types:
+      - opened
+      - synchronize
     # Optional: Only run on specific file changes
     # paths:
     #   - "src/**/*.ts"
     #   - "src/**/*.tsx"
     #   - "src/**/*.js"
     #   - "src/**/*.jsx"
-
 jobs:
   claude-review:
     # Optional: Filter by PR author
@@ -17,29 +17,25 @@ jobs:
     #   github.event.pull_request.user.login == 'external-contributor' ||
     #   github.event.pull_request.user.login == 'new-developer' ||
     #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       issues: write
       id-token: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
-
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@beta
         with:
           # Comma-separated list of allowed bot usernames, or '*' to allow all bots. Empty string (default) allows no bots.
-          allowed_bots: "cursor,dependabot"
+          allowed_bots: cursor,dependabot
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
           # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
           # model: "claude-opus-4-20250514"
 
@@ -53,28 +49,474 @@ jobs:
             - Test coverage
 
             Be constructive and helpful in your feedback.
+# Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
+# use_sticky_comment: true
 
-          # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
-          # use_sticky_comment: true
+# Optional: Customize review based on file types
+# direct_prompt: |
+#   Review this PR focusing on:
+#   - For TypeScript files: Type safety and proper interface usage
+#   - For API endpoints: Security, input validation, and error handling
+#   - For React components: Performance, accessibility, and best practices
+#   - For tests: Coverage, edge cases, and test quality
 
-          # Optional: Customize review based on file types
-          # direct_prompt: |
-          #   Review this PR focusing on:
-          #   - For TypeScript files: Type safety and proper interface usage
-          #   - For API endpoints: Security, input validation, and error handling
-          #   - For React components: Performance, accessibility, and best practices
-          #   - For tests: Coverage, edge cases, and test quality
+# Optional: Different prompts for different authors
+# direct_prompt: |
+#   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' &&
+#   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
+#   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
 
-          # Optional: Different prompts for different authors
-          # direct_prompt: |
-          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' &&
-          #   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
-          #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
+# Optional: Add specific tools for running tests or linting
+# allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
 
-          # Optional: Add specific tools for running tests or linting
-          # allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
+# Optional: Skip review for certain conditions
+# if: |
+#   !contains(github.event.pull_request.title, '[skip-review]') &&
+#   !contains(github.event.pull_request.title, '[WIP]')
+---
+name: Mirroring
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  to_gitlab:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: keninkujovic/gitlab-sync@2.1.0
+        with:
+          gitlab_url: https://git.slw.app/${{ secrets.GITLAB_USERNAME }}/vault-hub.git
+          username: ${{ secrets.GITLAB_USERNAME }}
+          gitlab_pat: ${{ secrets.GITLAB_ACCESS_TOKEN }}
+          force_push: true
+---
+name: Claude Code
+on:
+  issue_comment:
+    types:
+      - created
+  pull_request_review_comment:
+    types:
+      - created
+  issues:
+    types:
+      - opened
+      - assigned
+  pull_request_review:
+    types:
+      - submitted
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read # Required for Claude to read CI results on PRs
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@beta
+        with:
+          # Comma-separated list of allowed bot usernames, or '*' to allow all bots. Empty string (default) allows no bots.
+          allowed_bots: cursor,dependabot
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # This is an optional setting that allows Claude to read CI results on PRs
+          additional_permissions: |
+            actions: read
+# Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
+# model: "claude-opus-4-20250514"
 
-          # Optional: Skip review for certain conditions
-          # if: |
-          #   !contains(github.event.pull_request.title, '[skip-review]') &&
-          #   !contains(github.event.pull_request.title, '[WIP]')
+# Optional: Customize the trigger phrase (default: @claude)
+# trigger_phrase: "/claude"
+
+# Optional: Trigger when specific user is assigned to an issue
+# assignee_trigger: "claude-bot"
+
+# Optional: Allow Claude to run specific commands
+# allowed_tools: "Bash(npm install),Bash(npm run build),Bash(npm run test:*),Bash(npm run lint:*)"
+
+# Optional: Add custom instructions for Claude to customize its behavior for your project
+# custom_instructions: |
+#   Follow our coding standards
+#   Ensure all new code has tests
+#   Use TypeScript for new files
+
+# Optional: Custom environment variables for Claude
+# claude_env: |
+#   NODE_ENV: test
+---
+name: Publish Docker image
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v5
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/lwshen/vault-hub
+          tags: |
+            type=raw,value=latest
+            type=ref,event=tag
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+---
+name: Build and Publish Go Client
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+      - name: Set env
+        run: echo "TAG=v0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
+      - name: Generate Go Client Library
+        uses: openapi-generators/openapitools-generator-action@v1
+        with:
+          generator: go
+          openapi-file: packages/api/openapi/api.yaml
+          generator-tag: v7.13.0
+          command-args: --additional-properties=packageVersion=${{ env.TAG }} --additional-properties=moduleName=github.com/lwshen/vault-hub-go-client --git-user-id lwshen --git-repo-id vault-hub-go-client
+      - name: Ensure LICENSE is included
+        run: cp LICENSE go-client/LICENSE
+      - name: Initialize Go module and publish
+        run: |
+          cd go-client
+          go mod tidy
+
+          # Create repository if it doesn't exist and push
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git init -b main
+          git add .
+          git commit -m "Generated Go client library ${{ env.TAG }}"
+          git tag ${{ env.TAG }}
+
+          # Push to separate repository only outside of pull_request events
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            git remote add origin https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git
+            git push -f origin main
+            git push origin ${{ env.TAG }}
+          else
+            echo "Skipping push during pull_request event"
+          fi
+      - name: Upload OpenAPI client artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-client
+          path: go-client
+          if-no-files-found: error
+---
+name: Database Connection Tests
+env:
+  GO_VERSION: "1.24"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  test-sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - name: Install dependencies
+        run: go mod download
+      - name: Test SQLite Connection
+        run: |
+          export JWT_SECRET=secret
+          export ENCRYPTION_KEY=test-encryption-key-for-ci
+          export DATABASE_TYPE=sqlite
+          export DATABASE_URL=file::memory:?cache=shared
+          go test -v ./model -run TestDatabaseConnection
+  test-mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testdb
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - name: Install dependencies
+        run: go mod download
+      - name: Test MySQL Connection
+        run: |
+          export JWT_SECRET=secret
+          export ENCRYPTION_KEY=test-encryption-key-for-ci
+          export DATABASE_TYPE=mysql
+          export DATABASE_URL="root:root@tcp(localhost:3306)/testdb?charset=utf8mb4&parseTime=True&loc=Local"
+          go test -v ./model -run TestDatabaseConnection
+  test-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - name: Install dependencies
+        run: go mod download
+      - name: Test PostgreSQL Connection
+        run: |
+          export JWT_SECRET=secret
+          export ENCRYPTION_KEY=test-encryption-key-for-ci
+          export DATABASE_TYPE=postgres
+          export DATABASE_URL="postgres://postgres:postgres@localhost/testdb"
+          go test -v ./model -run TestDatabaseConnection
+---
+name: CI
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+      - name: Install dependencies
+        run: go mod download
+      - name: Verify dependencies
+        run: go mod verify
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1.6
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ./apps/web/package.json
+          run_install: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: ./apps/web/pnpm-lock.yaml
+      - name: Install frontend dependencies
+        working-directory: ./apps/web
+        run: pnpm install
+      - name: Check frontend format
+        working-directory: ./apps/web
+        run: pnpm typecheck && pnpm lint
+      - name: Build frontend
+        working-directory: ./apps/web
+        run: pnpm build
+      - name: Run tests
+        run: |
+          export JWT_SECRET=secret
+          export ENCRYPTION_KEY=test-encryption-key-for-ci
+          go test -v ./...
+      - name: Build backend
+        run: |
+          # Linux builds
+          GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-server-linux-amd64 apps/server/main.go
+          GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-server-linux-arm64 apps/server/main.go
+
+          # Windows builds
+          GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-server-windows-amd64.exe apps/server/main.go
+
+          # macOS builds
+          GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
+          GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
+      - name: Build CLI
+        run: |
+          # Linux builds
+          GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-cli-linux-amd64 apps/cli/main.go
+          GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-cli-linux-arm64 apps/cli/main.go
+
+          # Windows builds
+          GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-cli-windows-amd64.exe apps/cli/main.go
+
+          # macOS builds
+          GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-cli-darwin-amd64 apps/cli/main.go
+          GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-cli-darwin-arm64 apps/cli/main.go
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vault-hub-server
+          path: |
+            bin/
+            apps/web/dist
+---
+name: Build and Publish Client
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  build-and-publish-github:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Node for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          registry-url: https://npm.pkg.github.com
+          scope: '@lwshen'
+      - name: Set env
+        run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
+      - name: Generate Typescript Fetch Client Library
+        uses: openapi-generators/openapitools-generator-action@v1
+        with:
+          generator: typescript-fetch
+          openapi-file: packages/api/openapi/api.yaml
+          generator-tag: v7.13.0
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ env.TAG }} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
+      - name: Publish to GitHub Packages
+        run: |
+          # Push to separate repository only outside of pull_request events
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            cd typescript-fetch-client
+            echo ${{ env.TAG }}
+            cat package.json
+            npm install
+            npm run build
+            npm publish
+          else
+            echo "Skipping push during pull_request event"
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build-and-publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Node for npm registry
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          registry-url: https://registry.npmjs.org
+      - name: Set env
+        run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
+      - name: Generate Typescript Fetch Client Library
+        uses: openapi-generators/openapitools-generator-action@v1
+        with:
+          generator: typescript-fetch
+          openapi-file: packages/api/openapi/api.yaml
+          generator-tag: v7.13.0
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=useSingleRequestParameter=false --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
+      - name: Build package
+        run: |
+          cd typescript-fetch-client
+          npm install
+          npm run build
+      - name: Publish to npm registry
+        run: |
+          # Push to separate repository only outside of pull_request events
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            cd typescript-fetch-client
+            npm publish --access public
+          else
+            echo "Skipping push during pull_request event"
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Upload OpenAPI client artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-axios-client
+          path: typescript-axios-client
+          if-no-files-found: error
