@@ -27,7 +27,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
-
+import { toast } from 'sonner';
 
 export default function VaultsContent() {
   const { vaults, isLoading, error, refetch } = useVaults();
@@ -40,6 +40,7 @@ export default function VaultsContent() {
   const [selectedVault, setSelectedVault] = useState<VaultLite | null>(null);
 
   const handleVaultCreated = () => {
+    toast.success('Vault created successfully');
     refetch(); // Refresh the vault list after creation
   };
 
@@ -70,16 +71,19 @@ export default function VaultsContent() {
     try {
       await vaultApi.deleteVault(selectedVault.uniqueId);
       setDeleteConfirmOpen(false);
+      toast.success(`Vault "${selectedVault.name}" has been deleted successfully`);
       refetch(); // Refresh the vault list after deletion
     } catch (err) {
       console.error('Failed to delete vault:', err);
-      // TODO: Show error toast or notification
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete vault';
+      toast.error(`Failed to delete vault: ${errorMessage}`);
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleVaultUpdated = () => {
+    toast.success('Vault updated successfully');
     refetch(); // Refresh the vault list after update
   };
 
@@ -93,7 +97,10 @@ export default function VaultsContent() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold">Failed to load vaults</h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
-                <Button onClick={refetch}>Try Again</Button>
+                <Button onClick={() => {
+                  toast.info('Retrying to load vaults...');
+                  refetch();
+                }}>Try Again</Button>
               </div>
             </div>
           </Card>
