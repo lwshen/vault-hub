@@ -1,12 +1,12 @@
 import { apiKeyApi } from '@/apis/api';
+import DashboardHeader from '@/components/layout/dashboard-header';
 import CreateApiKeyModal from '@/components/modals/create-api-key-modal';
 import EditApiKeyModal from '@/components/modals/edit-api-key-modal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import DashboardHeader from '@/components/layout/dashboard-header';
 import { useApiKeys } from '@/hooks/use-api-keys';
 import type { APIKey } from '@lwshen/vault-hub-ts-fetch-client';
-import { AlertCircle, Key, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Edit, Key, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 
@@ -88,7 +88,7 @@ export default function ApiKeysContent() {
                         setIsEditModalOpen(true);
                       }}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
