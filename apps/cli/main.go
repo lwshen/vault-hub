@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -23,6 +24,17 @@ var rootCmd = &cobra.Command{
 environment variables and API keys stored in VaultHub.
 
 This CLI allows you to list and retrieve vaults from your VaultHub instance.`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		cfg := openapi.NewConfiguration()
+		cfg.Debug = debug
+		cfg.Servers = openapi.ServerConfigurations{
+			{
+				URL: baseURL,
+			},
+		}
+		client = openapi.NewAPIClient(cfg)
+		client.GetConfig().DefaultHeader["Authorization"] = "Bearer " + apiKey
+	},
 }
 
 func init() {
@@ -31,19 +43,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&baseURL, "base-url", "", "Base URL of VaultHub server")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Enable debug mode")
 
-	cfg := openapi.NewConfiguration()
-	cfg.Debug = debug
-	cfg.Servers = openapi.ServerConfigurations{
-		{
-			URL: baseURL,
-		},
-	}
-	client = openapi.NewAPIClient(cfg)
-	client.GetConfig().DefaultHeader["Authorization"] = "Bearer " + apiKey
-
 	// Add subcommands to root
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(getCmd)
+
+	listCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
 }
 
 func main() {
@@ -61,15 +65,42 @@ var listCmd = &cobra.Command{
 This command will display basic information about each vault including
 name, unique ID, and description.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Listing vaults...")
 		ctx := context.Background()
 		vaults, _, err := client.CliAPI.GetVaultsByAPIKey(ctx).Execute()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
-		for _, vault := range vaults {
-			fmt.Printf("Vault: %s\n", vault.Name)
+
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+		if jsonOutput {
+			output, err := json.MarshalIndent(vaults, "", "  ")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println(string(output))
+			return
+		}
+
+		if len(vaults) == 0 {
+			fmt.Println("No vaults found.")
+			return
+		}
+
+		fmt.Printf("Found %d vault(s):\n\n", len(vaults))
+		for i, vault := range vaults {
+			fmt.Printf("  %d. 📦 %s\n", i+1, vault.GetName())
+			fmt.Printf("     ID: %s\n", vault.GetUniqueId())
+			if vault.Category != nil && *vault.Category != "" {
+				fmt.Printf("     Category: %s\n", *vault.Category)
+			}
+			if vault.Description != nil && *vault.Description != "" {
+				fmt.Printf("     Description: %s\n", *vault.Description)
+			}
+			if i < len(vaults)-1 {
+				fmt.Println()
+			}
 		}
 	},
 }
