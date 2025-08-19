@@ -98,3 +98,4 @@ build-openapi-go-client:
     # Initialize Go module
     - cd go-client
     - go mod tidy
+    - go build ./...
