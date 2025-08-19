@@ -45,9 +45,9 @@ auditLogs:
           minimum: 1
           default: 1
     responses:
-      '200':
+      "200":
         description: List of audit logs
         content:
           application/json:
             schema:
-              $ref: '../schemas/audit.yaml#/AuditLogsResponse'
+              $ref: ../schemas/audit.yaml#/AuditLogsResponse

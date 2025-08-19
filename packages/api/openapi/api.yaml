@@ -2,98 +2,90 @@ openapi: 3.0.0
 info:
   version: 1.0.0
   title: Vault Hub Server
-
 # Merge path definitions from separate files
 paths:
   # Health endpoints
   /api/health:
-    $ref: './paths/health.yaml#/health'
-    
+    $ref: ./paths/health.yaml#/health
   # Auth endpoints
   /api/auth/login:
-    $ref: './paths/auth.yaml#/login'
+    $ref: ./paths/auth.yaml#/login
   /api/auth/signup:
-    $ref: './paths/auth.yaml#/signup'
+    $ref: ./paths/auth.yaml#/signup
   /api/auth/logout:
-    $ref: './paths/auth.yaml#/logout'
-    
+    $ref: ./paths/auth.yaml#/logout
   # User endpoints
   /api/user:
-    $ref: './paths/user.yaml#/getCurrentUser'
-    
+    $ref: ./paths/user.yaml#/getCurrentUser
   # Vault endpoints
   /api/vaults:
-    $ref: './paths/vault.yaml#/vaults'
+    $ref: ./paths/vault.yaml#/vaults
   /api/vaults/{uniqueId}:
-    $ref: './paths/vault.yaml#/vaultById'
-    
+    $ref: ./paths/vault.yaml#/vaultById
   # Audit endpoints
   /api/audit-logs:
-    $ref: './paths/audit.yaml#/auditLogs'
-    
+    $ref: ./paths/audit.yaml#/auditLogs
   # API Key endpoints
   /api/api-keys:
-    $ref: './paths/apikey.yaml#/apiKeys'
+    $ref: ./paths/apikey.yaml#/apiKeys
   /api/api-keys/{id}:
-    $ref: './paths/apikey.yaml#/apiKeyById'
-
+    $ref: ./paths/apikey.yaml#/apiKeyById
   /api/cli/vaults:
-    $ref: './paths/apikey-vault.yaml#/apiKeyVaults'
+    $ref: ./paths/apikey-vault.yaml#/apiKeyVaults
   /api/cli/vault/{uniqueId}:
-    $ref: './paths/apikey-vault.yaml#/apiKeyVaultById'
+    $ref: ./paths/apikey-vault.yaml#/apiKeyVaultById
   /api/cli/vault/name/{name}:
-    $ref: './paths/apikey-vault.yaml#/apiKeyVaultByName'
-
+    $ref: ./paths/apikey-vault.yaml#/apiKeyVaultByName
 components:
   securitySchemes:
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-API-Key
-      
+    apiKeyAuth:
+      type: http
+      scheme: bearer
   schemas:
+    EnableClientEncryption:
+      type: string
+      description: Enable additional client-side encryption using key derived from API key + vault unique ID
+      enum:
+        - true
+        - false
+      example: true
     # Health schemas
     HealthCheckResponse:
-      $ref: './schemas/health.yaml#/HealthCheckResponse'
-    
+      $ref: ./schemas/health.yaml#/HealthCheckResponse
     # Auth schemas
     LoginRequest:
-      $ref: './schemas/auth.yaml#/LoginRequest'
+      $ref: ./schemas/auth.yaml#/LoginRequest
     LoginResponse:
-      $ref: './schemas/auth.yaml#/LoginResponse'
+      $ref: ./schemas/auth.yaml#/LoginResponse
     SignupRequest:
-      $ref: './schemas/auth.yaml#/SignupRequest'
+      $ref: ./schemas/auth.yaml#/SignupRequest
     SignupResponse:
-      $ref: './schemas/auth.yaml#/SignupResponse'
-    
+      $ref: ./schemas/auth.yaml#/SignupResponse
     # User schemas
     GetUserResponse:
-      $ref: './schemas/user.yaml#/GetUserResponse'
-    
+      $ref: ./schemas/user.yaml#/GetUserResponse
     # Vault schemas
     VaultLite:
-      $ref: './schemas/vault.yaml#/VaultLite'
+      $ref: ./schemas/vault.yaml#/VaultLite
     Vault:
-      $ref: './schemas/vault.yaml#/Vault'
+      $ref: ./schemas/vault.yaml#/Vault
     CreateVaultRequest:
-      $ref: './schemas/vault.yaml#/CreateVaultRequest'
+      $ref: ./schemas/vault.yaml#/CreateVaultRequest
     UpdateVaultRequest:
-      $ref: './schemas/vault.yaml#/UpdateVaultRequest'
-    
+      $ref: ./schemas/vault.yaml#/UpdateVaultRequest
     # Audit log schemas
     AuditLogsResponse:
-      $ref: './schemas/audit.yaml#/AuditLogsResponse'
+      $ref: ./schemas/audit.yaml#/AuditLogsResponse
     AuditLog:
-      $ref: './schemas/audit.yaml#/AuditLog'
-    
+      $ref: ./schemas/audit.yaml#/AuditLog
     # API Key schemas
     APIKeysResponse:
-      $ref: './schemas/apikey.yaml#/APIKeysResponse'
-    APIKey:
-      $ref: './schemas/apikey.yaml#/APIKey'
+      $ref: ./schemas/apikey.yaml#/APIKeysResponse
+    VaultAPIKey:
+      $ref: ./schemas/apikey.yaml#/VaultAPIKey
     CreateAPIKeyRequest:
-      $ref: './schemas/apikey.yaml#/CreateAPIKeyRequest'
+      $ref: ./schemas/apikey.yaml#/CreateAPIKeyRequest
     CreateAPIKeyResponse:
-      $ref: './schemas/apikey.yaml#/CreateAPIKeyResponse'
+      $ref: ./schemas/apikey.yaml#/CreateAPIKeyResponse
     UpdateAPIKeyRequest:
-      $ref: './schemas/apikey.yaml#/UpdateAPIKeyRequest'
+      $ref: ./schemas/apikey.yaml#/UpdateAPIKeyRequest

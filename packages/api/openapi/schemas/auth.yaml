@@ -9,7 +9,6 @@ LoginRequest:
       format: email
     password:
       type: string
-
 LoginResponse:
   type: object
   required:
@@ -17,7 +16,6 @@ LoginResponse:
   properties:
     token:
       type: string
-
 SignupRequest:
   type: object
   required:
@@ -32,7 +30,6 @@ SignupRequest:
       type: string
     name:
       type: string
-
 SignupResponse:
   type: object
   required:
