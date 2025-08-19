@@ -11,15 +11,14 @@ login:
       content:
         application/json:
           schema:
-            $ref: "../schemas/auth.yaml#/LoginRequest"
+            $ref: ../schemas/auth.yaml#/LoginRequest
     responses:
-      '200':
+      "200":
         description: Login successfully
         content:
           application/json:
             schema:
-              $ref: '../schemas/auth.yaml#/LoginResponse'
-
+              $ref: ../schemas/auth.yaml#/LoginResponse
 signup:
   post:
     description: Sign up a new user
@@ -31,15 +30,14 @@ signup:
       content:
         application/json:
           schema:
-            $ref: "../schemas/auth.yaml#/SignupRequest"
+            $ref: ../schemas/auth.yaml#/SignupRequest
     responses:
-      '200':
+      "200":
         description: Sign up successfully
         content:
           application/json:
             schema:
-              $ref: '../schemas/auth.yaml#/SignupResponse'
-
+              $ref: ../schemas/auth.yaml#/SignupResponse
 logout:
   get:
     description: Logout
@@ -47,5 +45,5 @@ logout:
       - Auth
     operationId: logout
     responses:
-      '200':
+      "200":
         description: OK

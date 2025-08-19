@@ -28,7 +28,7 @@ func auditAPIKeyOperation(c *fiber.Ctx, action model.ActionType, userID uint, ap
 }
 
 // convertToApiAPIKey converts a model.APIKey to an api.APIKey
-func convertToApiAPIKey(apiKey *model.APIKey) (*APIKey, error) {
+func convertToApiAPIKey(apiKey *model.APIKey) (*VaultAPIKey, error) {
 	// Get accessible vaults for this API key
 	vaults, err := apiKey.GetAccessibleVaults()
 	if err != nil {
@@ -52,7 +52,7 @@ func convertToApiAPIKey(apiKey *model.APIKey) (*APIKey, error) {
 
 	// #nosec G115
 	id := int64(apiKey.ID)
-	return &APIKey{
+	return &VaultAPIKey{
 		Id:         id,
 		Name:       apiKey.Name,
 		Vaults:     &apiVaults,
@@ -98,7 +98,7 @@ func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
 	}
 
 	// Convert to API format - initialize with empty slice to ensure [] in JSON
-	apiKeyList := make([]APIKey, 0)
+	apiKeyList := make([]VaultAPIKey, 0)
 	for _, apiKey := range apiKeys {
 		apiAPIKey, err := convertToApiAPIKey(&apiKey)
 		if err != nil {

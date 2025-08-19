@@ -19,7 +19,6 @@ VaultLite:
     updatedAt:
       type: string
       format: date-time
-
 Vault:
   type: object
   required:
@@ -52,7 +51,6 @@ Vault:
     updatedAt:
       type: string
       format: date-time
-
 CreateVaultRequest:
   type: object
   required:
@@ -76,7 +74,6 @@ CreateVaultRequest:
       type: string
       description: Category/type of vault
       maxLength: 100
-
 UpdateVaultRequest:
   type: object
   properties:

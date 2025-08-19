@@ -32,36 +32,9 @@ const (
 	UpdateVault  AuditLogAction = "update_vault"
 )
 
-// APIKey defines model for APIKey.
-type APIKey struct {
-	// CreatedAt When the key was created
-	CreatedAt time.Time `json:"createdAt"`
-
-	// ExpiresAt Optional expiration date
-	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
-
-	// Id Unique API key ID
-	Id int64 `json:"id"`
-
-	// IsActive Whether the key is currently active
-	IsActive bool `json:"isActive"`
-
-	// LastUsedAt When the key was last used
-	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
-
-	// Name Human-readable name for the API key
-	Name string `json:"name"`
-
-	// UpdatedAt When the key was last updated
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-
-	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
-	Vaults *[]VaultLite `json:"vaults,omitempty"`
-}
-
 // APIKeysResponse defines model for APIKeysResponse.
 type APIKeysResponse struct {
-	ApiKeys []APIKey `json:"apiKeys"`
+	ApiKeys []VaultAPIKey `json:"apiKeys"`
 
 	// PageIndex Current page index (starting from 1)
 	PageIndex int `json:"pageIndex"`
@@ -77,7 +50,7 @@ type APIKeysResponse struct {
 type AuditLog struct {
 	// Action Type of action performed
 	Action AuditLogAction `json:"action"`
-	ApiKey *APIKey        `json:"apiKey,omitempty"`
+	ApiKey *VaultAPIKey   `json:"apiKey,omitempty"`
 
 	// CreatedAt When the action occurred
 	CreatedAt time.Time `json:"createdAt"`
@@ -121,7 +94,7 @@ type CreateAPIKeyRequest struct {
 
 // CreateAPIKeyResponse defines model for CreateAPIKeyResponse.
 type CreateAPIKeyResponse struct {
-	ApiKey APIKey `json:"apiKey"`
+	ApiKey VaultAPIKey `json:"apiKey"`
 
 	// Key The generated API key (only shown once)
 	Key string `json:"key"`
@@ -229,6 +202,33 @@ type Vault struct {
 
 	// Value Encrypted value
 	Value string `json:"value"`
+}
+
+// VaultAPIKey defines model for VaultAPIKey.
+type VaultAPIKey struct {
+	// CreatedAt When the key was created
+	CreatedAt time.Time `json:"createdAt"`
+
+	// ExpiresAt Optional expiration date
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+
+	// Id Unique API key ID
+	Id int64 `json:"id"`
+
+	// IsActive Whether the key is currently active
+	IsActive bool `json:"isActive"`
+
+	// LastUsedAt When the key was last used
+	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
+
+	// Name Human-readable name for the API key
+	Name string `json:"name"`
+
+	// UpdatedAt When the key was last updated
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+
+	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
+	Vaults *[]VaultLite `json:"vaults,omitempty"`
 }
 
 // VaultLite defines model for VaultLite.
@@ -762,7 +762,7 @@ type UpdateAPIKeyResponseObject interface {
 	VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error
 }
 
-type UpdateAPIKey200JSONResponse APIKey
+type UpdateAPIKey200JSONResponse VaultAPIKey
 
 func (response UpdateAPIKey200JSONResponse) VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")

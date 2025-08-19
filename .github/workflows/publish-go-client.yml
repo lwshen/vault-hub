@@ -33,6 +33,9 @@ jobs:
           # Prepare generated client
           cd go-client
           go mod tidy
+          go build ./...
+
+          # Create repository if it doesn't exist and push
           cd ..
 
           # Configure git identity

@@ -9,7 +9,7 @@ APIKeysResponse:
     apiKeys:
       type: array
       items:
-        $ref: '#/APIKey'
+        $ref: '#/VaultAPIKey'
     totalCount:
       type: integer
       description: Total number of API keys
@@ -19,8 +19,7 @@ APIKeysResponse:
     pageIndex:
       type: integer
       description: Current page index (starting from 1)
-
-APIKey:
+VaultAPIKey:
   type: object
   required:
     - id
@@ -38,7 +37,7 @@ APIKey:
     vaults:
       type: array
       items:
-        $ref: './vault.yaml#/VaultLite'
+        $ref: ./vault.yaml#/VaultLite
       description: Array of vaults this key can access (null/empty = all user's vaults)
     expiresAt:
       type: string
@@ -59,7 +58,6 @@ APIKey:
       type: string
       format: date-time
       description: When the key was last updated
-
 CreateAPIKeyRequest:
   type: object
   required:
@@ -79,7 +77,6 @@ CreateAPIKeyRequest:
       type: string
       format: date-time
       description: Optional expiration date
-
 CreateAPIKeyResponse:
   type: object
   required:
@@ -87,11 +84,10 @@ CreateAPIKeyResponse:
     - key
   properties:
     apiKey:
-      $ref: '#/APIKey'
+      $ref: '#/VaultAPIKey'
     key:
       type: string
       description: The generated API key (only shown once)
-
 UpdateAPIKeyRequest:
   type: object
   properties:
