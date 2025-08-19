@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   build-and-publish:
@@ -30,6 +32,10 @@ jobs:
           openapi-file: packages/api/openapi/api.yaml
           generator-tag: v7.13.0
           command-args: --additional-properties=packageVersion=${{ env.TAG }} --additional-properties=moduleName=github.com/lwshen/vault-hub-go-client --git-user-id lwshen --git-repo-id vault-hub-go-client
+
+      - name: Copy LICENSE file
+        run: |
+          cp LICENSE go-client/LICENSE
 
       - name: Initialize Go module and publish
         run: |
