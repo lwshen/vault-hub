@@ -1,10 +1,9 @@
 name: Mirroring
-
 on:
   workflow_dispatch:
   push:
-    branches: [main]
-
+    branches:
+      - main
 jobs:
   to_gitlab:
     runs-on: ubuntu-latest
