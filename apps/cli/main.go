@@ -19,7 +19,7 @@ var (
 )
 
 // debugLog prints debug messages to stderr when debug mode is enabled
-func debugLog(format string, args ...interface{}) {
+func debugLog(format string, args ...any) {
 	if debug {
 		fmt.Fprintf(os.Stderr, "[DEBUG] "+format+"\n", args...)
 	}
@@ -194,6 +194,7 @@ Examples:
 
 		ctx := context.Background()
 		var vault *openapi.Vault
+		var err error
 		if name != "" {
 			debugLog("Making API request to get vault by name: %s", name)
 			vault, _, err = client.CliAPI.GetVaultByNameAPIKey(ctx, name).Execute()
