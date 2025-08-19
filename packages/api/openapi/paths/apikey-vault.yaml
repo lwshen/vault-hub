@@ -4,7 +4,7 @@ apiKeyVaults:
   get:
     description: Get all vaults accessible by API key
     tags:
-      - API Key
+      - Cli
     operationId: getVaultsByAPIKey
     security:
       - ApiKeyAuth: []
@@ -21,7 +21,7 @@ apiKeyVaultById:
   get:
     description: Get a specific vault by Unique ID using API key
     tags:
-      - API Key
+      - Cli
     operationId: getVaultByAPIKey
     security:
       - ApiKeyAuth: []
@@ -43,7 +43,7 @@ apiKeyVaultByName:
   get:
     description: Get a specific vault by name using API key
     tags:
-      - API Key
+      - Cli
     operationId: getVaultByNameAPIKey
     security:
       - ApiKeyAuth: []
