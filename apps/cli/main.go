@@ -48,6 +48,10 @@ func init() {
 	rootCmd.AddCommand(getCmd)
 
 	listCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
+
+	getCmd.Flags().StringP("name", "n", "", "Vault name")
+	getCmd.Flags().StringP("id", "i", "", "Vault Unique ID")
+	getCmd.Flags().StringP("output", "o", "", "Output to file instead of stdout")
 }
 
 func main() {
@@ -112,15 +116,53 @@ var getCmd = &cobra.Command{
 You can specify the vault by either its name or unique ID.
 
 Examples:
-  vault-hub get my-api-keys
-  vault-hub get abc123-def456-ghi789`,
-	Args: cobra.ExactArgs(1),
+  vault-hub get --name my-api-keys
+  vault-hub get --id abc123-def456-ghi789
+  vault-hub get --name my-api-keys --output ./secrets.txt`,
 	Run: func(cmd *cobra.Command, args []string) {
-		vaultIdentifier := args[0]
-		fmt.Printf("Getting vault: %s\n", vaultIdentifier)
-		// TODO: Implement vault retrieval functionality
-		// This should call the /api/cli/vault/{uniqueId} endpoint
-		// Need to determine if the identifier is a name or unique ID
-		// and handle accordingly
+		name, err := cmd.Flags().GetString("name")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		id, err := cmd.Flags().GetString("id")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		outputFile, err := cmd.Flags().GetString("output")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if name == "" && id == "" {
+			fmt.Fprintf(os.Stderr, "Error: either name or id must be provided\n")
+			os.Exit(1)
+		}
+
+		ctx := context.Background()
+		var vault *openapi.Vault
+		if name != "" {
+			vault, _, err = client.CliAPI.GetVaultByNameAPIKey(ctx, name).Execute()
+		} else {
+			vault, _, err = client.CliAPI.GetVaultByAPIKey(ctx, id).Execute()
+		}
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if outputFile != "" {
+			err = os.WriteFile(outputFile, []byte(vault.Value), 0600)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing to file: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Printf("Vault value written to %s\n", outputFile)
+		} else {
+			fmt.Println(vault.Value)
+		}
 	},
 }
