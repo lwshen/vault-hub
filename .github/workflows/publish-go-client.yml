@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  pull_request:
 
 jobs:
   build-and-publish:
@@ -31,6 +32,9 @@ jobs:
           generator-tag: v7.13.0
           command-args: --additional-properties=packageVersion=${{ env.TAG }} --additional-properties=moduleName=github.com/lwshen/vault-hub-go-client --git-user-id lwshen --git-repo-id vault-hub-go-client
 
+      - name: Ensure LICENSE is included
+        run: cp LICENSE go-client/LICENSE
+
       - name: Initialize Go module and publish
         run: |
           cd go-client
@@ -45,7 +49,11 @@ jobs:
           git commit -m "Generated Go client library ${{ env.TAG }}"
           git tag ${{ env.TAG }}
           
-          # Push to separate repository (requires PUBLISH_TOKEN with repo permissions)
-          git remote add origin https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git
-          git push -f origin main
-          git push origin ${{ env.TAG }}
+          # Push to separate repository only outside of pull_request events
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            git remote add origin https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git
+            git push -f origin main
+            git push origin ${{ env.TAG }}
+          else
+            echo "Skipping push during pull_request event"
+          fi
