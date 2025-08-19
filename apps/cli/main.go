@@ -17,6 +17,13 @@ var (
 	client  *openapi.APIClient
 )
 
+// debugLog prints debug messages to stderr when debug mode is enabled
+func debugLog(format string, args ...interface{}) {
+	if debug {
+		fmt.Fprintf(os.Stderr, "[DEBUG] "+format+"\n", args...)
+	}
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "vault-hub",
 	Short: "VaultHub CLI - Secure environment variable and API key management",
@@ -25,6 +32,10 @@ environment variables and API keys stored in VaultHub.
 
 This CLI allows you to list and retrieve vaults from your VaultHub instance.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		debugLog("Initializing VaultHub CLI")
+		debugLog("Base URL: %s", baseURL)
+		debugLog("Debug mode: %v", debug)
+		
 		cfg := openapi.NewConfiguration()
 		cfg.Debug = debug
 		cfg.Servers = openapi.ServerConfigurations{
@@ -32,8 +43,10 @@ This CLI allows you to list and retrieve vaults from your VaultHub instance.`,
 				URL: baseURL,
 			},
 		}
+		debugLog("Creating API client with configuration")
 		client = openapi.NewAPIClient(cfg)
 		client.GetConfig().DefaultHeader["Authorization"] = "Bearer " + apiKey
+		debugLog("API client initialized successfully")
 	},
 }
 
@@ -69,29 +82,41 @@ var listCmd = &cobra.Command{
 This command will display basic information about each vault including
 name, unique ID, and description.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		debugLog("Executing list command")
+		
 		ctx := context.Background()
+		debugLog("Making API request to get vaults by API key")
 		vaults, _, err := client.CliAPI.GetVaultsByAPIKey(ctx).Execute()
 		if err != nil {
+			debugLog("API request failed: %v", err)
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
+		debugLog("API request successful, received %d vault(s)", len(vaults))
 
 		jsonOutput, _ := cmd.Flags().GetBool("json")
+		debugLog("JSON output mode: %v", jsonOutput)
+		
 		if jsonOutput {
+			debugLog("Marshaling vaults to JSON")
 			output, err := json.MarshalIndent(vaults, "", "  ")
 			if err != nil {
+				debugLog("JSON marshaling failed: %v", err)
 				fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
 				os.Exit(1)
 			}
+			debugLog("JSON marshaling successful")
 			fmt.Println(string(output))
 			return
 		}
 
 		if len(vaults) == 0 {
+			debugLog("No vaults found, displaying empty message")
 			fmt.Println("No vaults found.")
 			return
 		}
 
+		debugLog("Displaying %d vault(s) in formatted output", len(vaults))
 		fmt.Printf("Found %d vault(s):\n\n", len(vaults))
 		for i, vault := range vaults {
 			fmt.Printf("  %d. 📦 %s\n", i+1, vault.GetName())
@@ -106,6 +131,7 @@ name, unique ID, and description.`,
 				fmt.Println()
 			}
 		}
+		debugLog("List command completed successfully")
 	},
 }
 
@@ -120,23 +146,31 @@ Examples:
   vault-hub get --id abc123-def456-ghi789
   vault-hub get --name my-api-keys --output ./secrets.txt`,
 	Run: func(cmd *cobra.Command, args []string) {
+		debugLog("Executing get command")
+		
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
+			debugLog("Failed to get name flag: %v", err)
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
 		id, err := cmd.Flags().GetString("id")
 		if err != nil {
+			debugLog("Failed to get id flag: %v", err)
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
 		outputFile, err := cmd.Flags().GetString("output")
 		if err != nil {
+			debugLog("Failed to get output flag: %v", err)
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
 
+		debugLog("Parameters - name: '%s', id: '%s', output: '%s'", name, id, outputFile)
+
 		if name == "" && id == "" {
+			debugLog("Validation failed: neither name nor id provided")
 			fmt.Fprintf(os.Stderr, "Error: either name or id must be provided\n")
 			os.Exit(1)
 		}
@@ -144,25 +178,34 @@ Examples:
 		ctx := context.Background()
 		var vault *openapi.Vault
 		if name != "" {
+			debugLog("Making API request to get vault by name: %s", name)
 			vault, _, err = client.CliAPI.GetVaultByNameAPIKey(ctx, name).Execute()
 		} else {
+			debugLog("Making API request to get vault by ID: %s", id)
 			vault, _, err = client.CliAPI.GetVaultByAPIKey(ctx, id).Execute()
 		}
 
 		if err != nil {
+			debugLog("API request failed: %v", err)
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
+		debugLog("API request successful, vault retrieved")
 
 		if outputFile != "" {
+			debugLog("Writing vault value to file: %s", outputFile)
 			err = os.WriteFile(outputFile, []byte(vault.Value), 0600)
 			if err != nil {
+				debugLog("File write failed: %v", err)
 				fmt.Fprintf(os.Stderr, "Error writing to file: %v\n", err)
 				os.Exit(1)
 			}
+			debugLog("File write successful")
 			fmt.Printf("Vault value written to %s\n", outputFile)
 		} else {
+			debugLog("Outputting vault value to stdout")
 			fmt.Println(vault.Value)
 		}
+		debugLog("Get command completed successfully")
 	},
 }
