@@ -30,22 +30,40 @@ jobs:
         run: cp LICENSE go-client/LICENSE
       - name: Initialize Go module and publish
         run: |
+          # Prepare generated client
           cd go-client
           go mod tidy
+          cd ..
 
-          # Create repository if it doesn't exist and push
+          # Configure git identity
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          git init -b main
-          git add .
-          git commit -m "Generated Go client library ${{ env.TAG }}"
+          # Clone existing repository to preserve history
+          git clone https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git publish-repo
+          cd publish-repo
+
+          # Ensure we are on main (create if missing)
+          git checkout -B main || git checkout -b main
+
+          # Replace repository contents (except .git) with newly generated client
+          find . -mindepth 1 -maxdepth 1 ! -name ".git" -exec rm -rf {} +
+          cp -R ../go-client/. .
+
+          # Commit changes only if there are modifications
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Generated Go client library ${{ env.TAG }}"
+          fi
+
+          # Tag the release
           git tag ${{ env.TAG }}
 
           # Push to separate repository only outside of pull_request events
           if [ "${{ github.event_name }}" != "pull_request" ]; then
-            git remote add origin https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git
-            git push -f origin main
+            git push origin main
             git push origin ${{ env.TAG }}
           else
             echo "Skipping push during pull_request event"
