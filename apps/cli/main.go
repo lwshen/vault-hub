@@ -4,7 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	openapi "github.com/lwshen/vault-hub-go-client"
 	"github.com/spf13/cobra"
+)
+
+var (
+	apiKey  string
+	baseURL string
+	debug   bool
+	client  *openapi.APIClient
 )
 
 var rootCmd = &cobra.Command{
@@ -14,6 +22,26 @@ var rootCmd = &cobra.Command{
 environment variables and API keys stored in VaultHub.
 
 This CLI allows you to list and retrieve vaults from your VaultHub instance.`,
+}
+
+func init() {
+	// Add global flags
+	rootCmd.PersistentFlags().StringVar(&apiKey, "api-key", "", "API key for authentication")
+	rootCmd.PersistentFlags().StringVar(&baseURL, "base-url", "", "Base URL of VaultHub server")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Enable debug mode")
+
+	cfg := openapi.NewConfiguration()
+	cfg.Debug = debug
+	cfg.Servers = openapi.ServerConfigurations{
+		{
+			URL: baseURL,
+		},
+	}
+	client = openapi.NewAPIClient(cfg)
+
+	// Add subcommands to root
+	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(getCmd)
 }
 
 func main() {
@@ -55,14 +83,4 @@ Examples:
 		// Need to determine if the identifier is a name or unique ID
 		// and handle accordingly
 	},
-}
-
-func init() {
-	// Add global flags here if needed
-	// rootCmd.PersistentFlags().StringVar(&apiKey, "api-key", "", "API key for authentication")
-	// rootCmd.PersistentFlags().StringVar(&baseURL, "base-url", "", "Base URL of VaultHub server")
-
-	// Add subcommands to root
-	rootCmd.AddCommand(listCmd)
-	rootCmd.AddCommand(getCmd)
 }
