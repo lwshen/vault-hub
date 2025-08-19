@@ -33,20 +33,45 @@ jobs:
           cd go-client
           go mod tidy
 
-          # Create repository if it doesn't exist and push
+          # Configure git
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          git init -b main
-          git add .
-          git commit -m "Generated Go client library ${{ env.TAG }}"
-          git tag ${{ env.TAG }}
-
           # Push to separate repository only outside of pull_request events
           if [ "${{ github.event_name }}" != "pull_request" ]; then
-            git remote add origin https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git
-            git push -f origin main
-            git push origin ${{ env.TAG }}
+            # Try to clone existing repository to preserve history
+            REPO_URL="https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git"
+            
+            if git ls-remote "$REPO_URL" &>/dev/null; then
+              echo "Repository exists, cloning to preserve history..."
+              git clone "$REPO_URL" temp_repo
+              cd temp_repo
+              
+              # Remove all files except .git
+              find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+              
+              # Copy new generated files
+              cp -r ../. .
+              rm -rf temp_repo
+              
+              # Add changes and commit
+              git add .
+              git commit -m "Generated Go client library ${{ env.TAG }}" || echo "No changes to commit"
+              git tag ${{ env.TAG }}
+              
+              # Push changes (preserving history)
+              git push origin main
+              git push origin ${{ env.TAG }}
+            else
+              echo "Repository doesn't exist, creating new one..."
+              git init -b main
+              git add .
+              git commit -m "Generated Go client library ${{ env.TAG }}"
+              git tag ${{ env.TAG }}
+              git remote add origin "$REPO_URL"
+              git push origin main
+              git push origin ${{ env.TAG }}
+            fi
           else
             echo "Skipping push during pull_request event"
           fi
