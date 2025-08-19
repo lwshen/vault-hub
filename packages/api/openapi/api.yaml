@@ -51,6 +51,13 @@ components:
       scheme: bearer
       
   schemas:
+    EnableClientEncryption:
+      type: string
+      description: Enable additional client-side encryption using key derived from API key + vault unique ID
+      enum:
+        - true
+        - false
+      example: true
     # Health schemas
     HealthCheckResponse:
       $ref: './schemas/health.yaml#/HealthCheckResponse'
@@ -88,8 +95,8 @@ components:
     # API Key schemas
     APIKeysResponse:
       $ref: './schemas/apikey.yaml#/APIKeysResponse'
-    APIKey:
-      $ref: './schemas/apikey.yaml#/APIKey'
+    VaultAPIKey:
+      $ref: './schemas/apikey.yaml#/VaultAPIKey'
     CreateAPIKeyRequest:
       $ref: './schemas/apikey.yaml#/CreateAPIKeyRequest'
     CreateAPIKeyResponse:

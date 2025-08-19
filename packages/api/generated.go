@@ -6,7 +6,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -33,48 +32,9 @@ const (
 	UpdateVault  AuditLogAction = "update_vault"
 )
 
-// Defines values for GetVaultByNameAPIKeyParamsXEnableClientEncryption.
-const (
-	GetVaultByNameAPIKeyParamsXEnableClientEncryptionFalse GetVaultByNameAPIKeyParamsXEnableClientEncryption = "false"
-	GetVaultByNameAPIKeyParamsXEnableClientEncryptionTrue  GetVaultByNameAPIKeyParamsXEnableClientEncryption = "true"
-)
-
-// Defines values for GetVaultByAPIKeyParamsXEnableClientEncryption.
-const (
-	GetVaultByAPIKeyParamsXEnableClientEncryptionFalse GetVaultByAPIKeyParamsXEnableClientEncryption = "false"
-	GetVaultByAPIKeyParamsXEnableClientEncryptionTrue  GetVaultByAPIKeyParamsXEnableClientEncryption = "true"
-)
-
-// APIKey defines model for APIKey.
-type APIKey struct {
-	// CreatedAt When the key was created
-	CreatedAt time.Time `json:"createdAt"`
-
-	// ExpiresAt Optional expiration date
-	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
-
-	// Id Unique API key ID
-	Id int64 `json:"id"`
-
-	// IsActive Whether the key is currently active
-	IsActive bool `json:"isActive"`
-
-	// LastUsedAt When the key was last used
-	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
-
-	// Name Human-readable name for the API key
-	Name string `json:"name"`
-
-	// UpdatedAt When the key was last updated
-	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-
-	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
-	Vaults *[]VaultLite `json:"vaults,omitempty"`
-}
-
 // APIKeysResponse defines model for APIKeysResponse.
 type APIKeysResponse struct {
-	ApiKeys []APIKey `json:"apiKeys"`
+	ApiKeys []VaultAPIKey `json:"apiKeys"`
 
 	// PageIndex Current page index (starting from 1)
 	PageIndex int `json:"pageIndex"`
@@ -90,7 +50,7 @@ type APIKeysResponse struct {
 type AuditLog struct {
 	// Action Type of action performed
 	Action AuditLogAction `json:"action"`
-	ApiKey *APIKey        `json:"apiKey,omitempty"`
+	ApiKey *VaultAPIKey   `json:"apiKey,omitempty"`
 
 	// CreatedAt When the action occurred
 	CreatedAt time.Time `json:"createdAt"`
@@ -134,7 +94,7 @@ type CreateAPIKeyRequest struct {
 
 // CreateAPIKeyResponse defines model for CreateAPIKeyResponse.
 type CreateAPIKeyResponse struct {
-	ApiKey APIKey `json:"apiKey"`
+	ApiKey VaultAPIKey `json:"apiKey"`
 
 	// Key The generated API key (only shown once)
 	Key string `json:"key"`
@@ -244,6 +204,33 @@ type Vault struct {
 	Value string `json:"value"`
 }
 
+// VaultAPIKey defines model for VaultAPIKey.
+type VaultAPIKey struct {
+	// CreatedAt When the key was created
+	CreatedAt time.Time `json:"createdAt"`
+
+	// ExpiresAt Optional expiration date
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+
+	// Id Unique API key ID
+	Id int64 `json:"id"`
+
+	// IsActive Whether the key is currently active
+	IsActive bool `json:"isActive"`
+
+	// LastUsedAt When the key was last used
+	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
+
+	// Name Human-readable name for the API key
+	Name string `json:"name"`
+
+	// UpdatedAt When the key was last updated
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+
+	// Vaults Array of vaults this key can access (null/empty = all user's vaults)
+	Vaults *[]VaultLite `json:"vaults,omitempty"`
+}
+
 // VaultLite defines model for VaultLite.
 type VaultLite struct {
 	// Category Category/type of vault
@@ -286,24 +273,6 @@ type GetAuditLogsParams struct {
 	// PageIndex Page index, starting from 0 (default 0)
 	PageIndex int `form:"pageIndex" json:"pageIndex"`
 }
-
-// GetVaultByNameAPIKeyParams defines parameters for GetVaultByNameAPIKey.
-type GetVaultByNameAPIKeyParams struct {
-	// XEnableClientEncryption Enable additional client-side encryption using key derived from API key + vault unique ID
-	XEnableClientEncryption *GetVaultByNameAPIKeyParamsXEnableClientEncryption `json:"X-Enable-Client-Encryption,omitempty"`
-}
-
-// GetVaultByNameAPIKeyParamsXEnableClientEncryption defines parameters for GetVaultByNameAPIKey.
-type GetVaultByNameAPIKeyParamsXEnableClientEncryption string
-
-// GetVaultByAPIKeyParams defines parameters for GetVaultByAPIKey.
-type GetVaultByAPIKeyParams struct {
-	// XEnableClientEncryption Enable additional client-side encryption using key derived from API key + vault unique ID
-	XEnableClientEncryption *GetVaultByAPIKeyParamsXEnableClientEncryption `json:"X-Enable-Client-Encryption,omitempty"`
-}
-
-// GetVaultByAPIKeyParamsXEnableClientEncryption defines parameters for GetVaultByAPIKey.
-type GetVaultByAPIKeyParamsXEnableClientEncryption string
 
 // CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
 type CreateAPIKeyJSONRequestBody = CreateAPIKeyRequest
@@ -351,10 +320,10 @@ type ServerInterface interface {
 	Signup(c *fiber.Ctx) error
 
 	// (GET /api/cli/vault/name/{name})
-	GetVaultByNameAPIKey(c *fiber.Ctx, name string, params GetVaultByNameAPIKeyParams) error
+	GetVaultByNameAPIKey(c *fiber.Ctx, name string) error
 
 	// (GET /api/cli/vault/{uniqueId})
-	GetVaultByAPIKey(c *fiber.Ctx, uniqueId string, params GetVaultByAPIKeyParams) error
+	GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error
 
 	// (GET /api/cli/vaults)
 	GetVaultsByAPIKey(c *fiber.Ctx) error
@@ -574,25 +543,7 @@ func (siw *ServerInterfaceWrapper) GetVaultByNameAPIKey(c *fiber.Ctx) error {
 
 	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetVaultByNameAPIKeyParams
-
-	headers := c.GetReqHeaders()
-
-	// ------------- Optional header parameter "X-Enable-Client-Encryption" -------------
-	if value, found := headers[http.CanonicalHeaderKey("X-Enable-Client-Encryption")]; found {
-		var XEnableClientEncryption GetVaultByNameAPIKeyParamsXEnableClientEncryption
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-Enable-Client-Encryption", value, &XEnableClientEncryption, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter X-Enable-Client-Encryption: %w", err).Error())
-		}
-
-		params.XEnableClientEncryption = &XEnableClientEncryption
-
-	}
-
-	return siw.Handler.GetVaultByNameAPIKey(c, name, params)
+	return siw.Handler.GetVaultByNameAPIKey(c, name)
 }
 
 // GetVaultByAPIKey operation middleware
@@ -610,25 +561,7 @@ func (siw *ServerInterfaceWrapper) GetVaultByAPIKey(c *fiber.Ctx) error {
 
 	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetVaultByAPIKeyParams
-
-	headers := c.GetReqHeaders()
-
-	// ------------- Optional header parameter "X-Enable-Client-Encryption" -------------
-	if value, found := headers[http.CanonicalHeaderKey("X-Enable-Client-Encryption")]; found {
-		var XEnableClientEncryption GetVaultByAPIKeyParamsXEnableClientEncryption
-
-		err = runtime.BindStyledParameterWithOptions("simple", "X-Enable-Client-Encryption", value, &XEnableClientEncryption, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
-		if err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter X-Enable-Client-Encryption: %w", err).Error())
-		}
-
-		params.XEnableClientEncryption = &XEnableClientEncryption
-
-	}
-
-	return siw.Handler.GetVaultByAPIKey(c, uniqueId, params)
+	return siw.Handler.GetVaultByAPIKey(c, uniqueId)
 }
 
 // GetVaultsByAPIKey operation middleware
@@ -829,7 +762,7 @@ type UpdateAPIKeyResponseObject interface {
 	VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error
 }
 
-type UpdateAPIKey200JSONResponse APIKey
+type UpdateAPIKey200JSONResponse VaultAPIKey
 
 func (response UpdateAPIKey200JSONResponse) VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -905,8 +838,7 @@ func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error 
 }
 
 type GetVaultByNameAPIKeyRequestObject struct {
-	Name   string `json:"name"`
-	Params GetVaultByNameAPIKeyParams
+	Name string `json:"name"`
 }
 
 type GetVaultByNameAPIKeyResponseObject interface {
@@ -924,7 +856,6 @@ func (response GetVaultByNameAPIKey200JSONResponse) VisitGetVaultByNameAPIKeyRes
 
 type GetVaultByAPIKeyRequestObject struct {
 	UniqueId string `json:"uniqueId"`
-	Params   GetVaultByAPIKeyParams
 }
 
 type GetVaultByAPIKeyResponseObject interface {
@@ -1376,11 +1307,10 @@ func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
 }
 
 // GetVaultByNameAPIKey operation middleware
-func (sh *strictHandler) GetVaultByNameAPIKey(ctx *fiber.Ctx, name string, params GetVaultByNameAPIKeyParams) error {
+func (sh *strictHandler) GetVaultByNameAPIKey(ctx *fiber.Ctx, name string) error {
 	var request GetVaultByNameAPIKeyRequestObject
 
 	request.Name = name
-	request.Params = params
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.GetVaultByNameAPIKey(ctx.UserContext(), request.(GetVaultByNameAPIKeyRequestObject))
@@ -1404,11 +1334,10 @@ func (sh *strictHandler) GetVaultByNameAPIKey(ctx *fiber.Ctx, name string, param
 }
 
 // GetVaultByAPIKey operation middleware
-func (sh *strictHandler) GetVaultByAPIKey(ctx *fiber.Ctx, uniqueId string, params GetVaultByAPIKeyParams) error {
+func (sh *strictHandler) GetVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) error {
 	var request GetVaultByAPIKeyRequestObject
 
 	request.UniqueId = uniqueId
-	request.Params = params
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.GetVaultByAPIKey(ctx.UserContext(), request.(GetVaultByAPIKeyRequestObject))
