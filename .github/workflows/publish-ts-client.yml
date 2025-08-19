@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  pull_request:
 
 jobs:
   build-and-publish-github:
@@ -35,12 +36,17 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: |
-          cd typescript-fetch-client
-          echo ${{ env.TAG }}
-          cat package.json
-          npm install
-          npm run build
-          npm publish
+          # Push to separate repository only outside of pull_request events
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            cd typescript-fetch-client
+            echo ${{ env.TAG }}
+            cat package.json
+            npm install
+            npm run build
+            npm publish
+          else
+            echo "Skipping push during pull_request event"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -75,7 +81,19 @@ jobs:
 
       - name: Publish to npm registry
         run: |
-          cd typescript-fetch-client
-          npm publish --access public
+          # Push to separate repository only outside of pull_request events
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            cd typescript-fetch-client
+            npm publish --access public
+          else
+            echo "Skipping push during pull_request event"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Upload OpenAPI client artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-axios-client
+          path: typescript-axios-client
+          if-no-files-found: error
