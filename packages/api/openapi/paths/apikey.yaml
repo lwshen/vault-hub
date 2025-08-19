@@ -25,12 +25,12 @@ apiKeys:
           minimum: 1
           default: 1
     responses:
-      '200':
+      "200":
         description: List of API keys
         content:
           application/json:
             schema:
-              $ref: '../schemas/apikey.yaml#/APIKeysResponse'
+              $ref: ../schemas/apikey.yaml#/APIKeysResponse
   post:
     description: Create a new API key
     tags:
@@ -41,15 +41,14 @@ apiKeys:
       content:
         application/json:
           schema:
-            $ref: "../schemas/apikey.yaml#/CreateAPIKeyRequest"
+            $ref: ../schemas/apikey.yaml#/CreateAPIKeyRequest
     responses:
-      '201':
+      "201":
         description: API key created successfully
         content:
           application/json:
             schema:
-              $ref: '../schemas/apikey.yaml#/CreateAPIKeyResponse'
-
+              $ref: ../schemas/apikey.yaml#/CreateAPIKeyResponse
 apiKeyById:
   patch:
     description: Update an API key (enable/disable or modify properties)
@@ -69,14 +68,14 @@ apiKeyById:
       content:
         application/json:
           schema:
-            $ref: "../schemas/apikey.yaml#/UpdateAPIKeyRequest"
+            $ref: ../schemas/apikey.yaml#/UpdateAPIKeyRequest
     responses:
-      '200':
+      "200":
         description: API key updated successfully
         content:
           application/json:
             schema:
-              $ref: '../schemas/apikey.yaml#/VaultAPIKey'
+              $ref: ../schemas/apikey.yaml#/VaultAPIKey
   delete:
     description: Delete an API key
     tags:
@@ -91,5 +90,5 @@ apiKeyById:
           type: integer
           format: int64
     responses:
-      '204':
+      "204":
         description: API key deleted successfully

@@ -9,15 +9,14 @@ apiKeyVaults:
     security:
       - ApiKeyAuth: []
     responses:
-      '200':
+      "200":
         description: List of vaults accessible by API key
         content:
           application/json:
             schema:
               type: array
               items:
-                $ref: '../schemas/vault.yaml#/VaultLite'
-
+                $ref: ../schemas/vault.yaml#/VaultLite
 apiKeyVaultById:
   get:
     description: Get a specific vault by Unique ID using API key
@@ -34,13 +33,12 @@ apiKeyVaultById:
         schema:
           type: string
     responses:
-      '200':
+      "200":
         description: Vault details
         content:
           application/json:
             schema:
-              $ref: '../schemas/vault.yaml#/Vault'
-
+              $ref: ../schemas/vault.yaml#/Vault
 apiKeyVaultByName:
   get:
     description: Get a specific vault by name using API key
@@ -57,9 +55,9 @@ apiKeyVaultByName:
         schema:
           type: string
     responses:
-      '200':
+      "200":
         description: Vault details
         content:
           application/json:
             schema:
-              $ref: '../schemas/vault.yaml#/Vault'
+              $ref: ../schemas/vault.yaml#/Vault

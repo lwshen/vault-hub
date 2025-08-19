@@ -4,12 +4,12 @@ on:
     types:
       - opened
       - synchronize
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+      # Optional: Only run on specific file changes
+      # paths:
+      #   - "src/**/*.ts"
+      #   - "src/**/*.tsx"
+      #   - "src/**/*.js"
+      #   - "src/**/*.jsx"
 jobs:
   claude-review:
     # Optional: Filter by PR author
@@ -51,7 +51,6 @@ jobs:
             Be constructive and helpful in your feedback.
 # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
 # use_sticky_comment: true
-
 # Optional: Customize review based on file types
 # direct_prompt: |
 #   Review this PR focusing on:

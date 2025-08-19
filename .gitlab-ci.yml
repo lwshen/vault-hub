@@ -1,9 +1,7 @@
 stages:
   - build
-
 variables:
-  BASE_IMAGE: "shenlw/vault-hub-base:latest"
-
+  BASE_IMAGE: shenlw/vault-hub-base:latest
 build:
   stage: build
   image: ${BASE_IMAGE}
@@ -17,84 +15,66 @@ build:
     - mkdir -p .go-cache
     - export GOPATH="$CI_PROJECT_DIR/.go-cache"
     - export GOCACHE="$CI_PROJECT_DIR/.go-cache"
-
     # Install Go dependencies
     - go mod download
     - go mod verify
-
     # Note: The following tools are already installed in the base image, no need to reinstall
     # - golangci-lint
     # - Node.js
     # - pnpm
   script:
     - golangci-lint run
-
     # Install frontend dependencies
     - cd ./apps/web
     - pnpm install
-
     # Check frontend format
     - pnpm typecheck && pnpm lint
-
     # Build frontend
     - pnpm build
     - cd ../..
-
     # Run tests
     - export JWT_SECRET=secret ENCRYPTION_KEY=test-encryption-key-for-ci
     - go test -v ./...
-
     # Build backend
     # Linux builds
     - GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-server-linux-amd64 apps/server/main.go
     - GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-server-linux-arm64 apps/server/main.go
-
     # Windows builds
     - GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-server-windows-amd64.exe apps/server/main.go
-
     # macOS builds
     - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
     - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
-
     # Build CLI
     # Linux builds
     - GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-cli-linux-amd64 apps/cli/main.go
     - GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-cli-linux-arm64 apps/cli/main.go
-
     # Windows builds
     - GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-cli-windows-amd64.exe apps/cli/main.go
-
     # macOS builds
     - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-cli-darwin-amd64 apps/cli/main.go
     - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-cli-darwin-arm64 apps/cli/main.go
-
 build-openapi-typescript-client:
   stage: build
   image: ${BASE_IMAGE}
   script:
     # Set environment variables
     - export TAG=0.$(date +'%Y%m%d.%H%M%S')
-
     # Generate TypeScript Fetch client
     - openapi-generator generate -i packages/api/openapi/api.yaml -g typescript-fetch -o typescript-fetch-client --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${TAG} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
-
     # Build TypeScript Fetch client
     - cd typescript-fetch-client
     - echo $TAG
     - cat package.json
     - npm install
     - npm run build
-
 build-openapi-go-client:
   stage: build
   image: ${BASE_IMAGE}
   script:
     # Set environment variables
     - export TAG=v0.$(date +'%Y%m%d.%H%M%S')
-
     # Generate Go client
     - openapi-generator generate -i packages/api/openapi/api.yaml -g go -o go-client --additional-properties=packageVersion=${TAG} --additional-properties=moduleName=github.com/lwshen/vault-hub-go-client --git-user-id lwshen --git-repo-id vault-hub-go-client
-    
     # Initialize Go module
     - cd go-client
     - go mod tidy
