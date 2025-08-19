@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -61,8 +62,15 @@ This command will display basic information about each vault including
 name, unique ID, and description.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Listing vaults...")
-		// TODO: Implement vault listing functionality
-		// This should call the /api/cli/vaults endpoint
+		ctx := context.Background()
+		vaults, _, err := client.CliAPI.GetVaultsByAPIKey(ctx).Execute()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		for _, vault := range vaults {
+			fmt.Printf("Vault: %s\n", vault.Name)
+		}
 	},
 }
 
