@@ -76,7 +76,7 @@ apiKeyById:
         content:
           application/json:
             schema:
-              $ref: '../schemas/apikey.yaml#/APIKey'
+              $ref: '../schemas/apikey.yaml#/VaultAPIKey'
   delete:
     description: Delete an API key
     tags:

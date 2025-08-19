@@ -9,7 +9,7 @@ APIKeysResponse:
     apiKeys:
       type: array
       items:
-        $ref: '#/APIKey'
+        $ref: '#/VaultAPIKey'
     totalCount:
       type: integer
       description: Total number of API keys
@@ -20,7 +20,7 @@ APIKeysResponse:
       type: integer
       description: Current page index (starting from 1)
 
-APIKey:
+VaultAPIKey:
   type: object
   required:
     - id
@@ -87,7 +87,7 @@ CreateAPIKeyResponse:
     - key
   properties:
     apiKey:
-      $ref: '#/APIKey'
+      $ref: '#/VaultAPIKey'
     key:
       type: string
       description: The generated API key (only shown once)

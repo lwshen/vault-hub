@@ -293,7 +293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIKey'
+                $ref: '#/components/schemas/VaultAPIKey'
     delete:
       description: Delete an API key
       tags:
@@ -342,16 +342,6 @@ paths:
           description: Vault Unique ID
           schema:
             type: string
-        - name: X-Enable-Client-Encryption
-          in: header
-          required: false
-          description: Enable additional client-side encryption using key derived from API key + vault unique ID
-          schema:
-            type: string
-            enum:
-              - true
-              - false
-          example: true
       responses:
         '200':
           description: Vault details
@@ -374,16 +364,6 @@ paths:
           description: Vault name
           schema:
             type: string
-        - name: X-Enable-Client-Encryption
-          in: header
-          required: false
-          description: Enable additional client-side encryption using key derived from API key + vault unique ID
-          schema:
-            type: string
-            enum:
-              - true
-              - false
-          example: true
       responses:
         '200':
           description: Vault details
@@ -397,6 +377,13 @@ components:
       type: http
       scheme: bearer
   schemas:
+    EnableClientEncryption:
+      type: string
+      description: Enable additional client-side encryption using key derived from API key + vault unique ID
+      enum:
+        - true
+        - false
+      example: true
     HealthCheckResponse:
       type: object
       properties:
@@ -589,7 +576,7 @@ components:
         vault:
           $ref: '#/components/schemas/VaultLite'
         apiKey:
-          $ref: '#/components/schemas/APIKey'
+          $ref: '#/components/schemas/VaultAPIKey'
         action:
           type: string
           enum:
@@ -621,7 +608,7 @@ components:
         apiKeys:
           type: array
           items:
-            $ref: '#/components/schemas/APIKey'
+            $ref: '#/components/schemas/VaultAPIKey'
         totalCount:
           type: integer
           description: Total number of API keys
@@ -631,7 +618,7 @@ components:
         pageIndex:
           type: integer
           description: Current page index (starting from 1)
-    APIKey:
+    VaultAPIKey:
       type: object
       required:
         - id
@@ -696,7 +683,7 @@ components:
         - key
       properties:
         apiKey:
-          $ref: '#/components/schemas/APIKey'
+          $ref: '#/components/schemas/VaultAPIKey'
         key:
           type: string
           description: The generated API key (only shown once)
