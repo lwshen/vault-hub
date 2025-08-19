@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	openapi "github.com/lwshen/vault-hub-go-client"
 	"github.com/spf13/cobra"
@@ -33,6 +34,8 @@ environment variables and API keys stored in VaultHub.
 This CLI allows you to list and retrieve vaults from your VaultHub instance.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		debugLog("Initializing VaultHub CLI")
+		// Remove trailing slash from baseURL if present
+		baseURL = strings.TrimSuffix(baseURL, "/")
 		debugLog("Base URL: %s", baseURL)
 		debugLog("Debug mode: %v", debug)
 		
