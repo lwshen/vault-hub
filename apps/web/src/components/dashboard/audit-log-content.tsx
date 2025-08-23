@@ -280,6 +280,12 @@ export default function AuditLogContent() {
                                   <span>Vault Name: {audit.vault.name}</span>
                                 </>
                               )}
+                              {audit.apiKey && (
+                                <>
+                                  <span>•</span>
+                                  <span>API Key: {audit.apiKey.name}</span>
+                                </>
+                              )}
                               {audit.ipAddress && (
                                 <>
                                   <span>•</span>
