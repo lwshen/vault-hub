@@ -277,13 +277,13 @@ export default function AuditLogContent() {
                               {audit.vault && (
                                 <>
                                   <span>•</span>
-                                  <span>Vault Name: {audit.vault.name}</span>
+                                  <span>Vault: {audit.vault.name} ({audit.vault.uniqueId})</span>
                                 </>
                               )}
                               {audit.apiKey && (
                                 <>
                                   <span>•</span>
-                                  <span>API Key: {audit.apiKey.name}</span>
+                                  <span>API Key: {audit.apiKey.name} (ID: {audit.apiKey.id})</span>
                                 </>
                               )}
                               {audit.ipAddress && (
