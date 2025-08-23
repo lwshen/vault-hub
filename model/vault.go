@@ -12,12 +12,12 @@ import (
 
 type Vault struct {
 	gorm.Model
-	UniqueID    string `gorm:"size:255;not null;unique"`                    // Unique identifier for the vault
-	UserID      uint   `gorm:"uniqueIndex:idx_user_name;not null"`          // User who owns this vault
-	Name        string `gorm:"size:255;uniqueIndex:idx_user_name;not null"` // Human-readable name
-	Value       string `gorm:"type:text;not null"`                          // Encrypted value
-	Description string `gorm:"size:500"`                                    // Human-readable description
-	Category    string `gorm:"size:100;index"`                              // Category/type of vault
+	UniqueID    string `gorm:"size:255;not null;unique"`                                             // Unique identifier for the vault
+	UserID      uint   `gorm:"uniqueIndex:idx_user_name,where:deleted_at IS NULL;not null"`          // User who owns this vault
+	Name        string `gorm:"size:255;uniqueIndex:idx_user_name,where:deleted_at IS NULL;not null"` // Human-readable name
+	Value       string `gorm:"type:text;not null"`                                                   // Encrypted value
+	Description string `gorm:"size:500"`                                                             // Human-readable description
+	Category    string `gorm:"size:100;index"`                                                       // Category/type of vault
 }
 
 // CreateVaultParams defines parameters for creating a new vault
@@ -261,7 +261,7 @@ func (v *Vault) Update(params *UpdateVaultParams) error {
 	return nil
 }
 
-// Delete deletes a vault
+// Delete soft deletes a vault (GORM will set DeletedAt timestamp)
 func (v *Vault) Delete() error {
 	err := DB.Delete(v).Error
 	if err != nil {
