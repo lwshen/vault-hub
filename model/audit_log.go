@@ -101,8 +101,12 @@ func GetAuditLogsByUser(userID uint, limit int, offset int) ([]AuditLog, error) 
 	var logs []AuditLog
 	query := DB.Where("user_id = ?", userID).
 		Preload("User").
-		Preload("Vault").
-		Preload("APIKey").
+		Preload("Vault", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
+		Preload("APIKey", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
 		Order("created_at DESC")
 
 	if limit > 0 {
@@ -126,8 +130,12 @@ func GetAuditLogsByVault(vaultID uint, userID uint) ([]AuditLog, error) {
 	var logs []AuditLog
 	err := DB.Where("vault_id = ? AND user_id = ?", vaultID, userID).
 		Preload("User").
-		Preload("Vault").
-		Preload("APIKey").
+		Preload("Vault", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
+		Preload("APIKey", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
 		Order("created_at DESC").
 		Find(&logs).Error
 
@@ -153,8 +161,12 @@ func GetAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) ([]AuditLog, 
 	var logs []AuditLog
 	query := DB.Where("user_id = ?", params.UserID).
 		Preload("User").
-		Preload("Vault").
-		Preload("APIKey").
+		Preload("Vault", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
+		Preload("APIKey", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
 		Order("created_at DESC")
 
 	// Add vault filter if specified

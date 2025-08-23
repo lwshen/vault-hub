@@ -95,60 +95,57 @@ export default function AuditLogContent() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pageIndex, setPageIndex] = useState(1);
+  const [nextPageIndex, setNextPageIndex] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const pageSize = 20;
 
-  const fetchAuditLogs = useCallback(async (reset = false) => {
+  const fetchInitialAuditLogs = useCallback(async () => {
     try {
-      if (reset) {
-        setIsLoading(true);
-        setPageIndex(1);
-        setAuditLogs([]);
-      } else {
-        setIsLoadingMore(true);
-      }
+      setIsLoading(true);
       setError(null);
+      setAuditLogs([]);
+      setNextPageIndex(1);
 
-      const currentPageIndex = reset ? 1 : pageIndex;
+      const response = await auditApi.getAuditLogs(pageSize, 1);
+      const newLogs = response.auditLogs || [];
 
-      // Call API with query parameters (pageIndex, pageSize are required)
-      const response = await auditApi.getAuditLogs(
-        pageSize,
-        currentPageIndex,
-      );
-
-      // Convert API response to our format
-      const newLogs = (response.auditLogs || []);
-
-      if (reset) {
-        setAuditLogs(newLogs);
-      } else {
-        setAuditLogs(prev => [...prev, ...newLogs]);
-      }
-
+      setAuditLogs(newLogs);
       setTotalCount(response.totalCount || 0);
-      if (!reset) {
-        setPageIndex(currentPageIndex + 1);
-      }
+      setNextPageIndex(2);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch audit logs');
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  const loadMoreAuditLogs = useCallback(async () => {
+    if (isLoadingMore || auditLogs.length >= totalCount) return;
+
+    try {
+      setIsLoadingMore(true);
+      setError(null);
+
+      const response = await auditApi.getAuditLogs(pageSize, nextPageIndex);
+      const newLogs = response.auditLogs || [];
+
+      setAuditLogs(prev => [...prev, ...newLogs]);
+      setNextPageIndex(prev => prev + 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load more audit logs');
+    } finally {
       setIsLoadingMore(false);
     }
-  }, [pageIndex]);
+  }, [nextPageIndex, isLoadingMore, auditLogs.length, totalCount]);
 
   useEffect(() => {
-    fetchAuditLogs(true);
-  }, [fetchAuditLogs]);
+    fetchInitialAuditLogs();
+  }, [fetchInitialAuditLogs]);
 
   const loadMore = () => {
-    if (!isLoadingMore && auditLogs.length < totalCount) {
-      fetchAuditLogs(false);
-    }
+    loadMoreAuditLogs();
   };
 
   const getAuditTypeLabel = (action: AuditLogActionEnum) => {
@@ -177,7 +174,7 @@ export default function AuditLogContent() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold">Failed to load audit logs</h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
-                <Button onClick={() => fetchAuditLogs(true)}>Try Again</Button>
+                <Button onClick={fetchInitialAuditLogs}>Try Again</Button>
               </div>
             </div>
           </Card>
@@ -277,7 +274,13 @@ export default function AuditLogContent() {
                               {audit.vault && (
                                 <>
                                   <span>•</span>
-                                  <span>Vault Name: {audit.vault.name}</span>
+                                  <span>Vault: {audit.vault.name} ({audit.vault.uniqueId})</span>
+                                </>
+                              )}
+                              {audit.apiKey && (
+                                <>
+                                  <span>•</span>
+                                  <span>API Key: {audit.apiKey.name} (ID: {audit.apiKey.id})</span>
                                 </>
                               )}
                               {audit.ipAddress && (

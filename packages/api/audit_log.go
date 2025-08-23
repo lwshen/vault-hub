@@ -10,21 +10,21 @@ import (
 // convertToApiAuditLog converts a model.AuditLog to an api.AuditLog
 func convertToApiAuditLog(auditLog *model.AuditLog) AuditLog {
 	var vault *VaultLite
+	var apiKey *VaultAPIKey
 	if auditLog.Vault != nil {
-		vaultLite := VaultLite{
-			UniqueId:    auditLog.Vault.UniqueID,
-			Name:        auditLog.Vault.Name,
-			Description: &auditLog.Vault.Description,
-			Category:    &auditLog.Vault.Category,
-			UpdatedAt:   &auditLog.Vault.UpdatedAt,
-		}
+		vaultLite := convertToApiVaultLite(auditLog.Vault)
 		vault = &vaultLite
+	}
+	if auditLog.APIKey != nil {
+		apiKeyLocal, _ := convertToApiAPIKey(auditLog.APIKey)
+		apiKey = apiKeyLocal
 	}
 
 	return AuditLog{
 		Action:    AuditLogAction(auditLog.Action),
 		CreatedAt: auditLog.CreatedAt,
 		Vault:     vault,
+		ApiKey:    apiKey,
 		IpAddress: &auditLog.IPAddress,
 		UserAgent: &auditLog.UserAgent,
 	}
