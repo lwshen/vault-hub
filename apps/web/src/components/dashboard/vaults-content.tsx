@@ -1,24 +1,90 @@
-import CreateVaultModal from '@/components/modals/create-vault-modal';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import DashboardHeader from '@/components/layout/dashboard-header';
+import CreateVaultModal from '@/components/modals/create-vault-modal';
+import EditVaultModal from '@/components/modals/edit-vault-modal';
+import EditVaultValueModal from '@/components/modals/edit-vault-value-modal';
+import ViewVaultValueModal from '@/components/modals/view-vault-value-modal';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useVaults } from '@/hooks/use-vaults';
+import { vaultApi } from '@/apis/api';
+import type { VaultLite } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   AlertCircle,
+  Edit,
+  Eye,
+  Key,
   Loader2,
   Lock,
   MoreVertical,
   Plus,
+  Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
-
+import { toast } from 'sonner';
 
 export default function VaultsContent() {
   const { vaults, isLoading, error, refetch } = useVaults();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditValueModalOpen, setIsEditValueModalOpen] = useState(false);
+  const [isViewValueModalOpen, setIsViewValueModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedVault, setSelectedVault] = useState<VaultLite | null>(null);
 
   const handleVaultCreated = () => {
+    toast.success('Vault created successfully');
     refetch(); // Refresh the vault list after creation
+  };
+
+  const handleEditVault = (vault: VaultLite) => {
+    setSelectedVault(vault);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditVaultValue = (vault: VaultLite) => {
+    setSelectedVault(vault);
+    setIsEditValueModalOpen(true);
+  };
+
+  const handleViewVaultValue = (vault: VaultLite) => {
+    setSelectedVault(vault);
+    setIsViewValueModalOpen(true);
+  };
+
+  const handleDeleteVault = (vault: VaultLite) => {
+    setSelectedVault(vault);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteVault = async () => {
+    if (!selectedVault) return;
+
+    setIsDeleting(true);
+    try {
+      await vaultApi.deleteVault(selectedVault.uniqueId);
+      setDeleteConfirmOpen(false);
+      toast.success(`Vault "${selectedVault.name}" has been deleted successfully`);
+      refetch(); // Refresh the vault list after deletion
+    } catch (err) {
+      console.error('Failed to delete vault:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete vault';
+      toast.error(`Failed to delete vault: ${errorMessage}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleVaultUpdated = () => {
+    toast.success('Vault updated successfully');
+    refetch(); // Refresh the vault list after update
   };
 
   const renderContent = () => {
@@ -31,7 +97,10 @@ export default function VaultsContent() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold">Failed to load vaults</h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
-                <Button onClick={refetch}>Try Again</Button>
+                <Button onClick={() => {
+                  toast.info('Retrying to load vaults...');
+                  refetch();
+                }}>Try Again</Button>
               </div>
             </div>
           </Card>
@@ -86,12 +155,39 @@ export default function VaultsContent() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                      View
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewVaultValue(vault)}
+                      title="View Value"
+                    >
+                      <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditVaultValue(vault)}>
+                          <Key className="h-4 w-4" />
+                          Edit Value
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditVault(vault)}>
+                          <Edit className="h-4 w-4" />
+                          Edit Properties
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteVault(vault)}
+                          variant="destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete Vault
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </Card>
@@ -121,6 +217,67 @@ export default function VaultsContent() {
         onOpenChange={setIsCreateModalOpen}
         onVaultCreated={handleVaultCreated}
       />
+
+      <EditVaultModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        vault={selectedVault}
+        onVaultUpdated={handleVaultUpdated}
+      />
+
+      <EditVaultValueModal
+        open={isEditValueModalOpen}
+        onOpenChange={setIsEditValueModalOpen}
+        vault={selectedVault}
+        onVaultUpdated={handleVaultUpdated}
+      />
+
+      <ViewVaultValueModal
+        open={isViewValueModalOpen}
+        onOpenChange={setIsViewValueModalOpen}
+        vault={selectedVault}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmOpen && selectedVault && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setDeleteConfirmOpen(false)} />
+          <Card className="relative z-10 w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle className="text-xl">Delete Vault</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Are you sure you want to delete the vault <span className="font-medium">{selectedVault.name}</span>?
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteConfirmOpen(false)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDeleteVault}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </>
   );
 }

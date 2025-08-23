@@ -1,6 +1,7 @@
 import Header from '@/components/layout/header';
 import { AuthProvider } from './contexts/auth-provider';
 import { AppRoutes } from './routes';
+import { Toaster } from '@/components/ui/sonner';
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
         <main className="flex-1 overflow-auto">
           <AppRoutes />
         </main>
+        <Toaster />
       </AuthProvider>
     </div>
   );
