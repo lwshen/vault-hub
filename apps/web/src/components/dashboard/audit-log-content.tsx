@@ -174,7 +174,7 @@ export default function AuditLogContent() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold">Failed to load audit logs</h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
-                <Button onClick={() => fetchAuditLogs(true)}>Try Again</Button>
+                <Button onClick={fetchInitialAuditLogs}>Try Again</Button>
               </div>
             </div>
           </Card>
