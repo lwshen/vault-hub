@@ -1,0 +1,59 @@
+{
+  "categories": [
+    {
+      "title": "## 🚀 Features",
+      "labels": ["enhancement", "feature", "feat"]
+    },
+    {
+      "title": "## 🐛 Bug Fixes",
+      "labels": ["bug", "fix", "bugfix"]
+    },
+    {
+      "title": "## 📚 Documentation",
+      "labels": ["documentation", "docs"]
+    },
+    {
+      "title": "## 🔧 Maintenance", 
+      "labels": ["maintenance", "chore", "refactor"]
+    },
+    {
+      "title": "## ⚡ Performance",
+      "labels": ["performance", "perf"]
+    },
+    {
+      "title": "## 🔒 Security",
+      "labels": ["security"]
+    },
+    {
+      "title": "## 💥 Breaking Changes",
+      "labels": ["breaking-change", "breaking"]
+    }
+  ],
+  "ignore_labels": [
+    "ignore-for-release"
+  ],
+  "sort": "ASC",
+  "template": "${{CHANGELOG}}",
+  "pr_template": "- ${{TITLE}} by @${{AUTHOR}} in #${{NUMBER}}",
+  "empty_template": "- No changes",
+  "label_extractor": [
+    {
+      "pattern": "feat\\((.+)\\):",
+      "target": "$1",
+      "flags": "gu"
+    },
+    {
+      "pattern": "fix\\((.+)\\):",
+      "target": "$1", 
+      "flags": "gu"
+    }
+  ],
+  "duplicate_filter": {
+    "pattern": "\\[.*\\]",
+    "on_property": "title",
+    "method": "match"
+  },
+  "max_tags_to_fetch": 200,
+  "max_pull_requests": 1000,
+  "max_back_track_time_days": 1000
+}
