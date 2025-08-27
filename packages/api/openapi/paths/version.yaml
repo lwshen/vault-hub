@@ -1,0 +1,14 @@
+version:
+  get:
+    summary: Get version information
+    description: Returns the current version and commit hash of the application
+    operationId: getVersion
+    tags:
+      - Version
+    responses:
+      '200':
+        description: Version information retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/version.yaml#/VersionResponse

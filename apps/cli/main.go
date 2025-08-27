@@ -9,6 +9,8 @@ import (
 
 	openapi "github.com/lwshen/vault-hub-go-client"
 	"github.com/spf13/cobra"
+
+	"github.com/lwshen/vault-hub/internal/version"
 )
 
 var (
@@ -78,7 +80,8 @@ This CLI allows you to list and retrieve vaults from your VaultHub instance.`,
 		debugLog("Creating API client with configuration")
 		client = openapi.NewAPIClient(cfg)
 		client.GetConfig().DefaultHeader["Authorization"] = "Bearer " + apiKey
-		debugLog("API client initialized successfully")
+		client.GetConfig().UserAgent = fmt.Sprintf("VaultHub-CLI/%s (%s)", version.Version, version.Commit)
+		debugLog("API client initialized successfully with User-Agent: %s", client.GetConfig().UserAgent)
 	},
 }
 
@@ -91,6 +94,7 @@ func init() {
 	// Add subcommands to root
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	listCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
 
@@ -225,5 +229,19 @@ Examples:
 			fmt.Println(vault.Value)
 		}
 		debugLog("Get command completed successfully")
+	},
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Show version information",
+	Long:  "Display version and commit hash information for VaultHub CLI.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Skip authentication for version command
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("VaultHub CLI\n")
+		fmt.Printf("Version: %s\n", version.Version)
+		fmt.Printf("Commit:  %s\n", version.Commit)
 	},
 }

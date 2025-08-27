@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Go Backend (apps/server/)
 
 - **Build**: `go build -o tmp/main ./apps/server/main.go`
+- **Build with version**: `go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') -X github.com/lwshen/vault-hub/internal/version.Commit=$(git rev-parse --short HEAD)" -o tmp/main ./apps/server/main.go`
 - **Run**: `go run ./apps/server/main.go`
 - **Test**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` (run all tests with required env vars)
 - **Test specific package**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./model -v`
@@ -15,10 +16,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Go CLI (apps/cli/)
 
 - **Build**: `go build -o vault-hub-cli ./apps/cli/main.go`
+- **Build with version**: `go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') -X github.com/lwshen/vault-hub/internal/version.Commit=$(git rev-parse --short HEAD)" -o vault-hub-cli ./apps/cli/main.go`
 - **Run**: `go run ./apps/cli/main.go`
 - **Commands**:
   - `vault-hub list` or `vault-hub ls` - List all accessible vaults
   - `vault-hub get <vault-name-or-id>` - Get a specific vault by name or unique ID
+  - `vault-hub version` - Show version and commit information
 - **Multi-platform builds**: See CI configuration for cross-compilation examples
 
 ### React Frontend (apps/web/)
@@ -139,6 +142,9 @@ The application enforces strict authentication rules via middleware (`route/midd
 - **JWT Auth**: Sets `c.Locals("user", &user)` (full User object)
 
 ### API Endpoints
+
+**Public API:**
+- `GET /api/version` - Get current version and commit information (no authentication required)
 
 **CLI API Vault Access:**
 - `GET /api/cli/vaults` - List accessible vaults (VaultLite format, no decrypted values)
