@@ -64,7 +64,7 @@ jobs:
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
-          name: v${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           files: |
             bin/vault-hub-server-*
             bin/vault-hub-cli-*
@@ -116,6 +116,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          registry-url: https://registry.npmjs.org
       - name: Generate TypeScript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
@@ -204,5 +205,5 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          name: v${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           body: ${{steps.build_changelog.outputs.changelog}}
