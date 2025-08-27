@@ -15,10 +15,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Go CLI (apps/cli/)
 
 - **Build**: `go build -o vault-hub-cli ./apps/cli/main.go`
+- **Build with version**: `go build -ldflags="-X main.version=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') -X main.commit=$(git rev-parse --short HEAD)" -o vault-hub-cli ./apps/cli/main.go`
 - **Run**: `go run ./apps/cli/main.go`
 - **Commands**:
   - `vault-hub list` or `vault-hub ls` - List all accessible vaults
   - `vault-hub get <vault-name-or-id>` - Get a specific vault by name or unique ID
+  - `vault-hub version` - Show version and commit information
 - **Multi-platform builds**: See CI configuration for cross-compilation examples
 
 ### React Frontend (apps/web/)

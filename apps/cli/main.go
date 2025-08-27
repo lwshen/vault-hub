@@ -16,6 +16,8 @@ var (
 	baseURL string
 	debug   bool
 	client  *openapi.APIClient
+	version = "dev"
+	commit  = "unknown"
 )
 
 // debugLog prints debug messages to stderr when debug mode is enabled
@@ -91,6 +93,7 @@ func init() {
 	// Add subcommands to root
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	listCmd.Flags().BoolP("json", "j", false, "Output in JSON format")
 
@@ -225,5 +228,19 @@ Examples:
 			fmt.Println(vault.Value)
 		}
 		debugLog("Get command completed successfully")
+	},
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Show version information",
+	Long:  "Display version and commit hash information for VaultHub CLI.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Skip authentication for version command
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("VaultHub CLI\n")
+		fmt.Printf("Version: %s\n", version)
+		fmt.Printf("Commit:  %s\n", commit)
 	},
 }
