@@ -37,6 +37,7 @@ func jwtMiddleware(c *fiber.Ctx) error {
 func isPublicRoute(path string) bool {
 	publicRoutes := []string{
 		"/api/health",
+		"/api/version",
 		"/api/auth/login",
 		"/api/auth/signup",
 		"/api/auth/login/oidc",

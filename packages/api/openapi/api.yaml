@@ -7,6 +7,9 @@ paths:
   # Health endpoints
   /api/health:
     $ref: ./paths/health.yaml#/health
+  # Version endpoints
+  /api/version:
+    $ref: ./paths/version.yaml#/version
   # Auth endpoints
   /api/auth/login:
     $ref: ./paths/auth.yaml#/login
@@ -89,3 +92,6 @@ components:
       $ref: ./schemas/apikey.yaml#/CreateAPIKeyResponse
     UpdateAPIKeyRequest:
       $ref: ./schemas/apikey.yaml#/UpdateAPIKeyRequest
+    # Version schemas
+    VersionResponse:
+      $ref: ./schemas/version.yaml#/VersionResponse

@@ -143,6 +143,9 @@ The application enforces strict authentication rules via middleware (`route/midd
 
 ### API Endpoints
 
+**Public API:**
+- `GET /api/version` - Get current version and commit information (no authentication required)
+
 **CLI API Vault Access:**
 - `GET /api/cli/vaults` - List accessible vaults (VaultLite format, no decrypted values)
 - `GET /api/cli/vault/{uniqueId}` - Get specific vault (full Vault format with decrypted value)

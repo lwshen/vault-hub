@@ -247,6 +247,15 @@ type VaultLite struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
+// VersionResponse defines model for VersionResponse.
+type VersionResponse struct {
+	// Commit Git commit hash
+	Commit string `json:"commit"`
+
+	// Version Application version
+	Version string `json:"version"`
+}
+
 // GetAPIKeysParams defines parameters for GetAPIKeys.
 type GetAPIKeysParams struct {
 	// PageSize Number of API keys per page (default 20, max 1000)
@@ -348,6 +357,9 @@ type ServerInterface interface {
 
 	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(c *fiber.Ctx, uniqueId string) error
+	// Get version information
+	// (GET /api/version)
+	GetVersion(c *fiber.Ctx) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -644,6 +656,12 @@ func (siw *ServerInterfaceWrapper) UpdateVault(c *fiber.Ctx) error {
 	return siw.Handler.UpdateVault(c, uniqueId)
 }
 
+// GetVersion operation middleware
+func (siw *ServerInterfaceWrapper) GetVersion(c *fiber.Ctx) error {
+
+	return siw.Handler.GetVersion(c)
+}
+
 // FiberServerOptions provides options for the Fiber server.
 type FiberServerOptions struct {
 	BaseURL     string
@@ -700,6 +718,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/api/vaults/:uniqueId", wrapper.GetVault)
 
 	router.Put(options.BaseURL+"/api/vaults/:uniqueId", wrapper.UpdateVault)
+
+	router.Get(options.BaseURL+"/api/version", wrapper.GetVersion)
 
 }
 
@@ -1003,6 +1023,22 @@ func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.C
 	return ctx.JSON(&response)
 }
 
+type GetVersionRequestObject struct {
+}
+
+type GetVersionResponseObject interface {
+	VisitGetVersionResponse(ctx *fiber.Ctx) error
+}
+
+type GetVersion200JSONResponse VersionResponse
+
+func (response GetVersion200JSONResponse) VisitGetVersionResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
@@ -1059,6 +1095,9 @@ type StrictServerInterface interface {
 
 	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(ctx context.Context, request UpdateVaultRequestObject) (UpdateVaultResponseObject, error)
+	// Get version information
+	// (GET /api/version)
+	GetVersion(ctx context.Context, request GetVersionRequestObject) (GetVersionResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *fiber.Ctx, args interface{}) (interface{}, error)
@@ -1570,6 +1609,31 @@ func (sh *strictHandler) UpdateVault(ctx *fiber.Ctx, uniqueId string) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(UpdateVaultResponseObject); ok {
 		if err := validResponse.VisitUpdateVaultResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetVersion operation middleware
+func (sh *strictHandler) GetVersion(ctx *fiber.Ctx) error {
+	var request GetVersionRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVersion(ctx.UserContext(), request.(GetVersionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetVersion")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetVersionResponseObject); ok {
+		if err := validResponse.VisitGetVersionResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
