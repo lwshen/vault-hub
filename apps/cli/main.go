@@ -9,6 +9,8 @@ import (
 
 	openapi "github.com/lwshen/vault-hub-go-client"
 	"github.com/spf13/cobra"
+
+	"github.com/lwshen/vault-hub/internal/version"
 )
 
 var (
@@ -16,8 +18,6 @@ var (
 	baseURL string
 	debug   bool
 	client  *openapi.APIClient
-	version = "dev"
-	commit  = "unknown"
 )
 
 // debugLog prints debug messages to stderr when debug mode is enabled
@@ -80,7 +80,8 @@ This CLI allows you to list and retrieve vaults from your VaultHub instance.`,
 		debugLog("Creating API client with configuration")
 		client = openapi.NewAPIClient(cfg)
 		client.GetConfig().DefaultHeader["Authorization"] = "Bearer " + apiKey
-		debugLog("API client initialized successfully")
+		client.GetConfig().UserAgent = fmt.Sprintf("VaultHub-CLI/%s (%s)", version.Version, version.Commit)
+		debugLog("API client initialized successfully with User-Agent: %s", client.GetConfig().UserAgent)
 	},
 }
 
@@ -240,7 +241,7 @@ var versionCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("VaultHub CLI\n")
-		fmt.Printf("Version: %s\n", version)
-		fmt.Printf("Commit:  %s\n", commit)
+		fmt.Printf("Version: %s\n", version.Version)
+		fmt.Printf("Commit:  %s\n", version.Commit)
 	},
 }
