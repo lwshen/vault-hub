@@ -268,7 +268,12 @@ jobs:
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           cat CHANGELOG_RELEASE.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      - name: Commit and Push Changelog
+      - name: Release Note
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body: ${{steps.set_release_body.outputs.changelog}}
+      - name: Create Changelog PR with Auto-merge
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -286,12 +291,20 @@ jobs:
             git commit -m "chore: update CHANGELOG.md for ${{ github.ref_name }}"
             git push origin "$BRANCH_NAME"
             echo "Created branch: $BRANCH_NAME"
-            echo "Changelog update pushed to new branch for review"
+            
+            # Create PR using GitHub CLI
+            gh pr create \
+              --title "chore: update CHANGELOG.md for ${{ github.ref_name }}" \
+              --body "Automated changelog update for release ${{ github.ref_name }}" \
+              --base main \
+              --head "$BRANCH_NAME"
+            
+            # Enable auto-merge for the PR
+            gh pr merge "$BRANCH_NAME" --auto --squash
+            
+            echo "Changelog PR created and auto-merge enabled"
           else
             echo "No changes to CHANGELOG.md, skipping commit"
           fi
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: ${{ github.ref_name }}
-          body: ${{steps.set_release_body.outputs.changelog}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
