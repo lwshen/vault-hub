@@ -280,8 +280,13 @@ jobs:
           # Add and commit changelog if there are changes
           git add CHANGELOG.md
           if ! git diff --staged --quiet; then
+            # Create new branch for changelog update
+            BRANCH_NAME="chore/update-changelog-${{ github.ref_name }}"
+            git checkout -b "$BRANCH_NAME"
             git commit -m "chore: update CHANGELOG.md for ${{ github.ref_name }}"
-            git push origin main
+            git push origin "$BRANCH_NAME"
+            echo "Created branch: $BRANCH_NAME"
+            echo "Changelog update pushed to new branch for review"
           else
             echo "No changes to CHANGELOG.md, skipping commit"
           fi
