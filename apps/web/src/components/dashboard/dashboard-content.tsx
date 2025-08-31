@@ -11,8 +11,24 @@ import {
   Users,
   Vault,
 } from 'lucide-react';
+import { versionApi } from '@/apis/api';
+import { useEffect, useState } from 'react';
 
 export default function DashboardContent() {
+  const [version, setVersion] = useState<{ version: string; commit: string; } | null>(null);
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const response = await versionApi.getVersion();
+        setVersion(response);
+      } catch (error) {
+        console.error('Failed to fetch version:', error);
+      }
+    };
+    fetchVersion();
+  }, []);
+
   const stats = [
     {
       title: 'Total Vaults',
@@ -166,6 +182,18 @@ export default function DashboardContent() {
                 <span className="text-sm font-medium">Storage</span>
                 <span className="text-sm text-muted-foreground">78% Used</span>
               </div>
+              {version && (
+                <div className="pt-3 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Version</span>
+                    <span className="text-sm text-muted-foreground">{version.version}</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm font-medium">Commit</span>
+                    <span className="text-sm text-muted-foreground font-mono">{version.commit.substring(0, 7)}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
         </div>
