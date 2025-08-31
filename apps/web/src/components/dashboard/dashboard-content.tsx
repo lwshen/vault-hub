@@ -6,13 +6,28 @@ import {
   Lock,
   MoreVertical,
   Plus,
-  Search,
   Unlock,
   Users,
   Vault,
 } from 'lucide-react';
+import { versionApi } from '@/apis/api';
+import { useEffect, useState } from 'react';
 
 export default function DashboardContent() {
+  const [version, setVersion] = useState<{ version: string; commit: string; } | null>(null);
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const response = await versionApi.getVersion();
+        setVersion(response);
+      } catch (error) {
+        console.error('Failed to fetch version:', error);
+      }
+    };
+    fetchVersion();
+  }, []);
+
   const stats = [
     {
       title: 'Total Vaults',
@@ -61,15 +76,6 @@ export default function DashboardContent() {
             <p className="text-muted-foreground">
               Manage your vaults and monitor activity
             </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
-            <Button variant="outline" size="sm">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </header>
@@ -155,17 +161,18 @@ export default function DashboardContent() {
                   <span className="text-sm text-muted-foreground">Healthy</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Backup</span>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">Running</span>
+              {version && (
+                <div className="pt-3 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Version</span>
+                    <span className="text-sm text-muted-foreground">{version.version}</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm font-medium">Commit</span>
+                    <span className="text-sm text-muted-foreground font-mono">{version.commit.substring(0, 7)}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Storage</span>
-                <span className="text-sm text-muted-foreground">78% Used</span>
-              </div>
+              )}
             </div>
           </Card>
         </div>

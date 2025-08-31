@@ -5,12 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiKeyApi } from '@/apis/api';
 import { Loader2, X } from 'lucide-react';
-import type { APIKey } from '@lwshen/vault-hub-ts-fetch-client';
+import type { VaultAPIKey } from '@lwshen/vault-hub-ts-fetch-client';
 
 interface EditApiKeyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  apiKey: APIKey | null;
+  apiKey: VaultAPIKey | null;
   onApiKeyUpdated?: () => void;
 }
 
