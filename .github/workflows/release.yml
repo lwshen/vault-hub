@@ -42,18 +42,18 @@ jobs:
           VERSION=${{ github.ref_name }}
           COMMIT=$(git rev-parse --short HEAD)
           LDFLAGS="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}"
-          
+
           echo "Building server binaries with version: $VERSION, commit: $COMMIT"
           echo "LDFLAGS: $LDFLAGS"
-          
+
           # Create bin directory if it doesn't exist
           mkdir -p bin
-          
+
           # Linux builds
           echo "Building Linux AMD64..."
           GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-linux-amd64 apps/server/main.go
           echo "✓ Built vault-hub-server-linux-amd64"
-          
+
           echo "Building Linux ARM64..."
           GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-linux-arm64 apps/server/main.go
           echo "✓ Built vault-hub-server-linux-arm64"
@@ -67,11 +67,11 @@ jobs:
           echo "Building macOS AMD64..."
           GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
           echo "✓ Built vault-hub-server-darwin-amd64"
-          
+
           echo "Building macOS ARM64..."
           GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
           echo "✓ Built vault-hub-server-darwin-arm64"
-          
+
           echo "All server binaries built successfully!"
           echo "Listing built files:"
           ls -la bin/vault-hub-server-*
@@ -80,18 +80,18 @@ jobs:
           VERSION=${{ github.ref_name }}
           COMMIT=$(git rev-parse --short HEAD)
           LDFLAGS="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}"
-          
+
           echo "Building CLI binaries with version: $VERSION, commit: $COMMIT"
           echo "LDFLAGS: $LDFLAGS"
-          
+
           # Create bin directory if it doesn't exist
           mkdir -p bin
-          
+
           # Linux builds
           echo "Building CLI Linux AMD64..."
           GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-linux-amd64 apps/cli/main.go
           echo "✓ Built vault-hub-cli-linux-amd64"
-          
+
           echo "Building CLI Linux ARM64..."
           GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-linux-arm64 apps/cli/main.go
           echo "✓ Built vault-hub-cli-linux-arm64"
@@ -105,11 +105,11 @@ jobs:
           echo "Building CLI macOS AMD64..."
           GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-darwin-amd64 apps/cli/main.go
           echo "✓ Built vault-hub-cli-darwin-amd64"
-          
+
           echo "Building CLI macOS ARM64..."
           GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-darwin-arm64 apps/cli/main.go
           echo "✓ Built vault-hub-cli-darwin-arm64"
-          
+
           echo "All CLI binaries built successfully!"
           echo "Listing built files:"
           ls -la bin/vault-hub-cli-*
@@ -272,11 +272,11 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           # Switch to main branch (we're in detached HEAD from tag checkout)
           git checkout main
           git pull origin main
-          
+
           # Add and commit changelog if there are changes
           git add CHANGELOG.md
           if ! git diff --staged --quiet; then
