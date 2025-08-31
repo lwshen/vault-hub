@@ -272,9 +272,19 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
+          # Switch to main branch (we're in detached HEAD from tag checkout)
+          git checkout main
+          git pull origin main
+          
+          # Add and commit changelog if there are changes
           git add CHANGELOG.md
-          git diff --staged --quiet || git commit -m "chore: update CHANGELOG.md for ${{ github.ref_name }}"
-          git push
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: update CHANGELOG.md for ${{ github.ref_name }}"
+            git push origin main
+          else
+            echo "No changes to CHANGELOG.md, skipping commit"
+          fi
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
