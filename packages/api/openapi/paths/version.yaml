@@ -6,7 +6,7 @@ version:
     tags:
       - Version
     responses:
-      '200':
+      "200":
         description: Version information retrieved successfully
         content:
           application/json:

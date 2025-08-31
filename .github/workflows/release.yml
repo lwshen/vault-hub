@@ -42,33 +42,77 @@ jobs:
           VERSION=${{ github.ref_name }}
           COMMIT=$(git rev-parse --short HEAD)
           LDFLAGS="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}"
-          
+
+          echo "Building server binaries with version: $VERSION, commit: $COMMIT"
+          echo "LDFLAGS: $LDFLAGS"
+
+          # Create bin directory if it doesn't exist
+          mkdir -p bin
+
           # Linux builds
+          echo "Building Linux AMD64..."
           GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-linux-amd64 apps/server/main.go
+          echo "✓ Built vault-hub-server-linux-amd64"
+
+          echo "Building Linux ARM64..."
           GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-linux-arm64 apps/server/main.go
+          echo "✓ Built vault-hub-server-linux-arm64"
 
           # Windows builds
+          echo "Building Windows AMD64..."
           GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-windows-amd64.exe apps/server/main.go
+          echo "✓ Built vault-hub-server-windows-amd64.exe"
 
           # macOS builds
+          echo "Building macOS AMD64..."
           GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
+          echo "✓ Built vault-hub-server-darwin-amd64"
+
+          echo "Building macOS ARM64..."
           GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
+          echo "✓ Built vault-hub-server-darwin-arm64"
+
+          echo "All server binaries built successfully!"
+          echo "Listing built files:"
+          ls -la bin/vault-hub-server-*
       - name: Build CLI Binaries
         run: |
           VERSION=${{ github.ref_name }}
           COMMIT=$(git rev-parse --short HEAD)
           LDFLAGS="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}"
-          
+
+          echo "Building CLI binaries with version: $VERSION, commit: $COMMIT"
+          echo "LDFLAGS: $LDFLAGS"
+
+          # Create bin directory if it doesn't exist
+          mkdir -p bin
+
           # Linux builds
+          echo "Building CLI Linux AMD64..."
           GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-linux-amd64 apps/cli/main.go
+          echo "✓ Built vault-hub-cli-linux-amd64"
+
+          echo "Building CLI Linux ARM64..."
           GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-linux-arm64 apps/cli/main.go
+          echo "✓ Built vault-hub-cli-linux-arm64"
 
           # Windows builds
+          echo "Building CLI Windows AMD64..."
           GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-windows-amd64.exe apps/cli/main.go
+          echo "✓ Built vault-hub-cli-windows-amd64.exe"
 
           # macOS builds
+          echo "Building CLI macOS AMD64..."
           GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-darwin-amd64 apps/cli/main.go
+          echo "✓ Built vault-hub-cli-darwin-amd64"
+
+          echo "Building CLI macOS ARM64..."
           GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-darwin-arm64 apps/cli/main.go
+          echo "✓ Built vault-hub-cli-darwin-arm64"
+
+          echo "All CLI binaries built successfully!"
+          echo "Listing built files:"
+          ls -la bin/vault-hub-cli-*
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
@@ -228,9 +272,24 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+
+          # Switch to main branch (we're in detached HEAD from tag checkout)
+          git checkout main
+          git pull origin main
+
+          # Add and commit changelog if there are changes
           git add CHANGELOG.md
-          git diff --staged --quiet || git commit -m "chore: update CHANGELOG.md for ${{ github.ref_name }}"
-          git push
+          if ! git diff --staged --quiet; then
+            # Create new branch for changelog update
+            BRANCH_NAME="chore/update-changelog-${{ github.ref_name }}"
+            git checkout -b "$BRANCH_NAME"
+            git commit -m "chore: update CHANGELOG.md for ${{ github.ref_name }}"
+            git push origin "$BRANCH_NAME"
+            echo "Created branch: $BRANCH_NAME"
+            echo "Changelog update pushed to new branch for review"
+          else
+            echo "No changes to CHANGELOG.md, skipping commit"
+          fi
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
