@@ -6,7 +6,6 @@ import {
   Lock,
   MoreVertical,
   Plus,
-  Search,
   Unlock,
   Users,
   Vault,
@@ -77,15 +76,6 @@ export default function DashboardContent() {
             <p className="text-muted-foreground">
               Manage your vaults and monitor activity
             </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm">
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
-            <Button variant="outline" size="sm">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </header>
@@ -170,17 +160,6 @@ export default function DashboardContent() {
                   <div className="h-2 w-2 bg-green-500 rounded-full"></div>
                   <span className="text-sm text-muted-foreground">Healthy</span>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Backup</span>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">Running</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Storage</span>
-                <span className="text-sm text-muted-foreground">78% Used</span>
               </div>
               {version && (
                 <div className="pt-3 border-t border-border">
