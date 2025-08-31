@@ -5,7 +5,7 @@ import EditApiKeyModal from '@/components/modals/edit-api-key-modal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useApiKeys } from '@/hooks/use-api-keys';
-import type { APIKey } from '@lwshen/vault-hub-ts-fetch-client';
+import type { VaultAPIKey } from '@lwshen/vault-hub-ts-fetch-client';
 import { AlertCircle, Edit, Key, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -14,7 +14,7 @@ export default function ApiKeysContent() {
   const { apiKeys, isLoading, error, refetch } = useApiKeys();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedApiKey, setSelectedApiKey] = useState<APIKey | null>(null);
+  const [selectedApiKey, setSelectedApiKey] = useState<VaultAPIKey | null>(null);
 
   const handleKeyCreated = () => {
     refetch();

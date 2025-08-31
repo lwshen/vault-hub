@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { apiKeyApi } from '@/apis/api';
-import type { APIKey } from '@lwshen/vault-hub-ts-fetch-client';
+import type { VaultAPIKey } from '@lwshen/vault-hub-ts-fetch-client';
 
 interface UseApiKeysReturn {
-  apiKeys: APIKey[];
+  apiKeys: VaultAPIKey[];
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
 }
 
 export const useApiKeys = (): UseApiKeysReturn => {
-  const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
+  const [apiKeys, setApiKeys] = useState<VaultAPIKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,13 +21,13 @@ export const useApiKeys = (): UseApiKeysReturn => {
       // Fetch first page with a large pageSize to simplify UI for now
       const response = await apiKeyApi.getAPIKeys(100, 1);
 
-      let list: APIKey[] | undefined;
+      let list: VaultAPIKey[] | undefined;
 
       if (typeof response === 'object' && response !== null && 'apiKeys' in response) {
         // The response is APIKeysResponse
-        list = (response as { apiKeys?: APIKey[]; }).apiKeys;
+        list = (response as { apiKeys?: VaultAPIKey[]; }).apiKeys;
       } else if (Array.isArray(response)) {
-        list = response as APIKey[];
+        list = response as VaultAPIKey[];
       }
 
       setApiKeys(list ?? []);
