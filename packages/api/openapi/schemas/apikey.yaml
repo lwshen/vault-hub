@@ -9,7 +9,7 @@ APIKeysResponse:
     apiKeys:
       type: array
       items:
-        $ref: '#/VaultAPIKey'
+        $ref: "#/VaultAPIKey"
     totalCount:
       type: integer
       description: Total number of API keys
@@ -84,7 +84,7 @@ CreateAPIKeyResponse:
     - key
   properties:
     apiKey:
-      $ref: '#/VaultAPIKey'
+      $ref: "#/VaultAPIKey"
     key:
       type: string
       description: The generated API key (only shown once)

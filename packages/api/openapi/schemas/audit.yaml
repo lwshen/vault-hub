@@ -9,7 +9,7 @@ AuditLogsResponse:
     auditLogs:
       type: array
       items:
-        $ref: '#/AuditLog'
+        $ref: "#/AuditLog"
     totalCount:
       type: integer
       description: Total number of logs matching the filter criteria
