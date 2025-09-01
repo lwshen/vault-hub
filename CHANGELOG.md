@@ -1,3 +1,29 @@
+## [1.1.3] - 2025-09-01
+
+### ⚙️ Miscellaneous Tasks
+
+- Revert release workflow (#183)
+## [1.1.2] - 2025-09-01
+
+### ⚙️ Miscellaneous Tasks
+
+- Enhance changelog update process in release workflow (#182)
+## [1.1.1] - 2025-09-01
+
+### ⚙️ Miscellaneous Tasks
+
+- Update pull request permissions in release workflow (#181)
+## [1.1.0] - 2025-08-31
+
+### 🚀 Features
+
+- *(web)* Add version API and display version info in dashboard (#179)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update CHANGELOG.md for v1.0.4 (#177)
+- Update release workflow to create and auto-merge changelog PR (#178)
+- Format yaml (#180)
 ## [1.0.4] - 2025-08-31
 
 ### ⚙️ Miscellaneous Tasks
