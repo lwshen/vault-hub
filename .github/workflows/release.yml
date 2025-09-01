@@ -6,7 +6,7 @@ on:
       - v*
 permissions:
   contents: write
-  pull-requests: write
+  pull-requests: read
   packages: write
 jobs:
   build:
@@ -273,7 +273,7 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           body: ${{steps.set_release_body.outputs.changelog}}
-      - name: Create Changelog PR with Auto-merge
+      - name: Update Changelog
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -285,24 +285,24 @@ jobs:
           # Add and commit changelog if there are changes
           git add CHANGELOG.md
           if ! git diff --staged --quiet; then
-            # Create new branch for changelog update
-            BRANCH_NAME="chore/update-changelog-${{ github.ref_name }}"
-            git checkout -b "$BRANCH_NAME"
+            # Try to commit directly to main first
             git commit -m "chore: update CHANGELOG.md for ${{ github.ref_name }}"
-            git push origin "$BRANCH_NAME"
-            echo "Created branch: $BRANCH_NAME"
             
-            # Create PR using GitHub CLI
-            gh pr create \
-              --title "chore: update CHANGELOG.md for ${{ github.ref_name }}" \
-              --body "Automated changelog update for release ${{ github.ref_name }}" \
-              --base main \
-              --head "$BRANCH_NAME"
-            
-            # Enable auto-merge for the PR
-            gh pr merge "$BRANCH_NAME" --auto --squash
-            
-            echo "Changelog PR created and auto-merge enabled"
+            if git push origin main; then
+              echo "Successfully pushed changelog update to main branch"
+            else
+              echo "Failed to push to main, creating changelog release branch"
+              
+              # Reset the commit since push failed
+              git reset HEAD~1
+              
+              # Create new branch for changelog update
+              BRANCH_NAME="chore/update-changelog-${{ github.ref_name }}"
+              git checkout -b "$BRANCH_NAME"
+              git commit -m "chore: update CHANGELOG.md for ${{ github.ref_name }}"
+              git push origin "$BRANCH_NAME"
+              echo "Created and pushed changelog to branch: $BRANCH_NAME"
+            fi
           else
             echo "No changes to CHANGELOG.md, skipping commit"
           fi
