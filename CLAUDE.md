@@ -15,12 +15,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Go CLI (apps/cli/)
 
-- **Build**: `go build -o vault-hub-cli ./apps/cli/main.go`
-- **Build with version**: `go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') -X github.com/lwshen/vault-hub/internal/version.Commit=$(git rev-parse --short HEAD)" -o vault-hub-cli ./apps/cli/main.go`
+- **Build**: `go build -o tmp/vault-hub-cli ./apps/cli/main.go`
+- **Build with version**: `go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') -X github.com/lwshen/vault-hub/internal/version.Commit=$(git rev-parse --short HEAD)" -o tmp/vault-hub-cli ./apps/cli/main.go`
 - **Run**: `go run ./apps/cli/main.go`
 - **Commands**:
   - `vault-hub list` or `vault-hub ls` - List all accessible vaults
-  - `vault-hub get <vault-name-or-id>` - Get a specific vault by name or unique ID
+  - `vault-hub get --name/--id <vault-name-or-id>` - Get a specific vault by name or unique ID
+    - `--exec` flag: Execute command if vault has been updated since last output
+    - Example: `vault-hub get --name my-secrets --output .env --exec "source .env && npm start"`
   - `vault-hub version` - Show version and commit information
 - **Multi-platform builds**: See CI configuration for cross-compilation examples
 
@@ -68,7 +70,7 @@ VaultHub is a comprehensive secure environment variable and API key management s
 - **Entry point**: `apps/cli/main.go` - Sets up Cobra CLI with vault management commands
 - **Commands**:
   - `list` (alias: `ls`) - List all accessible vaults
-  - `get <vault-name-or-id>` - Get specific vault by name or unique ID
+  - `get --name/--id <vault-name-or-id>` - Get specific vault by name or unique ID
 - **API Integration**: Designed to work with `/api/cli/*` endpoints for API key authentication
 - **Cross-platform**: Built for Linux, Windows, and macOS (amd64, arm64)
 
@@ -154,6 +156,18 @@ The application enforces strict authentication rules via middleware (`route/midd
 - **Enhanced Security**: Supports optional client-side encryption via `X-Enable-Client-Encryption: true` header
   - Uses PBKDF2 key derivation from API key + vault unique ID as salt
   - Provides per-vault encryption keys without key exchange complexity
+
+## Go Code Quality
+
+**IMPORTANT**: Always run `golangci-lint run ./...` after editing Go code to ensure code quality and formatting standards are met. This will check for:
+
+- Formatting issues (gofmt)
+- Security vulnerabilities (gosec)
+- Code style violations
+- Unused variables/parameters
+- Other Go best practices
+
+**Format Go code**: Use `gofmt -w <files>` to automatically format Go files before committing.
 
 ## Testing Strategy
 
