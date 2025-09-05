@@ -10,6 +10,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
@@ -108,8 +115,7 @@ export default function AuditLogContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState(20);
 
   const fetchAuditLogs = useCallback(async (page: number) => {
     try {
@@ -140,6 +146,17 @@ export default function AuditLogContent() {
       fetchAuditLogs(page);
     }
   };
+
+  const handlePageSizeChange = (newPageSize: string) => {
+    const size = parseInt(newPageSize);
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  // Update fetchAuditLogs when pageSize changes
+  useEffect(() => {
+    fetchAuditLogs(1);
+  }, [pageSize, fetchAuditLogs]);
 
   const getAuditTypeLabel = (action: AuditLogActionEnum) => {
     const labels: { [key in AuditLogActionEnum]: string; } = {
@@ -271,11 +288,28 @@ export default function AuditLogContent() {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Audit Logs</h3>
-              {totalCount > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount} events
-                </p>
-              )}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Show</span>
+                  <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-muted-foreground">per page</span>
+                </div>
+                {totalCount > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount} events
+                  </p>
+                )}
+              </div>
             </div>
             {isLoading ? (
               <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
