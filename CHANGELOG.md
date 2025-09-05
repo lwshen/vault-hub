@@ -1,3 +1,9 @@
+## [1.1.6] - 2025-09-05
+
+### ⚙️ Miscellaneous Tasks
+
+- Update CHANGELOG.md for v1.1.5 (#187)
+- Add dry run and version increment selection in bump script (#188)
 ## [1.1.5] - 2025-09-05
 
 ### ⚙️ Miscellaneous Tasks
