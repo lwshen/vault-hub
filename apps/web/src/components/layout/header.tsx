@@ -11,10 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, ChevronDown, User, LogOut, Settings, Vault, Activity, Key } from 'lucide-react';
+import { Menu, X, ChevronDown, User, LogOut, Settings } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-mode-toggle';
 import useAuth from '@/hooks/use-auth';
 import { PATH } from '@/const/path';
+import { DASHBOARD_NAVIGATION } from '@/const/navigation';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -41,13 +42,6 @@ export default function Header() {
     { name: 'Documentation', href: '/docs' },
   ];
 
-  // Dashboard navigation for mobile sidebar
-  const dashboardNavigation = [
-    { name: 'Dashboard', href: PATH.DASHBOARD, icon: Activity },
-    { name: 'Vaults', href: PATH.VAULTS, icon: Vault },
-    { name: 'API Keys', href: PATH.API_KEYS, icon: Key },
-    { name: 'Audit Log', href: PATH.AUDIT_LOG, icon: Activity },
-  ];
 
   const handleLogin = () => {
     navigate(PATH.LOGIN);
@@ -186,7 +180,7 @@ export default function Header() {
                 <div className="px-3 py-2 text-sm font-medium text-foreground/60 border-b border-border mb-2">
                   Dashboard Navigation
                 </div>
-                {dashboardNavigation.map((item) => {
+                {DASHBOARD_NAVIGATION.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link

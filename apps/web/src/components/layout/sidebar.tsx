@@ -1,28 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'wouter';
-import { PATH } from '@/const/path';
-import {
-  Vault,
-  Activity,
-  Key,
-} from 'lucide-react';
+import { DASHBOARD_NAVIGATION } from '@/const/navigation';
 
 export default function Sidebar() {
   const [pathname] = useLocation();
-
-
-  const navItems = [
-    { href: PATH.DASHBOARD, icon: Activity, label: 'Dashboard' },
-    { href: PATH.VAULTS, icon: Vault, label: 'Vaults' },
-    { href: PATH.API_KEYS, icon: Key, label: 'API Keys' },
-    { href: PATH.AUDIT_LOG, icon: Activity, label: 'Audit Log' },
-  ];
 
   return (
     <div className="hidden md:flex w-64 bg-card border-r border-border flex-col h-full">
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        {navItems.map(({ href, icon: Icon, label }) => {
+        {DASHBOARD_NAVIGATION.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href;
           return (
             <Link key={href} href={href}>
