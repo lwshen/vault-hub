@@ -15,12 +15,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Go CLI (apps/cli/)
 
-- **Build**: `go build -o vault-hub-cli ./apps/cli/main.go`
-- **Build with version**: `go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') -X github.com/lwshen/vault-hub/internal/version.Commit=$(git rev-parse --short HEAD)" -o vault-hub-cli ./apps/cli/main.go`
+- **Build**: `go build -o tmp/vault-hub-cli ./apps/cli/main.go`
+- **Build with version**: `go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') -X github.com/lwshen/vault-hub/internal/version.Commit=$(git rev-parse --short HEAD)" -o tmp/vault-hub-cli ./apps/cli/main.go`
 - **Run**: `go run ./apps/cli/main.go`
 - **Commands**:
   - `vault-hub list` or `vault-hub ls` - List all accessible vaults
   - `vault-hub get <vault-name-or-id>` - Get a specific vault by name or unique ID
+    - `--exec` flag: Execute command if vault has been updated since last output
+    - Example: `vault-hub get --name my-secrets --output .env --exec "source .env && npm start"`
   - `vault-hub version` - Show version and commit information
 - **Multi-platform builds**: See CI configuration for cross-compilation examples
 

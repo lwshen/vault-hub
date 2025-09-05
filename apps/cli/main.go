@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
+	"time"
 
 	openapi "github.com/lwshen/vault-hub-go-client"
 	"github.com/spf13/cobra"
@@ -101,6 +103,7 @@ func init() {
 	getCmd.Flags().StringP("name", "n", "", "Vault name")
 	getCmd.Flags().StringP("id", "i", "", "Vault Unique ID")
 	getCmd.Flags().StringP("output", "o", "", "Output to file instead of stdout")
+	getCmd.Flags().StringP("exec", "e", "", "Command to execute if vault has been updated")
 }
 
 func main() {
@@ -180,15 +183,17 @@ You can specify the vault by either its name or unique ID.
 Examples:
   vault-hub get --name my-api-keys
   vault-hub get --id abc123-def456-ghi789
-  vault-hub get --name my-api-keys --output ./secrets.txt`,
+  vault-hub get --name my-api-keys --output ./secrets.txt
+  vault-hub get --name my-api-keys --output ./secrets.txt --exec "source ./secrets.txt && npm start"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		debugLog("Executing get command")
 
 		name := mustGetStringFlag(cmd, "name")
 		id := mustGetStringFlag(cmd, "id")
 		outputFile := mustGetStringFlag(cmd, "output")
+		followUpCommand := mustGetStringFlag(cmd, "exec")
 
-		debugLog("Parameters - name: '%s', id: '%s', output: '%s'", name, id, outputFile)
+		debugLog("Parameters - name: '%s', id: '%s', output: '%s', exec: '%s'", name, id, outputFile, followUpCommand)
 
 		if name == "" && id == "" {
 			debugLog("Validation failed: neither name nor id provided")
@@ -216,6 +221,31 @@ Examples:
 
 		if outputFile != "" {
 			debugLog("Writing vault value to file: %s", outputFile)
+			
+			// Check if file exists and get its modification time
+			var fileModTime time.Time
+			var fileExists bool
+			if fileInfo, err := os.Stat(outputFile); err == nil {
+				fileModTime = fileInfo.ModTime()
+				fileExists = true
+				debugLog("File exists, last modified: %s", fileModTime.Format(time.RFC3339))
+			} else {
+				debugLog("File does not exist")
+			}
+			
+			// Parse vault's updated timestamp
+			var vaultUpdatedAt time.Time
+			if vault.UpdatedAt != nil {
+				vaultUpdatedAt = *vault.UpdatedAt
+			} else {
+				vaultUpdatedAt = time.Now() // Fallback to current time if no timestamp
+			}
+			debugLog("Vault last updated: %s", vaultUpdatedAt.Format(time.RFC3339))
+			
+			// Determine if vault has been updated
+			vaultHasUpdates := !fileExists || vaultUpdatedAt.After(fileModTime)
+			debugLog("Vault has updates: %v", vaultHasUpdates)
+			
 			err = os.WriteFile(outputFile, []byte(vault.Value), 0600)
 			if err != nil {
 				debugLog("File write failed: %v", err)
@@ -223,7 +253,32 @@ Examples:
 				os.Exit(1)
 			}
 			debugLog("File write successful")
-			fmt.Printf("Vault value written to %s\n", outputFile)
+			
+			if vaultHasUpdates {
+				fmt.Printf("Vault value written to %s (vault was updated)\n", outputFile)
+				
+				// Execute follow-up command if specified
+				if followUpCommand != "" {
+					debugLog("Executing follow-up command: %s", followUpCommand)
+					fmt.Printf("Executing follow-up command: %s\n", followUpCommand)
+					
+					cmdParts := strings.Fields(followUpCommand)
+					if len(cmdParts) > 0 {
+						cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
+						cmd.Stdout = os.Stdout
+						cmd.Stderr = os.Stderr
+						
+						if err := cmd.Run(); err != nil {
+							debugLog("Follow-up command failed: %v", err)
+							fmt.Fprintf(os.Stderr, "Warning: Follow-up command failed: %v\n", err)
+						} else {
+							debugLog("Follow-up command completed successfully")
+						}
+					}
+				}
+			} else {
+				fmt.Printf("Vault value written to %s (no updates since last fetch)\n", outputFile)
+			}
 		} else {
 			debugLog("Outputting vault value to stdout")
 			fmt.Println(vault.Value)
