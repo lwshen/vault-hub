@@ -25,6 +25,11 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+if ! command -v uvx >/dev/null 2>&1; then
+    echo "Error: uvx is required but not installed"
+    exit 1
+fi
+
 # Get new version using bump-my-version
 version=$(uvx bump-my-version show --increment "$increment" new_version)
 version=v$version
