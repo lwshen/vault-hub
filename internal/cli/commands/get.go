@@ -87,12 +87,24 @@ func handleFileOutput(vault *openapi.Vault, outputFile, followUpCommand string, 
 	// Check if file exists and get its modification time
 	var fileModTime time.Time
 	var fileExists bool
+	var contentChanged bool
+
 	if fileInfo, err := os.Stat(outputFile); err == nil {
 		fileModTime = fileInfo.ModTime()
 		fileExists = true
 		debugLog("File exists, last modified: %s", fileModTime.Format(time.RFC3339))
+
+		// Compare file content with vault value
+		if existingContent, readErr := os.ReadFile(outputFile); readErr == nil {
+			contentChanged = string(existingContent) != vault.Value
+			debugLog("Content comparison - file differs from vault: %v", contentChanged)
+		} else {
+			debugLog("Could not read existing file for content comparison: %v", readErr)
+			contentChanged = true // Assume content changed if we can't read the file
+		}
 	} else {
 		debugLog("File does not exist")
+		contentChanged = true // New file, so content is "changed"
 	}
 
 	// Parse vault's updated timestamp
@@ -105,8 +117,10 @@ func handleFileOutput(vault *openapi.Vault, outputFile, followUpCommand string, 
 	debugLog("Vault last updated: %s", vaultUpdatedAt.Format(time.RFC3339))
 
 	// Determine if vault has been updated
-	vaultHasUpdates := !fileExists || vaultUpdatedAt.After(fileModTime)
-	debugLog("Vault has updates: %v", vaultHasUpdates)
+	// Consider updates if: file doesn't exist, vault timestamp is newer, OR content differs
+	timestampChanged := !fileExists || vaultUpdatedAt.After(fileModTime)
+	vaultHasUpdates := timestampChanged || contentChanged
+	debugLog("Vault has updates: %v (timestamp: %v, content: %v)", vaultHasUpdates, timestampChanged, contentChanged)
 
 	err := os.WriteFile(outputFile, []byte(vault.Value), 0600)
 	if err != nil {
@@ -117,14 +131,24 @@ func handleFileOutput(vault *openapi.Vault, outputFile, followUpCommand string, 
 	debugLog("File write successful")
 
 	if vaultHasUpdates {
-		fmt.Printf("Vault value written to %s (vault was updated)\n", outputFile)
+		var reason string
+		if !fileExists {
+			reason = "new file"
+		} else if timestampChanged && contentChanged {
+			reason = "vault updated and content differs"
+		} else if timestampChanged {
+			reason = "vault was updated"
+		} else if contentChanged {
+			reason = "content differs from vault"
+		}
+		fmt.Printf("Vault value written to %s (%s)\n", outputFile, reason)
 
 		// Execute follow-up command if specified
 		if followUpCommand != "" {
 			executeFollowUpCommand(followUpCommand, debugLog)
 		}
 	} else {
-		fmt.Printf("Vault value written to %s (no updates since last fetch)\n", outputFile)
+		fmt.Printf("Vault value written to %s (no updates - content matches vault)\n", outputFile)
 	}
 }
 
