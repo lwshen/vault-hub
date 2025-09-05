@@ -2,6 +2,14 @@ import { auditApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import DashboardHeader from '@/components/layout/dashboard-header';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
@@ -97,57 +105,40 @@ export default function AuditLogContent() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [nextPageIndex, setNextPageIndex] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
 
   const pageSize = 20;
 
-  const fetchInitialAuditLogs = useCallback(async () => {
+  const fetchAuditLogs = useCallback(async (page: number) => {
     try {
       setIsLoading(true);
       setError(null);
-      setAuditLogs([]);
-      setNextPageIndex(1);
 
-      const response = await auditApi.getAuditLogs(pageSize, 1);
+      const response = await auditApi.getAuditLogs(pageSize, page);
       const newLogs = response.auditLogs || [];
 
       setAuditLogs(newLogs);
       setTotalCount(response.totalCount || 0);
-      setNextPageIndex(2);
+      setTotalPages(Math.ceil((response.totalCount || 0) / pageSize));
+      setCurrentPage(page);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch audit logs');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [pageSize]);
 
-  const loadMoreAuditLogs = useCallback(async () => {
-    if (isLoadingMore || auditLogs.length >= totalCount) return;
-
-    try {
-      setIsLoadingMore(true);
-      setError(null);
-
-      const response = await auditApi.getAuditLogs(pageSize, nextPageIndex);
-      const newLogs = response.auditLogs || [];
-
-      setAuditLogs(prev => [...prev, ...newLogs]);
-      setNextPageIndex(prev => prev + 1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load more audit logs');
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [nextPageIndex, isLoadingMore, auditLogs.length, totalCount]);
 
   useEffect(() => {
-    fetchInitialAuditLogs();
-  }, [fetchInitialAuditLogs]);
+    fetchAuditLogs(1);
+  }, [fetchAuditLogs]);
 
-  const loadMore = () => {
-    loadMoreAuditLogs();
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      fetchAuditLogs(page);
+    }
   };
 
   const getAuditTypeLabel = (action: AuditLogActionEnum) => {
@@ -176,7 +167,7 @@ export default function AuditLogContent() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold">Failed to load audit logs</h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
-                <Button onClick={fetchInitialAuditLogs}>Try Again</Button>
+                <Button onClick={() => fetchAuditLogs(currentPage)}>Try Again</Button>
               </div>
             </div>
           </Card>
@@ -227,6 +218,50 @@ export default function AuditLogContent() {
                   <p className="text-2xl font-bold">156</p>
                   <p className="text-sm text-muted-foreground">API Key Events</p>
                   <p className="text-xs text-muted-foreground">Last 30 days</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Secondary Metrics */}
+          <div className="grid gap-4 md:grid-cols-4 mb-6">
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <Shield className="h-8 w-8 text-red-500" />
+                <div>
+                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-sm text-muted-foreground">Critical Actions</p>
+                  <p className="text-xs text-muted-foreground">Delete operations</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <Globe className="h-8 w-8 text-purple-500" />
+                <div>
+                  <p className="text-2xl font-bold">23</p>
+                  <p className="text-sm text-muted-foreground">Unique IPs</p>
+                  <p className="text-xs text-muted-foreground">Security monitoring</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-8 w-8 text-indigo-500" />
+                <div>
+                  <p className="text-2xl font-bold">prod-secrets</p>
+                  <p className="text-sm text-muted-foreground">Most Active Vault</p>
+                  <p className="text-xs text-muted-foreground">324 accesses</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <Activity className="h-8 w-8 text-emerald-500" />
+                <div>
+                  <p className="text-2xl font-bold">7</p>
+                  <p className="text-sm text-muted-foreground">Active Sessions</p>
+                  <p className="text-xs text-muted-foreground">Current users</p>
                 </div>
               </div>
             </Card>
@@ -295,23 +330,51 @@ export default function AuditLogContent() {
                   );
                 })}
 
-                {/* Load More */}
-                {auditLogs.length < totalCount && (
-                  <div className="mt-6 text-center">
-                    <Button
-                      variant="outline"
-                      onClick={loadMore}
-                      disabled={isLoadingMore}
-                    >
-                      {isLoadingMore ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        `Load More (${auditLogs.length} of ${totalCount})`
-                      )}
-                    </Button>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-6 flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+
+                          return (
+                            <PaginationItem key={pageNum}>
+                              <PaginationLink
+                                onClick={() => handlePageChange(pageNum)}
+                                isActive={currentPage === pageNum}
+                                className="cursor-pointer"
+                              >
+                                {pageNum}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   </div>
                 )}
               </div>
