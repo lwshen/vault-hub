@@ -157,6 +157,18 @@ The application enforces strict authentication rules via middleware (`route/midd
   - Uses PBKDF2 key derivation from API key + vault unique ID as salt
   - Provides per-vault encryption keys without key exchange complexity
 
+## Go Code Quality
+
+**IMPORTANT**: Always run `golangci-lint run ./...` after editing Go code to ensure code quality and formatting standards are met. This will check for:
+
+- Formatting issues (gofmt)
+- Security vulnerabilities (gosec)
+- Code style violations
+- Unused variables/parameters
+- Other Go best practices
+
+**Format Go code**: Use `gofmt -w <files>` to automatically format Go files before committing.
+
 ## Testing Strategy
 
 - Go unit tests for encryption (`internal/encryption/encryption_test.go`)
