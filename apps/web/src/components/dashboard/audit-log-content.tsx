@@ -286,9 +286,14 @@ export default function AuditLogContent() {
 
           {/* Audit List */}
           <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Audit Logs</h3>
-              <div className="flex items-center gap-4">
+            <div className="mb-4">
+              {/* Header with title */}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold">Audit Logs</h3>
+              </div>
+
+              {/* Controls - responsive layout */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">Show</span>
                   <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
@@ -304,6 +309,7 @@ export default function AuditLogContent() {
                   </Select>
                   <span className="text-sm text-muted-foreground">per page</span>
                 </div>
+
                 {totalCount > 0 && (
                   <p className="text-sm text-muted-foreground">
                     Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount} events
