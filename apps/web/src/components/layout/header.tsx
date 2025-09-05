@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, ChevronDown, User, LogOut, Settings } from 'lucide-react';
+import { Menu, X, ChevronDown, User, LogOut, Settings, Vault, Activity, Key } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-mode-toggle';
 import useAuth from '@/hooks/use-auth';
 import { PATH } from '@/const/path';
@@ -20,6 +20,14 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pathname, navigate] = useLocation();
   const { isAuthenticated, user, logout, isLoading } = useAuth();
+
+  // Check if user is on dashboard pages
+  const isDashboardPage = isAuthenticated && (
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/vaults') ||
+    pathname.startsWith('/api-keys') ||
+    pathname.startsWith('/audit-log')
+  );
 
   const navigation = isAuthenticated ? [
     { name: 'Dashboard', href: PATH.DASHBOARD },
@@ -31,6 +39,14 @@ export default function Header() {
     { name: 'Features', href: '/features' },
     { name: 'Pricing', href: '/pricing' },
     { name: 'Documentation', href: '/docs' },
+  ];
+
+  // Dashboard navigation for mobile sidebar
+  const dashboardNavigation = [
+    { name: 'Dashboard', href: PATH.DASHBOARD, icon: Activity },
+    { name: 'Vaults', href: PATH.VAULTS, icon: Vault },
+    { name: 'API Keys', href: PATH.API_KEYS, icon: Key },
+    { name: 'Audit Log', href: PATH.AUDIT_LOG, icon: Activity },
   ];
 
   const handleLogin = () => {
@@ -164,21 +180,50 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-background/95 border-t border-border">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  'block px-3 py-2 rounded-md text-base font-medium',
-                  pathname === item.href
-                    ? 'text-foreground bg-accent'
-                    : 'text-foreground/60 hover:text-foreground hover:bg-accent/50',
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {isDashboardPage ? (
+              // Show dashboard navigation when on dashboard pages
+              <>
+                <div className="px-3 py-2 text-sm font-medium text-foreground/60 border-b border-border mb-2">
+                  Dashboard Navigation
+                </div>
+                {dashboardNavigation.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium',
+                        pathname === item.href
+                          ? 'text-foreground bg-accent'
+                          : 'text-foreground/60 hover:text-foreground hover:bg-accent/50',
+                      )}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </>
+            ) : (
+              // Show regular navigation when not on dashboard pages
+              navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    'block px-3 py-2 rounded-md text-base font-medium',
+                    pathname === item.href
+                      ? 'text-foreground bg-accent'
+                      : 'text-foreground/60 hover:text-foreground hover:bg-accent/50',
+                  )}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))
+            )}
 
             {/* Mobile auth buttons */}
             <div className="pt-4 pb-3 border-t border-border">
