@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	openapi "github.com/lwshen/vault-hub-go-client"
@@ -24,7 +23,7 @@ Examples:
   vault-hub get --name my-api-keys
   vault-hub get --id abc123-def456-ghi789
   vault-hub get --name my-api-keys --output ./secrets.txt
-  vault-hub get --name my-api-keys --output ./secrets.txt --exec "source ./secrets.txt && npm start"`,
+  vault-hub get --name my-api-keys --output .env --exec "source .env && echo 'Environment loaded'"`,
 		Run: func(cmd *cobra.Command, args []string) {
 			runGetCommand(cmd, args, ctx)
 		},
@@ -109,17 +108,19 @@ func handleFileOutput(vault *openapi.Vault, outputFile, followUpCommand string, 
 
 	// Parse vault's updated timestamp
 	var vaultUpdatedAt time.Time
+	var hasValidTimestamp bool
 	if vault.UpdatedAt != nil {
 		vaultUpdatedAt = *vault.UpdatedAt
+		hasValidTimestamp = true
+		debugLog("Vault last updated: %s", vaultUpdatedAt.Format(time.RFC3339))
 	} else {
-		vaultUpdatedAt = time.Now() // Fallback to current time if no timestamp
+		debugLog("Vault has no timestamp - treating as new vault")
 	}
-	debugLog("Vault last updated: %s", vaultUpdatedAt.Format(time.RFC3339))
 
 	// Determine if vault has been updated
-	// Consider updates if: file doesn't exist, vault timestamp is newer, OR content differs
-	timestampChanged := !fileExists || vaultUpdatedAt.After(fileModTime)
-	vaultHasUpdates := timestampChanged || contentChanged
+	// Only proceed with update check if we have valid timestamps
+	vaultHasUpdates := !fileExists || (hasValidTimestamp && vaultUpdatedAt.After(fileModTime)) || contentChanged
+	timestampChanged := hasValidTimestamp && vaultUpdatedAt.After(fileModTime)
 	debugLog("Vault has updates: %v (timestamp: %v, content: %v)", vaultHasUpdates, timestampChanged, contentChanged)
 
 	err := os.WriteFile(outputFile, []byte(vault.Value), 0600)
@@ -156,18 +157,15 @@ func executeFollowUpCommand(followUpCommand string, debugLog func(string, ...any
 	debugLog("Executing follow-up command: %s", followUpCommand)
 	fmt.Printf("Executing follow-up command: %s\n", followUpCommand)
 
-	cmdParts := strings.Fields(followUpCommand)
-	if len(cmdParts) > 0 {
-		// #nosec G204 - This is intentional: user-provided command execution is the expected behavior
-		cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+	// Use shell to handle complex commands properly
+	cmd := exec.Command("sh", "-c", followUpCommand)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-		if err := cmd.Run(); err != nil {
-			debugLog("Follow-up command failed: %v", err)
-			fmt.Fprintf(os.Stderr, "Warning: Follow-up command failed: %v\n", err)
-		} else {
-			debugLog("Follow-up command completed successfully")
-		}
+	if err := cmd.Run(); err != nil {
+		debugLog("Follow-up command failed: %v", err)
+		fmt.Fprintf(os.Stderr, "Warning: Follow-up command failed: %v\n", err)
+	} else {
+		debugLog("Follow-up command completed successfully")
 	}
 }
