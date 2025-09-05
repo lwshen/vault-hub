@@ -45,7 +45,27 @@ if [ "$dry_run" = true ]; then
   echo "[DRY RUN] Would run: git tag -am \"$version\" \"$version\""
   echo "[DRY RUN] Would run: git push origin \"$version\""
 else
-  git tag -am "$version" "$version"
-  echo "tag $version created"
-  git push origin "$version"
+  echo "About to create and push tag: $version"
+  printf "Proceed? (y/N): "
+  read -r response
+  case "$response" in
+    [yY]|[yY][eE][sS])
+      git tag -am "$version" "$version"
+      if [ $? -ne 0 ]; then
+        echo "Error: Failed to create tag $version"
+        exit 1
+      fi
+      echo "tag $version created"
+      git push origin "$version"
+      if [ $? -ne 0 ]; then
+        echo "Error: Failed to push tag $version to origin"
+        exit 1
+      fi
+      echo "tag $version pushed to origin"
+      ;;
+    *)
+      echo "Aborted"
+      exit 1
+      ;;
+  esac
 fi
