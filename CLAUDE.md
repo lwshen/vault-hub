@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run**: `go run ./apps/cli/main.go`
 - **Commands**:
   - `vault-hub list` or `vault-hub ls` - List all accessible vaults
-  - `vault-hub get <vault-name-or-id>` - Get a specific vault by name or unique ID
+  - `vault-hub get --name/--id <vault-name-or-id>` - Get a specific vault by name or unique ID
     - `--exec` flag: Execute command if vault has been updated since last output
     - Example: `vault-hub get --name my-secrets --output .env --exec "source .env && npm start"`
   - `vault-hub version` - Show version and commit information
@@ -70,7 +70,7 @@ VaultHub is a comprehensive secure environment variable and API key management s
 - **Entry point**: `apps/cli/main.go` - Sets up Cobra CLI with vault management commands
 - **Commands**:
   - `list` (alias: `ls`) - List all accessible vaults
-  - `get <vault-name-or-id>` - Get specific vault by name or unique ID
+  - `get --name/--id <vault-name-or-id>` - Get specific vault by name or unique ID
 - **API Integration**: Designed to work with `/api/cli/*` endpoints for API key authentication
 - **Cross-platform**: Built for Linux, Windows, and macOS (amd64, arm64)
 
