@@ -1,3 +1,14 @@
+## [1.1.5] - 2025-09-05
+
+### ⚙️ Miscellaneous Tasks
+
+- Update token reference in release workflow (#186) (#186)
+## [1.1.4] - 2025-09-05
+
+### ⚙️ Miscellaneous Tasks
+
+- Update CHANGELOG.md for v1.1.3 (#184)
+- Update release workflow for automated changelog PRs (#185)
 ## [1.1.3] - 2025-09-01
 
 ### ⚙️ Miscellaneous Tasks
