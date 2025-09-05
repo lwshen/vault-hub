@@ -51,8 +51,16 @@ else
   case "$response" in
     [yY]|[yY][eE][sS])
       git tag -am "$version" "$version"
+      if [ $? -ne 0 ]; then
+        echo "Error: Failed to create tag $version"
+        exit 1
+      fi
       echo "tag $version created"
       git push origin "$version"
+      if [ $? -ne 0 ]; then
+        echo "Error: Failed to push tag $version to origin"
+        exit 1
+      fi
       echo "tag $version pushed to origin"
       ;;
     *)
