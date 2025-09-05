@@ -269,6 +269,14 @@ export default function AuditLogContent() {
 
           {/* Audit List */}
           <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Audit Logs</h3>
+              {totalCount > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount} events
+                </p>
+              )}
+            </div>
             {isLoading ? (
               <div className="flex items-center justify-center min-h-[200px] flex-col gap-4">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
