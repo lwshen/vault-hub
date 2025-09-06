@@ -1,3 +1,8 @@
+## [1.2.2] - 2025-09-06
+
+### 🚀 Features
+
+- *(audit)* Add metrics endpoints for audit logs (#198)
 ## [1.2.1] - 2025-09-06
 
 ### 🚀 Features
