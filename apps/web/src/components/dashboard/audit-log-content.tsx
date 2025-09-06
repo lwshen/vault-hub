@@ -38,9 +38,6 @@ import {
   Plus,
   Trash2,
   UserPlus,
-  Globe,
-  TrendingUp,
-  Shield,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
