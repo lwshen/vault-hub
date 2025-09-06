@@ -1,71 +1,32 @@
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'wouter';
-import { PATH } from '@/const/path';
-import {
-  Vault,
-  Activity,
-  Key,
-} from 'lucide-react';
+import { DASHBOARD_NAVIGATION } from '@/const/navigation';
 
 export default function Sidebar() {
   const [pathname] = useLocation();
 
   return (
-    <div className="w-64 bg-card border-r border-border flex flex-col h-full">
+    <div className="hidden md:flex w-64 bg-card border-r border-border flex-col h-full">
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        <Link href={PATH.DASHBOARD}>
-          <Button
-            variant={pathname === PATH.DASHBOARD ? 'default' : 'ghost'}
-            className={`w-full justify-start ${
-              pathname === PATH.DASHBOARD
-                ? 'bg-primary/10 text-primary hover:bg-primary/20'
-                : ''
-            }`}
-          >
-            <Activity className="h-4 w-4 mr-3" />
-            Dashboard
-          </Button>
-        </Link>
-        <Link href={PATH.VAULTS}>
-          <Button
-            variant={pathname === PATH.VAULTS ? 'default' : 'ghost'}
-            className={`w-full justify-start ${
-              pathname === PATH.VAULTS
-                ? 'bg-primary/10 text-primary hover:bg-primary/20'
-                : ''
-            }`}
-          >
-            <Vault className="h-4 w-4 mr-3" />
-            Vaults
-          </Button>
-        </Link>
-        <Link href={PATH.API_KEYS}>
-          <Button
-            variant={pathname === PATH.API_KEYS ? 'default' : 'ghost'}
-            className={`w-full justify-start ${
-              pathname === PATH.API_KEYS
-                ? 'bg-primary/10 text-primary hover:bg-primary/20'
-                : ''
-            }`}
-          >
-            <Key className="h-4 w-4 mr-3" />
-            API Keys
-          </Button>
-        </Link>
-        <Link href={PATH.AUDIT_LOG}>
-          <Button
-            variant={pathname === PATH.AUDIT_LOG ? 'default' : 'ghost'}
-            className={`w-full justify-start ${
-              pathname === PATH.AUDIT_LOG
-                ? 'bg-primary/10 text-primary hover:bg-primary/20'
-                : ''
-            }`}
-          >
-            <Activity className="h-4 w-4 mr-3" />
-            Audit Log
-          </Button>
-        </Link>
+        {DASHBOARD_NAVIGATION.map(({ href, icon: Icon, label }) => {
+          const isActive = pathname === href;
+          return (
+            <Link key={href} href={href}>
+              <Button
+                variant={isActive ? 'default' : 'ghost'}
+                className={`w-full justify-start ${
+                  isActive
+                    ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                    : ''
+                }`}
+              >
+                <Icon className="h-4 w-4 mr-3" />
+                {label}
+              </Button>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Quick Actions in Sidebar */}
