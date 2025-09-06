@@ -9,13 +9,13 @@ import (
 type ActionType string
 
 const (
+	ActionLoginUser    ActionType = "login_user"
+	ActionRegisterUser ActionType = "register_user"
+	ActionLogoutUser   ActionType = "logout_user"
 	ActionReadVault    ActionType = "read_vault"
 	ActionUpdateVault  ActionType = "update_vault"
 	ActionDeleteVault  ActionType = "delete_vault"
 	ActionCreateVault  ActionType = "create_vault"
-	ActionLoginUser    ActionType = "login_user"
-	ActionRegisterUser ActionType = "register_user"
-	ActionLogoutUser   ActionType = "logout_user"
 	ActionCreateAPIKey ActionType = "create_api_key"
 	//nolint:gosec // G101 here is the enum name
 	ActionUpdateAPIKey ActionType = "update_api_key"
@@ -224,13 +224,12 @@ func CountAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) (int64, err
 	return count, nil
 }
 
-// GetTotalEventsLast30Days returns the total count of audit events for a user in the last 30 days
-func GetTotalEventsLast30Days(userID uint) (int64, error) {
+// GetAuditEventsCountSince returns the count of audit events for a user since a given time
+func GetAuditEventsCountSince(userID uint, since time.Time) (int64, error) {
 	var count int64
-	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
 
 	err := DB.Model(&AuditLog{}).
-		Where("user_id = ? AND created_at >= ?", userID, thirtyDaysAgo).
+		Where("user_id = ? AND created_at >= ?", userID, since).
 		Count(&count).Error
 
 	if err != nil {
@@ -240,20 +239,16 @@ func GetTotalEventsLast30Days(userID uint) (int64, error) {
 	return count, nil
 }
 
+// GetTotalEventsLast30Days returns the total count of audit events for a user in the last 30 days
+func GetTotalEventsLast30Days(userID uint) (int64, error) {
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+	return GetAuditEventsCountSince(userID, thirtyDaysAgo)
+}
+
 // GetEventsCountLast24Hours returns the count of audit events for a user in the last 24 hours
 func GetEventsCountLast24Hours(userID uint) (int64, error) {
-	var count int64
 	twentyFourHoursAgo := time.Now().Add(-24 * time.Hour)
-
-	err := DB.Model(&AuditLog{}).
-		Where("user_id = ? AND created_at >= ?", userID, twentyFourHoursAgo).
-		Count(&count).Error
-
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
+	return GetAuditEventsCountSince(userID, twentyFourHoursAgo)
 }
 
 // GetVaultEventsLast30Days returns the count of vault-related events for a user in the last 30 days
