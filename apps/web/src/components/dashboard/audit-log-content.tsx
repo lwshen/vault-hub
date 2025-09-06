@@ -3,6 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import DashboardHeader from '@/components/layout/dashboard-header';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -158,21 +166,6 @@ export default function AuditLogContent() {
     fetchAuditLogs(1);
   }, [pageSize, fetchAuditLogs]);
 
-  const getAuditTypeLabel = (action: AuditLogActionEnum) => {
-    const labels: { [key in AuditLogActionEnum]: string; } = {
-      [AuditLogActionEnum.ReadVault]: 'Vault Operation',
-      [AuditLogActionEnum.CreateVault]: 'Vault Operation',
-      [AuditLogActionEnum.UpdateVault]: 'Vault Operation',
-      [AuditLogActionEnum.DeleteVault]: 'Vault Operation',
-      [AuditLogActionEnum.LoginUser]: 'Authentication',
-      [AuditLogActionEnum.LogoutUser]: 'Authentication',
-      [AuditLogActionEnum.RegisterUser]: 'Authentication',
-      [AuditLogActionEnum.CreateApiKey]: 'API Key Management',
-      [AuditLogActionEnum.UpdateApiKey]: 'API Key Management',
-      [AuditLogActionEnum.DeleteApiKey]: 'API Key Management',
-    };
-    return labels[action] || 'System';
-  };
 
   const renderContent = () => {
     if (error) {
@@ -331,52 +324,78 @@ export default function AuditLogContent() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                {auditLogs.map((audit) => {
-                  const { icon: Icon, color } = getIconForAction(audit.action);
-                  return (
-                    <div key={`${audit.action}-${audit.createdAt}`} className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                          <Icon className={`h-5 w-5 ${color}`} />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-medium text-foreground">{getActionTitle(audit.action)}</h3>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                              <span>{formatTimestamp(audit.createdAt)}</span>
-                              {audit.vault && (
-                                <>
-                                  <span>•</span>
-                                  <span>Vault: {audit.vault.name} ({audit.vault.uniqueId})</span>
-                                </>
-                              )}
-                              {audit.apiKey && (
-                                <>
-                                  <span>•</span>
-                                  <span>API Key: {audit.apiKey.name} (ID: {audit.apiKey.id})</span>
-                                </>
-                              )}
-                              {audit.ipAddress && (
-                                <>
-                                  <span>•</span>
-                                  <span>IP: {audit.ipAddress}</span>
-                                </>
-                              )}
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12"></TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead className="hidden sm:table-cell">Resource</TableHead>
+                      <TableHead className="hidden md:table-cell">Method</TableHead>
+                      <TableHead className="hidden lg:table-cell">IP Address</TableHead>
+                      <TableHead>Time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {auditLogs.map((audit) => {
+                      const { icon: Icon, color } = getIconForAction(audit.action);
+                      return (
+                        <TableRow key={`${audit.action}-${audit.createdAt}`}>
+                          <TableCell>
+                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                              <Icon className={`h-4 w-4 ${color}`} />
                             </div>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                              {getAuditTypeLabel(audit.action)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{getActionTitle(audit.action)}</span>
+                              <span className="text-xs text-muted-foreground sm:hidden">
+                                {audit.vault && `Vault: ${audit.vault.name}`}
+                                {audit.apiKey && `API Key: ${audit.apiKey.name}`}
+                                {!audit.vault && !audit.apiKey && 'User Account'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {audit.vault && (
+                              <div className="flex flex-col">
+                                <span className="font-medium">{audit.vault.name}</span>
+                                <span className="text-xs text-muted-foreground">{audit.vault.uniqueId}</span>
+                              </div>
+                            )}
+                            {audit.apiKey && (
+                              <div className="flex flex-col">
+                                <span className="font-medium">{audit.apiKey.name}</span>
+                                <span className="text-xs text-muted-foreground">ID: {audit.apiKey.id}</span>
+                              </div>
+                            )}
+                            {!audit.vault && !audit.apiKey && (
+                              <span className="text-muted-foreground">User Account</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                              {audit.apiKey ? 'CLI/API' : 'Web UI'}
                             </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <span className="text-sm text-muted-foreground">
+                              {audit.ipAddress || '-'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="text-sm">{formatTimestamp(audit.createdAt)}</span>
+                              <span className="text-xs text-muted-foreground lg:hidden">
+                                {audit.ipAddress && `IP: ${audit.ipAddress}`}
+                              </span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
 
                 {/* Pagination */}
                 {totalPages > 1 && (
@@ -425,7 +444,7 @@ export default function AuditLogContent() {
                     </Pagination>
                   </div>
                 )}
-              </div>
+              </>
             )}
           </Card>
         </div>
