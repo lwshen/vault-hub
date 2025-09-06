@@ -1,3 +1,13 @@
+## [1.2.1] - 2025-09-06
+
+### 🚀 Features
+
+- *(web)* Update audit log metrics and refine sidebar in mobile view (#194)
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove duplicated cocker build steps (#193)
+- Skip CHANGELOG.md updates in release log (#196)
 ## [1.2.0] - 2025-09-05
 
 ### 🚀 Features
