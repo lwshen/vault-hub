@@ -54,3 +54,23 @@ AuditLog:
     userAgent:
       type: string
       description: User agent string from the client
+AuditMetricsResponse:
+  type: object
+  required:
+    - totalEventsLast30Days
+    - eventsCountLast24Hours
+    - vaultEventsLast30Days
+    - apiKeyEventsLast30Days
+  properties:
+    totalEventsLast30Days:
+      type: integer
+      description: Total number of audit events in the last 30 days
+    eventsCountLast24Hours:
+      type: integer
+      description: Number of audit events in the last 24 hours
+    vaultEventsLast30Days:
+      type: integer
+      description: Number of vault-related events in the last 30 days
+    apiKeyEventsLast30Days:
+      type: integer
+      description: Number of API key-related events in the last 30 days

@@ -80,6 +80,21 @@ type AuditLogsResponse struct {
 	TotalCount int `json:"totalCount"`
 }
 
+// AuditMetricsResponse defines model for AuditMetricsResponse.
+type AuditMetricsResponse struct {
+	// ApiKeyEventsLast30Days Number of API key-related events in the last 30 days
+	ApiKeyEventsLast30Days int `json:"apiKeyEventsLast30Days"`
+
+	// EventsCountLast24Hours Number of audit events in the last 24 hours
+	EventsCountLast24Hours int `json:"eventsCountLast24Hours"`
+
+	// TotalEventsLast30Days Total number of audit events in the last 30 days
+	TotalEventsLast30Days int `json:"totalEventsLast30Days"`
+
+	// VaultEventsLast30Days Number of vault-related events in the last 30 days
+	VaultEventsLast30Days int `json:"vaultEventsLast30Days"`
+}
+
 // CreateAPIKeyRequest defines model for CreateAPIKeyRequest.
 type CreateAPIKeyRequest struct {
 	// ExpiresAt Optional expiration date
@@ -319,6 +334,9 @@ type ServerInterface interface {
 	// (GET /api/audit-logs)
 	GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error
 
+	// (GET /api/audit-logs/metrics)
+	GetAuditMetrics(c *fiber.Ctx) error
+
 	// (POST /api/auth/login)
 	Login(c *fiber.Ctx) error
 
@@ -522,6 +540,12 @@ func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
 	return siw.Handler.GetAuditLogs(c, params)
 }
 
+// GetAuditMetrics operation middleware
+func (siw *ServerInterfaceWrapper) GetAuditMetrics(c *fiber.Ctx) error {
+
+	return siw.Handler.GetAuditMetrics(c)
+}
+
 // Login operation middleware
 func (siw *ServerInterfaceWrapper) Login(c *fiber.Ctx) error {
 
@@ -693,6 +717,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Get(options.BaseURL+"/api/audit-logs", wrapper.GetAuditLogs)
 
+	router.Get(options.BaseURL+"/api/audit-logs/metrics", wrapper.GetAuditMetrics)
+
 	router.Post(options.BaseURL+"/api/auth/login", wrapper.Login)
 
 	router.Get(options.BaseURL+"/api/auth/logout", wrapper.Logout)
@@ -802,6 +828,22 @@ type GetAuditLogsResponseObject interface {
 type GetAuditLogs200JSONResponse AuditLogsResponse
 
 func (response GetAuditLogs200JSONResponse) VisitGetAuditLogsResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type GetAuditMetricsRequestObject struct {
+}
+
+type GetAuditMetricsResponseObject interface {
+	VisitGetAuditMetricsResponse(ctx *fiber.Ctx) error
+}
+
+type GetAuditMetrics200JSONResponse AuditMetricsResponse
+
+func (response GetAuditMetrics200JSONResponse) VisitGetAuditMetricsResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1057,6 +1099,9 @@ type StrictServerInterface interface {
 	// (GET /api/audit-logs)
 	GetAuditLogs(ctx context.Context, request GetAuditLogsRequestObject) (GetAuditLogsResponseObject, error)
 
+	// (GET /api/audit-logs/metrics)
+	GetAuditMetrics(ctx context.Context, request GetAuditMetricsRequestObject) (GetAuditMetricsResponseObject, error)
+
 	// (POST /api/auth/login)
 	Login(ctx context.Context, request LoginRequestObject) (LoginResponseObject, error)
 
@@ -1250,6 +1295,31 @@ func (sh *strictHandler) GetAuditLogs(ctx *fiber.Ctx, params GetAuditLogsParams)
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(GetAuditLogsResponseObject); ok {
 		if err := validResponse.VisitGetAuditLogsResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetAuditMetrics operation middleware
+func (sh *strictHandler) GetAuditMetrics(ctx *fiber.Ctx) error {
+	var request GetAuditMetricsRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAuditMetrics(ctx.UserContext(), request.(GetAuditMetricsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAuditMetrics")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetAuditMetricsResponseObject); ok {
+		if err := validResponse.VisitGetAuditMetricsResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

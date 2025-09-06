@@ -223,3 +223,80 @@ func CountAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) (int64, err
 
 	return count, nil
 }
+
+// GetTotalEventsLast30Days returns the total count of audit events for a user in the last 30 days
+func GetTotalEventsLast30Days(userID uint) (int64, error) {
+	var count int64
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+
+	err := DB.Model(&AuditLog{}).
+		Where("user_id = ? AND created_at >= ?", userID, thirtyDaysAgo).
+		Count(&count).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// GetEventsCountLast24Hours returns the count of audit events for a user in the last 24 hours
+func GetEventsCountLast24Hours(userID uint) (int64, error) {
+	var count int64
+	twentyFourHoursAgo := time.Now().Add(-24 * time.Hour)
+
+	err := DB.Model(&AuditLog{}).
+		Where("user_id = ? AND created_at >= ?", userID, twentyFourHoursAgo).
+		Count(&count).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// GetVaultEventsLast30Days returns the count of vault-related events for a user in the last 30 days
+func GetVaultEventsLast30Days(userID uint) (int64, error) {
+	var count int64
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+
+	vaultActions := []ActionType{
+		ActionReadVault,
+		ActionUpdateVault,
+		ActionDeleteVault,
+		ActionCreateVault,
+	}
+
+	err := DB.Model(&AuditLog{}).
+		Where("user_id = ? AND created_at >= ? AND action IN ?", userID, thirtyDaysAgo, vaultActions).
+		Count(&count).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// GetAPIKeyEventsLast30Days returns the count of API key-related events for a user in the last 30 days
+func GetAPIKeyEventsLast30Days(userID uint) (int64, error) {
+	var count int64
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+
+	apiKeyActions := []ActionType{
+		ActionCreateAPIKey,
+		ActionUpdateAPIKey,
+		ActionDeleteAPIKey,
+	}
+
+	err := DB.Model(&AuditLog{}).
+		Where("user_id = ? AND created_at >= ? AND action IN ?", userID, thirtyDaysAgo, apiKeyActions).
+		Count(&count).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
