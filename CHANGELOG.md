@@ -1,3 +1,14 @@
+## [1.2.0] - 2025-09-05
+
+### 🚀 Features
+
+- Add executing follow-up commands (#191)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update CHANGELOG.md for v1.1.6 (#189)
+- *(release)* Update commit message format for CHANGELOG (#190)
+- Add confirmation prompt in bump script (#192)
 ## [1.1.6] - 2025-09-05
 
 ### ⚙️ Miscellaneous Tasks
