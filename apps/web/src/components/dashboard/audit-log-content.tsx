@@ -233,50 +233,6 @@ export default function AuditLogContent() {
             </Card>
           </div>
 
-          {/* Secondary Metrics */}
-          <div className="grid gap-4 md:grid-cols-4 mb-6">
-            <Card className="p-4">
-              <div className="flex items-center gap-3">
-                <Shield className="h-8 w-8 text-red-500" />
-                <div>
-                  <p className="text-2xl font-bold">12</p>
-                  <p className="text-sm text-muted-foreground">Critical Actions</p>
-                  <p className="text-xs text-muted-foreground">Delete operations</p>
-                </div>
-              </div>
-            </Card>
-            <Card className="p-4">
-              <div className="flex items-center gap-3">
-                <Globe className="h-8 w-8 text-purple-500" />
-                <div>
-                  <p className="text-2xl font-bold">23</p>
-                  <p className="text-sm text-muted-foreground">Unique IPs</p>
-                  <p className="text-xs text-muted-foreground">Security monitoring</p>
-                </div>
-              </div>
-            </Card>
-            <Card className="p-4">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="h-8 w-8 text-indigo-500" />
-                <div>
-                  <p className="text-2xl font-bold">prod-secrets</p>
-                  <p className="text-sm text-muted-foreground">Most Active Vault</p>
-                  <p className="text-xs text-muted-foreground">324 accesses</p>
-                </div>
-              </div>
-            </Card>
-            <Card className="p-4">
-              <div className="flex items-center gap-3">
-                <Activity className="h-8 w-8 text-emerald-500" />
-                <div>
-                  <p className="text-2xl font-bold">7</p>
-                  <p className="text-sm text-muted-foreground">Active Sessions</p>
-                  <p className="text-xs text-muted-foreground">Current users</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
           {/* Audit List */}
           <Card className="p-6">
             <div className="mb-4">
