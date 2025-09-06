@@ -108,36 +108,18 @@ func (Server) GetAuditMetrics(c *fiber.Ctx) error {
 		return err
 	}
 
-	// Get total events in last 30 days
-	totalEventsLast30Days, err := model.GetTotalEventsLast30Days(user.ID)
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	// Get events count in last 24 hours
-	eventsCountLast24Hours, err := model.GetEventsCountLast24Hours(user.ID)
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	// Get vault events in last 30 days
-	vaultEventsLast30Days, err := model.GetVaultEventsLast30Days(user.ID)
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	// Get API key events in last 30 days
-	apiKeyEventsLast30Days, err := model.GetAPIKeyEventsLast30Days(user.ID)
+	// Get all metrics in a single optimized query
+	metrics, err := model.GetAllAuditMetrics(user.ID)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	// Prepare response
 	response := AuditMetricsResponse{
-		TotalEventsLast30Days:  int(totalEventsLast30Days),
-		EventsCountLast24Hours: int(eventsCountLast24Hours),
-		VaultEventsLast30Days:  int(vaultEventsLast30Days),
-		ApiKeyEventsLast30Days: int(apiKeyEventsLast30Days),
+		TotalEventsLast30Days:  int(metrics.TotalEventsLast30Days),
+		EventsCountLast24Hours: int(metrics.EventsCountLast24Hours),
+		VaultEventsLast30Days:  int(metrics.VaultEventsLast30Days),
+		ApiKeyEventsLast30Days: int(metrics.APIKeyEventsLast30Days),
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response)

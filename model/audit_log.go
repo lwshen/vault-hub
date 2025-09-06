@@ -224,74 +224,58 @@ func CountAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) (int64, err
 	return count, nil
 }
 
-// GetAuditEventsCountSince returns the count of audit events for a user since a given time
-func GetAuditEventsCountSince(userID uint, since time.Time) (int64, error) {
-	var count int64
+// AuditMetrics holds all audit metrics for efficient single-query retrieval
+type AuditMetrics struct {
+	TotalEventsLast30Days  int64
+	EventsCountLast24Hours int64
+	VaultEventsLast30Days  int64
+	APIKeyEventsLast30Days int64
+}
 
-	err := DB.Model(&AuditLog{}).
-		Where("user_id = ? AND created_at >= ?", userID, since).
-		Count(&count).Error
+// GetAllAuditMetrics retrieves all audit metrics in a single optimized query
+func GetAllAuditMetrics(userID uint) (*AuditMetrics, error) {
+	now := time.Now()
+	thirtyDaysAgo := now.AddDate(0, 0, -30)
+	twentyFourHoursAgo := now.Add(-24 * time.Hour)
 
-	if err != nil {
-		return 0, err
+	var result struct {
+		TotalEventsLast30Days  int64
+		EventsCountLast24Hours int64
+		VaultEventsLast30Days  int64
+		APIKeyEventsLast30Days int64
 	}
 
-	return count, nil
-}
+	vaultActions := []string{
+		string(ActionReadVault),
+		string(ActionUpdateVault),
+		string(ActionDeleteVault),
+		string(ActionCreateVault),
+	}
 
-// GetTotalEventsLast30Days returns the total count of audit events for a user in the last 30 days
-func GetTotalEventsLast30Days(userID uint) (int64, error) {
-	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
-	return GetAuditEventsCountSince(userID, thirtyDaysAgo)
-}
-
-// GetEventsCountLast24Hours returns the count of audit events for a user in the last 24 hours
-func GetEventsCountLast24Hours(userID uint) (int64, error) {
-	twentyFourHoursAgo := time.Now().Add(-24 * time.Hour)
-	return GetAuditEventsCountSince(userID, twentyFourHoursAgo)
-}
-
-// GetVaultEventsLast30Days returns the count of vault-related events for a user in the last 30 days
-func GetVaultEventsLast30Days(userID uint) (int64, error) {
-	var count int64
-	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
-
-	vaultActions := []ActionType{
-		ActionReadVault,
-		ActionUpdateVault,
-		ActionDeleteVault,
-		ActionCreateVault,
+	apiKeyActions := []string{
+		string(ActionCreateAPIKey),
+		string(ActionUpdateAPIKey),
+		string(ActionDeleteAPIKey),
 	}
 
 	err := DB.Model(&AuditLog{}).
-		Where("user_id = ? AND created_at >= ? AND action IN ?", userID, thirtyDaysAgo, vaultActions).
-		Count(&count).Error
+		Select(`
+			COUNT(CASE WHEN created_at >= ? THEN 1 END) as total_events_last30_days,
+			COUNT(CASE WHEN created_at >= ? THEN 1 END) as events_count_last24_hours,
+			COUNT(CASE WHEN created_at >= ? AND action IN ? THEN 1 END) as vault_events_last30_days,
+			COUNT(CASE WHEN created_at >= ? AND action IN ? THEN 1 END) as api_key_events_last30_days
+		`, thirtyDaysAgo, twentyFourHoursAgo, thirtyDaysAgo, vaultActions, thirtyDaysAgo, apiKeyActions).
+		Where("user_id = ?", userID).
+		Scan(&result).Error
 
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return count, nil
-}
-
-// GetAPIKeyEventsLast30Days returns the count of API key-related events for a user in the last 30 days
-func GetAPIKeyEventsLast30Days(userID uint) (int64, error) {
-	var count int64
-	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
-
-	apiKeyActions := []ActionType{
-		ActionCreateAPIKey,
-		ActionUpdateAPIKey,
-		ActionDeleteAPIKey,
-	}
-
-	err := DB.Model(&AuditLog{}).
-		Where("user_id = ? AND created_at >= ? AND action IN ?", userID, thirtyDaysAgo, apiKeyActions).
-		Count(&count).Error
-
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
+	return &AuditMetrics{
+		TotalEventsLast30Days:  result.TotalEventsLast30Days,
+		EventsCountLast24Hours: result.EventsCountLast24Hours,
+		VaultEventsLast30Days:  result.VaultEventsLast30Days,
+		APIKeyEventsLast30Days: result.APIKeyEventsLast30Days,
+	}, nil
 }
