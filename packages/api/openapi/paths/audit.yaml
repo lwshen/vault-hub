@@ -51,3 +51,17 @@ auditLogs:
           application/json:
             schema:
               $ref: ../schemas/audit.yaml#/AuditLogsResponse
+
+auditMetrics:
+  get:
+    description: Get audit log metrics including total events and categorized counts
+    tags:
+      - Audit
+    operationId: getAuditMetrics
+    responses:
+      "200":
+        description: Audit log metrics
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/audit.yaml#/AuditMetricsResponse

@@ -9,17 +9,28 @@ import (
 type ActionType string
 
 const (
+	ActionLoginUser    ActionType = "login_user"
+	ActionRegisterUser ActionType = "register_user"
+	ActionLogoutUser   ActionType = "logout_user"
 	ActionReadVault    ActionType = "read_vault"
 	ActionUpdateVault  ActionType = "update_vault"
 	ActionDeleteVault  ActionType = "delete_vault"
 	ActionCreateVault  ActionType = "create_vault"
-	ActionLoginUser    ActionType = "login_user"
-	ActionRegisterUser ActionType = "register_user"
-	ActionLogoutUser   ActionType = "logout_user"
 	ActionCreateAPIKey ActionType = "create_api_key"
 	//nolint:gosec // G101 here is the enum name
 	ActionUpdateAPIKey ActionType = "update_api_key"
 	ActionDeleteAPIKey ActionType = "delete_api_key"
+)
+
+var (
+	vaultActions = []string{
+		string(ActionReadVault), string(ActionUpdateVault),
+		string(ActionDeleteVault), string(ActionCreateVault),
+	}
+	apiKeyActions = []string{
+		string(ActionCreateAPIKey), string(ActionUpdateAPIKey),
+		string(ActionDeleteAPIKey),
+	}
 )
 
 type AuditLog struct {
@@ -222,4 +233,47 @@ func CountAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) (int64, err
 	}
 
 	return count, nil
+}
+
+// AuditMetrics holds all audit metrics for efficient single-query retrieval
+type AuditMetrics struct {
+	TotalEventsLast30Days  int64
+	EventsCountLast24Hours int64
+	VaultEventsLast30Days  int64
+	APIKeyEventsLast30Days int64
+}
+
+// GetAllAuditMetrics retrieves all audit metrics in a single optimized query
+func GetAllAuditMetrics(userID uint) (*AuditMetrics, error) {
+	now := time.Now()
+	thirtyDaysAgo := now.AddDate(0, 0, -30)
+	twentyFourHoursAgo := now.Add(-24 * time.Hour)
+
+	var result struct {
+		TotalEventsLast30Days  int64
+		EventsCountLast24Hours int64
+		VaultEventsLast30Days  int64
+		APIKeyEventsLast30Days int64
+	}
+
+	err := DB.Model(&AuditLog{}).
+		Select(`
+			COUNT(CASE WHEN created_at >= ? THEN 1 END) as total_events_last30_days,
+			COUNT(CASE WHEN created_at >= ? THEN 1 END) as events_count_last24_hours,
+			COUNT(CASE WHEN created_at >= ? AND action IN ? THEN 1 END) as vault_events_last30_days,
+			COUNT(CASE WHEN created_at >= ? AND action IN ? THEN 1 END) as api_key_events_last30_days
+		`, thirtyDaysAgo, twentyFourHoursAgo, thirtyDaysAgo, vaultActions, thirtyDaysAgo, apiKeyActions).
+		Where("user_id = ?", userID).
+		Scan(&result).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuditMetrics{
+		TotalEventsLast30Days:  result.TotalEventsLast30Days,
+		EventsCountLast24Hours: result.EventsCountLast24Hours,
+		VaultEventsLast30Days:  result.VaultEventsLast30Days,
+		APIKeyEventsLast30Days: result.APIKeyEventsLast30Days,
+	}, nil
 }

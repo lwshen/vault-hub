@@ -100,3 +100,27 @@ func (Server) GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error {
 
 	return c.Status(fiber.StatusOK).JSON(response)
 }
+
+func (Server) GetAuditMetrics(c *fiber.Ctx) error {
+	// Get authenticated user
+	user, err := getUserFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	// Get all metrics in a single optimized query
+	metrics, err := model.GetAllAuditMetrics(user.ID)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Prepare response
+	response := AuditMetricsResponse{
+		TotalEventsLast30Days:  int(metrics.TotalEventsLast30Days),
+		EventsCountLast24Hours: int(metrics.EventsCountLast24Hours),
+		VaultEventsLast30Days:  int(metrics.VaultEventsLast30Days),
+		ApiKeyEventsLast30Days: int(metrics.APIKeyEventsLast30Days),
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
+}

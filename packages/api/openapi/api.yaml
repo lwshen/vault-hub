@@ -28,6 +28,8 @@ paths:
   # Audit endpoints
   /api/audit-logs:
     $ref: ./paths/audit.yaml#/auditLogs
+  /api/audit-logs/metrics:
+    $ref: ./paths/audit.yaml#/auditMetrics
   # API Key endpoints
   /api/api-keys:
     $ref: ./paths/apikey.yaml#/apiKeys
@@ -81,6 +83,8 @@ components:
       $ref: ./schemas/audit.yaml#/AuditLogsResponse
     AuditLog:
       $ref: ./schemas/audit.yaml#/AuditLog
+    AuditMetricsResponse:
+      $ref: ./schemas/audit.yaml#/AuditMetricsResponse
     # API Key schemas
     APIKeysResponse:
       $ref: ./schemas/apikey.yaml#/APIKeysResponse
