@@ -22,6 +22,17 @@ const (
 	ActionDeleteAPIKey ActionType = "delete_api_key"
 )
 
+var (
+	vaultActions = []string{
+		string(ActionReadVault), string(ActionUpdateVault),
+		string(ActionDeleteVault), string(ActionCreateVault),
+	}
+	apiKeyActions = []string{
+		string(ActionCreateAPIKey), string(ActionUpdateAPIKey),
+		string(ActionDeleteAPIKey),
+	}
+)
+
 type AuditLog struct {
 	gorm.Model
 	VaultID   *uint      `gorm:"index"`
@@ -243,19 +254,6 @@ func GetAllAuditMetrics(userID uint) (*AuditMetrics, error) {
 		EventsCountLast24Hours int64
 		VaultEventsLast30Days  int64
 		APIKeyEventsLast30Days int64
-	}
-
-	vaultActions := []string{
-		string(ActionReadVault),
-		string(ActionUpdateVault),
-		string(ActionDeleteVault),
-		string(ActionCreateVault),
-	}
-
-	apiKeyActions := []string{
-		string(ActionCreateAPIKey),
-		string(ActionUpdateAPIKey),
-		string(ActionDeleteAPIKey),
 	}
 
 	err := DB.Model(&AuditLog{}).
