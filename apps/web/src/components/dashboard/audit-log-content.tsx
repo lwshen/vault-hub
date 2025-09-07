@@ -134,8 +134,6 @@ export default function AuditLogContent() {
   const fetchMetrics = useCallback(async () => {
     try {
       setMetricsLoading(true);
-
-      // Fetch metrics using auditApi
       const metricsData = await auditApi.getAuditMetrics();
       setMetrics(metricsData);
     } catch (err) {

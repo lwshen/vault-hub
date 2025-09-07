@@ -24,8 +24,6 @@ export default function DashboardContent() {
       try {
         const versionResponse = await versionApi.getVersion();
         setVersion(versionResponse);
-
-        // Fetch metrics using auditApi
         const metricsResponse = await auditApi.getAuditMetrics();
         setMetrics(metricsResponse);
       } catch (error) {
