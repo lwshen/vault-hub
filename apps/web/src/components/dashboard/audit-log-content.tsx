@@ -28,7 +28,6 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
@@ -480,12 +479,12 @@ export default function AuditLogContent() {
   };
 
   return (
-    <TooltipProvider>
+    <>
       <DashboardHeader
         title="Audit Log"
         description="Monitor audit logs"
       />
       {renderContent()}
-    </TooltipProvider>
+    </>
   );
 }
