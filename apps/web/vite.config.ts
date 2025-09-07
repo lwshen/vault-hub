@@ -19,4 +19,22 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (/\/(@radix-ui|framer-motion|lucide-react)/.test(id)) {
+            return 'ui-libs';
+          }
+          if (/\/react(?:-dom)?/.test(id)) {
+            return 'vendor';
+          }
+          if (/@lwshen\/vault-hub-ts-fetch-client/.test(id)) {
+            return 'api';
+          }
+          return null;
+        },
+      },
+    },
+  },
 });
