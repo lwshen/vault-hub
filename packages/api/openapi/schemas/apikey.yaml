@@ -105,6 +105,3 @@ UpdateAPIKeyRequest:
       type: string
       format: date-time
       description: Optional expiration date
-    isActive:
-      type: boolean
-      description: Enable or disable the API key

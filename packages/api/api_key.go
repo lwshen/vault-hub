@@ -58,7 +58,7 @@ func convertToApiAPIKey(apiKey *model.APIKey) (*VaultAPIKey, error) {
 		Vaults:     &apiVaults,
 		ExpiresAt:  expiresAt,
 		LastUsedAt: lastUsedAt,
-		IsActive:   apiKey.IsActive,
+		IsActive:   !apiKey.DeletedAt.Valid,
 		CreatedAt:  apiKey.CreatedAt,
 		UpdatedAt:  &apiKey.UpdatedAt,
 	}, nil
@@ -230,7 +230,6 @@ func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
 		Name:      req.Name,
 		VaultIDs:  vaultIDs,
 		ExpiresAt: req.ExpiresAt,
-		IsActive:  req.IsActive,
 	}
 
 	// Validate parameters

@@ -51,7 +51,6 @@ type APIKey struct {
 	VaultIDs   VaultIDs   `gorm:"type:json"`               // JSON array of vault IDs (null = all user's vaults)
 	ExpiresAt  *time.Time `gorm:"index"`                   // Optional expiration date
 	LastUsedAt *time.Time // Track when it was last used
-	IsActive   bool       `gorm:"default:true;index"` // Enable/disable the key
 }
 
 // CreateAPIKeyParams defines parameters for creating a new API key
@@ -129,7 +128,6 @@ func (params *CreateAPIKeyParams) Create() (*APIKey, string, error) {
 		KeyHash:   keyHash,
 		VaultIDs:  vaultIDs,
 		ExpiresAt: params.ExpiresAt,
-		IsActive:  true,
 	}
 
 	err = DB.Create(&apiKey).Error
@@ -225,7 +223,6 @@ type UpdateAPIKeyParams struct {
 	Name      *string
 	VaultIDs  *[]uint
 	ExpiresAt *time.Time
-	IsActive  *bool
 }
 
 // Validate validates the update API key parameters
@@ -286,10 +283,6 @@ func (k *APIKey) Update(params UpdateAPIKeyParams) error {
 
 	if params.ExpiresAt != nil {
 		k.ExpiresAt = params.ExpiresAt
-	}
-
-	if params.IsActive != nil {
-		k.IsActive = *params.IsActive
 	}
 
 	return DB.Save(k).Error

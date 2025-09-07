@@ -107,56 +107,6 @@ func LogAPIKeyAction(apiKeyID uint, action ActionType, userID uint, ipAddress, u
 	})
 }
 
-// GetAuditLogsByUser retrieves audit logs for a specific user
-func GetAuditLogsByUser(userID uint, limit int, offset int) ([]AuditLog, error) {
-	var logs []AuditLog
-	query := DB.Where("user_id = ?", userID).
-		Preload("User").
-		Preload("Vault", func(db *gorm.DB) *gorm.DB {
-			return db.Unscoped()
-		}).
-		Preload("APIKey", func(db *gorm.DB) *gorm.DB {
-			return db.Unscoped()
-		}).
-		Order("created_at DESC")
-
-	if limit > 0 {
-		query = query.Limit(limit)
-	}
-
-	if offset > 0 {
-		query = query.Offset(offset)
-	}
-
-	err := query.Find(&logs).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return logs, nil
-}
-
-// GetAuditLogsByVault retrieves audit logs for a specific vault
-func GetAuditLogsByVault(vaultID uint, userID uint) ([]AuditLog, error) {
-	var logs []AuditLog
-	err := DB.Where("vault_id = ? AND user_id = ?", vaultID, userID).
-		Preload("User").
-		Preload("Vault", func(db *gorm.DB) *gorm.DB {
-			return db.Unscoped()
-		}).
-		Preload("APIKey", func(db *gorm.DB) *gorm.DB {
-			return db.Unscoped()
-		}).
-		Order("created_at DESC").
-		Find(&logs).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return logs, nil
-}
-
 // GetAuditLogsWithFiltersParams defines parameters for filtering audit logs
 type GetAuditLogsWithFiltersParams struct {
 	UserID    uint

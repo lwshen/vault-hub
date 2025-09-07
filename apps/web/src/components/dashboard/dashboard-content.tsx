@@ -1,8 +1,11 @@
+import { auditApi, versionApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import type { AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
   Key,
+  Loader2,
   Lock,
   MoreVertical,
   Plus,
@@ -10,51 +13,56 @@ import {
   Users,
   Vault,
 } from 'lucide-react';
-import { versionApi } from '@/apis/api';
 import { useEffect, useState } from 'react';
 
 export default function DashboardContent() {
   const [version, setVersion] = useState<{ version: string; commit: string; } | null>(null);
+  const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchVersion = async () => {
+    const fetchData = async () => {
       try {
-        const response = await versionApi.getVersion();
-        setVersion(response);
+        const versionResponse = await versionApi.getVersion();
+        setVersion(versionResponse);
+        const metricsResponse = await auditApi.getAuditMetrics();
+        setMetrics(metricsResponse);
       } catch (error) {
-        console.error('Failed to fetch version:', error);
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchVersion();
+    fetchData();
   }, []);
 
   const stats = [
     {
-      title: 'Total Vaults',
-      value: '12',
-      icon: Vault,
-      change: '+2 this month',
-      changeType: 'positive' as const,
-    },
-    {
-      title: 'Active Users',
-      value: '24',
-      icon: Users,
-      change: '+5 this week',
-      changeType: 'positive' as const,
-    },
-    {
-      title: 'Secrets Stored',
-      value: '156',
-      icon: Key,
-      change: '+12 today',
-      changeType: 'positive' as const,
-    },
-    {
-      title: 'Recent Activity',
-      value: '8',
+      title: 'Total Events (30 days)',
+      value: metrics?.totalEventsLast30Days?.toString() || '-',
       icon: Activity,
+      change: 'Last 30 days',
+      changeType: 'neutral' as const,
+    },
+    {
+      title: 'Events (24 hours)',
+      value: metrics?.eventsCountLast24Hours?.toString() || '-',
+      icon: Users,
       change: 'Last 24 hours',
+      changeType: 'positive' as const,
+    },
+    {
+      title: 'Vault Events (30 days)',
+      value: metrics?.vaultEventsLast30Days?.toString() || '-',
+      icon: Vault,
+      change: 'Last 30 days',
+      changeType: 'positive' as const,
+    },
+    {
+      title: 'API Key Events (30 days)',
+      value: metrics?.apiKeyEventsLast30Days?.toString() || '-',
+      icon: Key,
+      change: 'Last 30 days',
       changeType: 'neutral' as const,
     },
   ];
@@ -95,7 +103,11 @@ export default function DashboardContent() {
                   <Icon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold">{stat.value}</div>
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin inline" />
+                  ) : (
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                  )}
                   <p className={`text-xs ${
                     stat.changeType === 'positive'
                       ? 'text-green-600'

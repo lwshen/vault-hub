@@ -1,15 +1,7 @@
 import { auditApi } from '@/apis/api';
+import DashboardHeader from '@/components/layout/dashboard-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import DashboardHeader from '@/components/layout/dashboard-header';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Pagination,
   PaginationContent,
@@ -25,6 +17,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import type { AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
 import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
@@ -115,12 +121,26 @@ const formatTimestamp = (timestamp: string | Date) => {
 
 export default function AuditLogContent() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+
+  const fetchMetrics = useCallback(async () => {
+    try {
+      setMetricsLoading(true);
+      const metricsData = await auditApi.getAuditMetrics();
+      setMetrics(metricsData);
+    } catch (err) {
+      console.error('Failed to fetch metrics:', err);
+    } finally {
+      setMetricsLoading(false);
+    }
+  }, []);
 
   const fetchAuditLogs = useCallback(async (page: number) => {
     try {
@@ -141,10 +161,9 @@ export default function AuditLogContent() {
     }
   }, [pageSize]);
 
-
   useEffect(() => {
-    fetchAuditLogs(1);
-  }, [fetchAuditLogs]);
+    fetchMetrics();
+  }, [fetchMetrics]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -158,11 +177,9 @@ export default function AuditLogContent() {
     setCurrentPage(1);
   };
 
-  // Update fetchAuditLogs when pageSize changes
   useEffect(() => {
     fetchAuditLogs(1);
   }, [pageSize, fetchAuditLogs]);
-
 
   const renderContent = () => {
     if (error) {
@@ -192,7 +209,13 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Activity className="h-8 w-8 text-blue-500" />
                 <div>
-                  <p className="text-2xl font-bold">1,247</p>
+                  <p className="text-2xl font-bold">
+                    {metricsLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin inline" />
+                    ) : (
+                      metrics?.totalEventsLast30Days?.toLocaleString() || '-'
+                    )}
+                  </p>
                   <p className="text-sm text-muted-foreground">Total Events</p>
                   <p className="text-xs text-muted-foreground">Last 30 days</p>
                 </div>
@@ -202,7 +225,13 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Activity className="h-8 w-8 text-orange-500" />
                 <div>
-                  <p className="text-2xl font-bold">43</p>
+                  <p className="text-2xl font-bold">
+                    {metricsLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin inline" />
+                    ) : (
+                      metrics?.eventsCountLast24Hours?.toLocaleString() || '-'
+                    )}
+                  </p>
                   <p className="text-sm text-muted-foreground">Last 24 Hours</p>
                   <p className="text-xs text-muted-foreground">Recent activity</p>
                 </div>
@@ -212,7 +241,13 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Lock className="h-8 w-8 text-green-500" />
                 <div>
-                  <p className="text-2xl font-bold">892</p>
+                  <p className="text-2xl font-bold">
+                    {metricsLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin inline" />
+                    ) : (
+                      metrics?.vaultEventsLast30Days?.toLocaleString() || '-'
+                    )}
+                  </p>
                   <p className="text-sm text-muted-foreground">Vault Events</p>
                   <p className="text-xs text-muted-foreground">Last 30 days</p>
                 </div>
@@ -222,7 +257,13 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Key className="h-8 w-8 text-cyan-500" />
                 <div>
-                  <p className="text-2xl font-bold">156</p>
+                  <p className="text-2xl font-bold">
+                    {metricsLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin inline" />
+                    ) : (
+                      metrics?.apiKeyEventsLast30Days?.toLocaleString() || '-'
+                    )}
+                  </p>
                   <p className="text-sm text-muted-foreground">API Key Events</p>
                   <p className="text-xs text-muted-foreground">Last 30 days</p>
                 </div>
@@ -327,9 +368,36 @@ export default function AuditLogContent() {
                             )}
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                              {audit.apiKey ? 'CLI/API' : 'Web UI'}
-                            </span>
+                            {audit.apiKey ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className={'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-help bg-muted text-muted-foreground'}>
+                                    CLI/API
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="space-y-1">
+                                    <p>API Key: {audit.apiKey.name}</p>
+                                    <p className={`text-sm ${
+                                      audit.apiKey.isActive
+                                        ? 'text-green-600 dark:text-green-400'
+                                        : 'text-red-600 dark:text-red-400'
+                                    }`}>
+                                      Status: {audit.apiKey.isActive ? 'Active' : 'Inactive'}
+                                    </p>
+                                    {!audit.apiKey.isActive && (
+                                      <p className="text-xs text-orange-600 dark:text-orange-400">
+                                        ⚠ This API key was deleted
+                                      </p>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                                Web UI
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
                             <span className="text-sm text-muted-foreground">
