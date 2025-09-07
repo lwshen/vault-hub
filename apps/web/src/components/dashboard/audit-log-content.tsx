@@ -218,7 +218,7 @@ export default function AuditLogContent() {
                     {metricsLoading ? (
                       <Loader2 className="h-6 w-6 animate-spin inline" />
                     ) : (
-                      metrics?.totalEventsLast30Days?.toLocaleString() || '0'
+                      metrics?.totalEventsLast30Days?.toLocaleString() || '-'
                     )}
                   </p>
                   <p className="text-sm text-muted-foreground">Total Events</p>
@@ -234,7 +234,7 @@ export default function AuditLogContent() {
                     {metricsLoading ? (
                       <Loader2 className="h-6 w-6 animate-spin inline" />
                     ) : (
-                      metrics?.eventsCountLast24Hours?.toLocaleString() || '0'
+                      metrics?.eventsCountLast24Hours?.toLocaleString() || '-'
                     )}
                   </p>
                   <p className="text-sm text-muted-foreground">Last 24 Hours</p>
@@ -250,7 +250,7 @@ export default function AuditLogContent() {
                     {metricsLoading ? (
                       <Loader2 className="h-6 w-6 animate-spin inline" />
                     ) : (
-                      metrics?.vaultEventsLast30Days?.toLocaleString() || '0'
+                      metrics?.vaultEventsLast30Days?.toLocaleString() || '-'
                     )}
                   </p>
                   <p className="text-sm text-muted-foreground">Vault Events</p>
@@ -266,7 +266,7 @@ export default function AuditLogContent() {
                     {metricsLoading ? (
                       <Loader2 className="h-6 w-6 animate-spin inline" />
                     ) : (
-                      metrics?.apiKeyEventsLast30Days?.toLocaleString() || '0'
+                      metrics?.apiKeyEventsLast30Days?.toLocaleString() || '-'
                     )}
                   </p>
                   <p className="text-sm text-muted-foreground">API Key Events</p>
