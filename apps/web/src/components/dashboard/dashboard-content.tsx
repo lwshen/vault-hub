@@ -13,48 +13,76 @@ import {
 import { versionApi } from '@/apis/api';
 import { useEffect, useState } from 'react';
 
+interface AuditMetrics {
+  totalEventsLast30Days: number;
+  eventsCountLast24Hours: number;
+  vaultEventsLast30Days: number;
+  apiKeyEventsLast30Days: number;
+}
+
 export default function DashboardContent() {
   const [version, setVersion] = useState<{ version: string; commit: string; } | null>(null);
+  const [metrics, setMetrics] = useState<AuditMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchVersion = async () => {
+    const fetchData = async () => {
       try {
-        const response = await versionApi.getVersion();
-        setVersion(response);
+        const versionResponse = await versionApi.getVersion();
+        setVersion(versionResponse);
+
+        // Fetch metrics using direct fetch until TypeScript client is updated
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/audit-logs/metrics', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const metricsResponse = await response.json();
+        setMetrics(metricsResponse);
       } catch (error) {
-        console.error('Failed to fetch version:', error);
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchVersion();
+    fetchData();
   }, []);
 
   const stats = [
     {
-      title: 'Total Vaults',
-      value: '12',
-      icon: Vault,
-      change: '+2 this month',
-      changeType: 'positive' as const,
-    },
-    {
-      title: 'Active Users',
-      value: '24',
-      icon: Users,
-      change: '+5 this week',
-      changeType: 'positive' as const,
-    },
-    {
-      title: 'Secrets Stored',
-      value: '156',
-      icon: Key,
-      change: '+12 today',
-      changeType: 'positive' as const,
-    },
-    {
-      title: 'Recent Activity',
-      value: '8',
+      title: 'Total Events (30 days)',
+      value: loading ? '...' : metrics?.totalEventsLast30Days?.toString() || '0',
       icon: Activity,
+      change: 'Last 30 days',
+      changeType: 'neutral' as const,
+    },
+    {
+      title: 'Events (24 hours)',
+      value: loading ? '...' : metrics?.eventsCountLast24Hours?.toString() || '0',
+      icon: Users,
       change: 'Last 24 hours',
+      changeType: 'positive' as const,
+    },
+    {
+      title: 'Vault Events (30 days)',
+      value: loading ? '...' : metrics?.vaultEventsLast30Days?.toString() || '0',
+      icon: Vault,
+      change: 'Last 30 days',
+      changeType: 'positive' as const,
+    },
+    {
+      title: 'API Key Events (30 days)',
+      value: loading ? '...' : metrics?.apiKeyEventsLast30Days?.toString() || '0',
+      icon: Key,
+      change: 'Last 30 days',
       changeType: 'neutral' as const,
     },
   ];

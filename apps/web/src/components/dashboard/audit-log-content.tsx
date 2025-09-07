@@ -113,14 +113,51 @@ const formatTimestamp = (timestamp: string | Date) => {
 };
 
 
+interface AuditMetrics {
+  totalEventsLast30Days: number;
+  eventsCountLast24Hours: number;
+  vaultEventsLast30Days: number;
+  apiKeyEventsLast30Days: number;
+}
+
 export default function AuditLogContent() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [metrics, setMetrics] = useState<AuditMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+
+  const fetchMetrics = useCallback(async () => {
+    try {
+      setMetricsLoading(true);
+
+      // Direct fetch until TypeScript client is updated with getAuditMetrics method
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/audit-logs/metrics', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const metricsData = await response.json();
+      setMetrics(metricsData);
+    } catch (err) {
+      console.error('Failed to fetch metrics:', err);
+      // Don't set error state for metrics failures, just log it
+    } finally {
+      setMetricsLoading(false);
+    }
+  }, []);
 
   const fetchAuditLogs = useCallback(async (page: number) => {
     try {
@@ -143,8 +180,9 @@ export default function AuditLogContent() {
 
 
   useEffect(() => {
+    fetchMetrics();
     fetchAuditLogs(1);
-  }, [fetchAuditLogs]);
+  }, [fetchMetrics, fetchAuditLogs]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -192,7 +230,13 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Activity className="h-8 w-8 text-blue-500" />
                 <div>
-                  <p className="text-2xl font-bold">1,247</p>
+                  <p className="text-2xl font-bold">
+                    {metricsLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin inline" />
+                    ) : (
+                      metrics?.totalEventsLast30Days?.toLocaleString() || '0'
+                    )}
+                  </p>
                   <p className="text-sm text-muted-foreground">Total Events</p>
                   <p className="text-xs text-muted-foreground">Last 30 days</p>
                 </div>
@@ -202,7 +246,13 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Activity className="h-8 w-8 text-orange-500" />
                 <div>
-                  <p className="text-2xl font-bold">43</p>
+                  <p className="text-2xl font-bold">
+                    {metricsLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin inline" />
+                    ) : (
+                      metrics?.eventsCountLast24Hours?.toLocaleString() || '0'
+                    )}
+                  </p>
                   <p className="text-sm text-muted-foreground">Last 24 Hours</p>
                   <p className="text-xs text-muted-foreground">Recent activity</p>
                 </div>
@@ -212,7 +262,13 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Lock className="h-8 w-8 text-green-500" />
                 <div>
-                  <p className="text-2xl font-bold">892</p>
+                  <p className="text-2xl font-bold">
+                    {metricsLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin inline" />
+                    ) : (
+                      metrics?.vaultEventsLast30Days?.toLocaleString() || '0'
+                    )}
+                  </p>
                   <p className="text-sm text-muted-foreground">Vault Events</p>
                   <p className="text-xs text-muted-foreground">Last 30 days</p>
                 </div>
@@ -222,7 +278,13 @@ export default function AuditLogContent() {
               <div className="flex items-center gap-3">
                 <Key className="h-8 w-8 text-cyan-500" />
                 <div>
-                  <p className="text-2xl font-bold">156</p>
+                  <p className="text-2xl font-bold">
+                    {metricsLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin inline" />
+                    ) : (
+                      metrics?.apiKeyEventsLast30Days?.toLocaleString() || '0'
+                    )}
+                  </p>
                   <p className="text-sm text-muted-foreground">API Key Events</p>
                   <p className="text-xs text-muted-foreground">Last 30 days</p>
                 </div>
