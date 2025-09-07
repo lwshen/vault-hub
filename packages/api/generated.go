@@ -171,9 +171,6 @@ type UpdateAPIKeyRequest struct {
 	// ExpiresAt Optional expiration date
 	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 
-	// IsActive Enable or disable the API key
-	IsActive *bool `json:"isActive,omitempty"`
-
 	// Name Human-readable name for the API key
 	Name *string `json:"name,omitempty"`
 

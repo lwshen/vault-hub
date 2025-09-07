@@ -128,7 +128,6 @@ func (params *CreateAPIKeyParams) Create() (*APIKey, string, error) {
 		KeyHash:   keyHash,
 		VaultIDs:  vaultIDs,
 		ExpiresAt: params.ExpiresAt,
-		IsActive:  true,
 	}
 
 	err = DB.Create(&apiKey).Error
@@ -224,7 +223,6 @@ type UpdateAPIKeyParams struct {
 	Name      *string
 	VaultIDs  *[]uint
 	ExpiresAt *time.Time
-	IsActive  *bool
 }
 
 // Validate validates the update API key parameters
@@ -285,10 +283,6 @@ func (k *APIKey) Update(params UpdateAPIKeyParams) error {
 
 	if params.ExpiresAt != nil {
 		k.ExpiresAt = params.ExpiresAt
-	}
-
-	if params.IsActive != nil {
-		k.IsActive = *params.IsActive
 	}
 
 	return DB.Save(k).Error

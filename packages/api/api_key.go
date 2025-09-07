@@ -230,7 +230,6 @@ func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
 		Name:      req.Name,
 		VaultIDs:  vaultIDs,
 		ExpiresAt: req.ExpiresAt,
-		IsActive:  req.IsActive,
 	}
 
 	// Validate parameters
