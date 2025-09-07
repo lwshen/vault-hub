@@ -1,3 +1,12 @@
+## [1.2.3] - 2025-09-07
+
+### 🚀 Features
+
+- *(web)* Show metrics in audit log page (#200)
+
+### ⚙️ Miscellaneous Tasks
+
+- *(web)* Enhance Vite configuration with manual chunking (#201)
 ## [1.2.2] - 2025-09-06
 
 ### 🚀 Features
