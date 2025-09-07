@@ -5,6 +5,7 @@ import type { AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
   Key,
+  Loader2,
   Lock,
   MoreVertical,
   Plus,
@@ -38,28 +39,28 @@ export default function DashboardContent() {
   const stats = [
     {
       title: 'Total Events (30 days)',
-      value: loading ? '...' : metrics?.totalEventsLast30Days?.toString() || '0',
+      value: metrics?.totalEventsLast30Days?.toString() || '-',
       icon: Activity,
       change: 'Last 30 days',
       changeType: 'neutral' as const,
     },
     {
       title: 'Events (24 hours)',
-      value: loading ? '...' : metrics?.eventsCountLast24Hours?.toString() || '0',
+      value: metrics?.eventsCountLast24Hours?.toString() || '-',
       icon: Users,
       change: 'Last 24 hours',
       changeType: 'positive' as const,
     },
     {
       title: 'Vault Events (30 days)',
-      value: loading ? '...' : metrics?.vaultEventsLast30Days?.toString() || '0',
+      value: metrics?.vaultEventsLast30Days?.toString() || '-',
       icon: Vault,
       change: 'Last 30 days',
       changeType: 'positive' as const,
     },
     {
       title: 'API Key Events (30 days)',
-      value: loading ? '...' : metrics?.apiKeyEventsLast30Days?.toString() || '0',
+      value: metrics?.apiKeyEventsLast30Days?.toString() || '-',
       icon: Key,
       change: 'Last 30 days',
       changeType: 'neutral' as const,
@@ -103,13 +104,17 @@ export default function DashboardContent() {
                 </div>
                 <div className="space-y-1">
                   <div className="text-2xl font-bold">{stat.value}</div>
-                  <p className={`text-xs ${
-                    stat.changeType === 'positive'
-                      ? 'text-green-600'
-                      : 'text-muted-foreground'
-                  }`}>
-                    {stat.change}
-                  </p>
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin inline" />
+                  ) :
+                    <p className={`text-xs ${
+                      stat.changeType === 'positive'
+                        ? 'text-green-600'
+                        : 'text-muted-foreground'
+                    }`}>
+                      {stat.change}
+                    </p>
+                  }
                 </div>
               </Card>
             );
