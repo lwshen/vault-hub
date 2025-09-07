@@ -162,11 +162,9 @@ export default function AuditLogContent() {
     }
   }, [pageSize]);
 
-
   useEffect(() => {
     fetchMetrics();
-    fetchAuditLogs(1);
-  }, [fetchMetrics, fetchAuditLogs]);
+  }, [fetchMetrics]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -180,11 +178,9 @@ export default function AuditLogContent() {
     setCurrentPage(1);
   };
 
-  // Update fetchAuditLogs when pageSize changes
   useEffect(() => {
     fetchAuditLogs(1);
   }, [pageSize, fetchAuditLogs]);
-
 
   const renderContent = () => {
     if (error) {
