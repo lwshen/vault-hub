@@ -19,6 +19,12 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -389,9 +395,22 @@ export default function AuditLogContent() {
                             )}
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                              {audit.apiKey ? 'CLI/API' : 'Web UI'}
-                            </span>
+                            {audit.apiKey ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground cursor-help">
+                                    CLI/API
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>API Key: {audit.apiKey.name}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                                Web UI
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
                             <span className="text-sm text-muted-foreground">
@@ -468,12 +487,12 @@ export default function AuditLogContent() {
   };
 
   return (
-    <>
+    <TooltipProvider>
       <DashboardHeader
         title="Audit Log"
         description="Monitor audit logs"
       />
       {renderContent()}
-    </>
+    </TooltipProvider>
   );
 }
