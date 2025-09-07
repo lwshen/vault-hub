@@ -137,7 +137,6 @@ export default function AuditLogContent() {
       setMetrics(metricsData);
     } catch (err) {
       console.error('Failed to fetch metrics:', err);
-      // Don't set error state for metrics failures, just log it
     } finally {
       setMetricsLoading(false);
     }
