@@ -58,7 +58,7 @@ func convertToApiAPIKey(apiKey *model.APIKey) (*VaultAPIKey, error) {
 		Vaults:     &apiVaults,
 		ExpiresAt:  expiresAt,
 		LastUsedAt: lastUsedAt,
-		IsActive:   apiKey.IsActive,
+		IsActive:   !apiKey.DeletedAt.Valid,
 		CreatedAt:  apiKey.CreatedAt,
 		UpdatedAt:  &apiKey.UpdatedAt,
 	}, nil

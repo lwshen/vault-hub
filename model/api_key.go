@@ -51,7 +51,6 @@ type APIKey struct {
 	VaultIDs   VaultIDs   `gorm:"type:json"`               // JSON array of vault IDs (null = all user's vaults)
 	ExpiresAt  *time.Time `gorm:"index"`                   // Optional expiration date
 	LastUsedAt *time.Time // Track when it was last used
-	IsActive   bool       `gorm:"default:true;index"` // Enable/disable the key
 }
 
 // CreateAPIKeyParams defines parameters for creating a new API key

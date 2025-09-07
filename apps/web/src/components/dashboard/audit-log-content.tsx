@@ -398,12 +398,26 @@ export default function AuditLogContent() {
                             {audit.apiKey ? (
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground cursor-help">
+                                  <span className={'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-help bg-muted text-muted-foreground'}>
                                     CLI/API
                                   </span>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>API Key: {audit.apiKey.name}</p>
+                                  <div className="space-y-1">
+                                    <p>API Key: {audit.apiKey.name}</p>
+                                    <p className={`text-sm ${
+                                      audit.apiKey.isActive
+                                        ? 'text-green-600 dark:text-green-400'
+                                        : 'text-red-600 dark:text-red-400'
+                                    }`}>
+                                      Status: {audit.apiKey.isActive ? 'Active' : 'Inactive'}
+                                    </p>
+                                    {!audit.apiKey.isActive && (
+                                      <p className="text-xs text-orange-600 dark:text-orange-400">
+                                        ⚠ This API key was deleted
+                                      </p>
+                                    )}
+                                  </div>
                                 </TooltipContent>
                               </Tooltip>
                             ) : (
