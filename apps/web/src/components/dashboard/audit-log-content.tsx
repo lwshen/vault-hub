@@ -1,15 +1,7 @@
 import { auditApi } from '@/apis/api';
+import DashboardHeader from '@/components/layout/dashboard-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import DashboardHeader from '@/components/layout/dashboard-header';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Pagination,
   PaginationContent,
@@ -19,18 +11,27 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import type { AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
 import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
@@ -119,16 +120,9 @@ const formatTimestamp = (timestamp: string | Date) => {
 };
 
 
-interface AuditMetrics {
-  totalEventsLast30Days: number;
-  eventsCountLast24Hours: number;
-  vaultEventsLast30Days: number;
-  apiKeyEventsLast30Days: number;
-}
-
 export default function AuditLogContent() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [metrics, setMetrics] = useState<AuditMetrics | null>(null);
+  const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -141,21 +135,8 @@ export default function AuditLogContent() {
     try {
       setMetricsLoading(true);
 
-      // Direct fetch until TypeScript client is updated with getAuditMetrics method
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/audit-logs/metrics', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const metricsData = await response.json();
+      // Fetch metrics using auditApi
+      const metricsData = await auditApi.getAuditMetrics();
       setMetrics(metricsData);
     } catch (err) {
       console.error('Failed to fetch metrics:', err);

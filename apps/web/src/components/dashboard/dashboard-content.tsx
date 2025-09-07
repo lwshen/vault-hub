@@ -1,5 +1,7 @@
+import { auditApi, versionApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import type { AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
   Key,
@@ -10,19 +12,11 @@ import {
   Users,
   Vault,
 } from 'lucide-react';
-import { versionApi } from '@/apis/api';
 import { useEffect, useState } from 'react';
-
-interface AuditMetrics {
-  totalEventsLast30Days: number;
-  eventsCountLast24Hours: number;
-  vaultEventsLast30Days: number;
-  apiKeyEventsLast30Days: number;
-}
 
 export default function DashboardContent() {
   const [version, setVersion] = useState<{ version: string; commit: string; } | null>(null);
-  const [metrics, setMetrics] = useState<AuditMetrics | null>(null);
+  const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,21 +25,8 @@ export default function DashboardContent() {
         const versionResponse = await versionApi.getVersion();
         setVersion(versionResponse);
 
-        // Fetch metrics using direct fetch until TypeScript client is updated
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/audit-logs/metrics', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const metricsResponse = await response.json();
+        // Fetch metrics using auditApi
+        const metricsResponse = await auditApi.getAuditMetrics();
         setMetrics(metricsResponse);
       } catch (error) {
         console.error('Failed to fetch data:', error);
