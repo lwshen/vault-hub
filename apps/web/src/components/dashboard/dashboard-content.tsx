@@ -103,18 +103,18 @@ export default function DashboardContent() {
                   <Icon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-2xl font-bold">{stat.value}</div>
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin inline" />
-                  ) :
-                    <p className={`text-xs ${
-                      stat.changeType === 'positive'
-                        ? 'text-green-600'
-                        : 'text-muted-foreground'
-                    }`}>
-                      {stat.change}
-                    </p>
-                  }
+                  ) : (
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                  )}
+                  <p className={`text-xs ${
+                    stat.changeType === 'positive'
+                      ? 'text-green-600'
+                      : 'text-muted-foreground'
+                  }`}>
+                    {stat.change}
+                  </p>
                 </div>
               </Card>
             );
