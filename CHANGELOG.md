@@ -1,3 +1,8 @@
+## [1.2.4] - 2025-09-08
+
+### 🚀 Features
+
+- *(docker)* Add Dockerfile for CLI and update documentation (#203)
 ## [1.2.3] - 2025-09-07
 
 ### 🚀 Features
