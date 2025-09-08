@@ -229,7 +229,7 @@ COPY . /app
 WORKDIR /app
 RUN go build -o vault-hub-cli ./apps/cli/main.go
 
-FROM alpine:latest
+FROM alpine:3.22
 RUN apk --no-cache add ca-certificates
 COPY --from=builder /app/vault-hub-cli /usr/local/bin/
 ENTRYPOINT ["vault-hub-cli"]

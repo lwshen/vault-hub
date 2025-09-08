@@ -1,0 +1,89 @@
+ARG GO_VERSION=1.24
+
+FROM golang:${GO_VERSION}-alpine AS cli-builder
+
+WORKDIR /app
+
+RUN apk add --no-cache gcc libc-dev
+
+ENV GO111MODULE=on \
+    CGO_ENABLED=1 \
+    GOOS=linux
+
+COPY . .
+
+RUN go mod download
+
+RUN go build -o vault-hub-cli apps/cli/main.go
+
+FROM alpine:3.22
+
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup -g 1001 -S vaultuser && \
+    adduser -u 1001 -S vaultuser -G vaultuser
+
+# Install cron and other necessary packages
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    dcron \
+    bash \
+    && mkdir -p /var/log/cron \
+    && chown -R vaultuser:vaultuser /var/log/cron
+
+COPY --from=cli-builder /app/vault-hub-cli ./
+
+# Change ownership of app directory
+RUN chown -R vaultuser:vaultuser /app
+
+# Create entrypoint script
+RUN cat > /app/entrypoint.sh << 'EOF'
+#!/bin/bash
+set -e
+
+# Check run mode from environment variable
+RUN_MODE=${RUN_MODE:-"oneshot"}
+
+case "$RUN_MODE" in
+  "cron")
+    echo "Starting in cron mode..."
+    # Create cron job from CRON_SCHEDULE (default every hour)
+    CRON_SCHEDULE=${CRON_SCHEDULE:-"0 * * * *"}
+    VAULT_HUB_CLI_ARGS=${VAULT_HUB_CLI_ARGS:-"list"}
+    
+    # Create cron job for vaultuser
+    echo "$CRON_SCHEDULE cd /app && ./vault-hub-cli $VAULT_HUB_CLI_ARGS >> /var/log/cron/vault-hub.log 2>&1" > /etc/crontabs/vaultuser
+    
+    echo "Cron job scheduled: $CRON_SCHEDULE"
+    echo "CLI arguments: $VAULT_HUB_CLI_ARGS"
+    echo "Logs will be written to /var/log/cron/vault-hub.log"
+    
+    # Start cron daemon
+    crond -f -l 2
+    ;;
+  "oneshot")
+    echo "Running in one-shot mode..."
+    VAULT_HUB_CLI_ARGS=${VAULT_HUB_CLI_ARGS:-"list"}
+    echo "Executing: ./vault-hub-cli $VAULT_HUB_CLI_ARGS"
+    exec ./vault-hub-cli $VAULT_HUB_CLI_ARGS
+    ;;
+  *)
+    echo "Invalid RUN_MODE: $RUN_MODE. Use 'cron' or 'oneshot'"
+    exit 1
+    ;;
+esac
+EOF
+
+RUN chmod +x /app/entrypoint.sh
+
+# Switch to non-root user
+USER vaultuser
+
+# Environment variables for configuration
+ENV RUN_MODE=oneshot
+ENV CRON_SCHEDULE="0 * * * *"
+ENV VAULT_HUB_CLI_ARGS="list"
+
+ENTRYPOINT ["/app/entrypoint.sh"]
