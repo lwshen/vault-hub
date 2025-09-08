@@ -16,9 +16,13 @@ RUN go mod download
 
 RUN go build -o vault-hub-cli apps/cli/main.go
 
-FROM alpine:latest
+FROM alpine:3.22
 
 WORKDIR /app
+
+# Create non-root user
+RUN addgroup -g 1001 -S vaultuser && \
+    adduser -u 1001 -S vaultuser -G vaultuser
 
 # Install cron and other necessary packages
 RUN apk add --no-cache \
@@ -26,9 +30,13 @@ RUN apk add --no-cache \
     tzdata \
     dcron \
     bash \
-    && mkdir -p /var/log/cron
+    && mkdir -p /var/log/cron \
+    && chown -R vaultuser:vaultuser /var/log/cron
 
 COPY --from=cli-builder /app/vault-hub-cli ./
+
+# Change ownership of app directory
+RUN chown -R vaultuser:vaultuser /app
 
 # Create entrypoint script
 RUN cat > /app/entrypoint.sh << 'EOF'
@@ -45,8 +53,8 @@ case "$RUN_MODE" in
     CRON_SCHEDULE=${CRON_SCHEDULE:-"0 * * * *"}
     VAULT_HUB_CLI_ARGS=${VAULT_HUB_CLI_ARGS:-"list"}
     
-    # Create cron job
-    echo "$CRON_SCHEDULE cd /app && ./vault-hub-cli $VAULT_HUB_CLI_ARGS >> /var/log/cron/vault-hub.log 2>&1" > /etc/crontabs/root
+    # Create cron job for vaultuser
+    echo "$CRON_SCHEDULE cd /app && ./vault-hub-cli $VAULT_HUB_CLI_ARGS >> /var/log/cron/vault-hub.log 2>&1" > /etc/crontabs/vaultuser
     
     echo "Cron job scheduled: $CRON_SCHEDULE"
     echo "CLI arguments: $VAULT_HUB_CLI_ARGS"
@@ -69,6 +77,9 @@ esac
 EOF
 
 RUN chmod +x /app/entrypoint.sh
+
+# Switch to non-root user
+USER vaultuser
 
 # Environment variables for configuration
 ENV RUN_MODE=oneshot

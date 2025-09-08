@@ -31,12 +31,22 @@ RUN go mod download
 
 RUN go build -o vault-hub-server apps/server/main.go
 
-FROM alpine:latest
+FROM alpine:3.22
 
 WORKDIR /app
 
+# Create non-root user
+RUN addgroup -g 1001 -S vaultuser && \
+    adduser -u 1001 -S vaultuser -G vaultuser
+
 COPY --from=backend-builder /app/vault-hub-server ./
 COPY --from=backend-builder /app/apps/web/dist ./apps/web/dist
+
+# Change ownership of app directory
+RUN chown -R vaultuser:vaultuser /app
+
+# Switch to non-root user
+USER vaultuser
 
 EXPOSE 3000
 
