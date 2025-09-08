@@ -122,8 +122,57 @@ The CLI container supports all VaultHub CLI commands:
 - `get --name <vault-name>` - Get specific vault by name
 - `get --id <vault-id>` - Get specific vault by unique ID
 - `get --name <vault> --output <file>` - Save vault to file
+- `get --id <vault-id> --output <file>` - Save vault to file by ID
 - `get --name <vault> --exec "command"` - Execute command if vault updated
 - `version` - Show version information
+
+## Output Vault to File
+
+To save a vault's contents to a file, use the `--output` flag with the `get` command:
+
+### One-shot Mode Examples
+
+```bash
+# Save vault by name to .env file
+docker run --rm \
+  -e RUN_MODE=oneshot \
+  -e VAULT_HUB_CLI_ARGS="get --name my-secrets --output .env" \
+  -e VAULT_HUB_SERVER_URL=https://vault-hub.example.com \
+  -e VAULT_HUB_API_KEY=vhub_xxx \
+  -v $(pwd):/output \
+  -w /output \
+  vault-hub-cli
+
+# Save vault by unique ID to custom file
+docker run --rm \
+  -e RUN_MODE=oneshot \
+  -e VAULT_HUB_CLI_ARGS="get --id abc123 --output config.env" \
+  -e VAULT_HUB_SERVER_URL=https://vault-hub.example.com \
+  -e VAULT_HUB_API_KEY=vhub_xxx \
+  -v $(pwd):/output \
+  -w /output \
+  vault-hub-cli
+```
+
+### Cron Mode with File Output
+
+```bash
+# Sync vault to file every hour
+docker run -d \
+  -e RUN_MODE=cron \
+  -e CRON_SCHEDULE="0 * * * *" \
+  -e VAULT_HUB_CLI_ARGS="get --name production-secrets --output .env" \
+  -e VAULT_HUB_SERVER_URL=https://vault-hub.example.com \
+  -e VAULT_HUB_API_KEY=vhub_xxx \
+  -v vault-hub-data:/output \
+  -w /output \
+  vault-hub-cli
+```
+
+**Note:** When outputting to files, make sure to:
+1. Mount a volume (`-v`) to persist the output file
+2. Set the working directory (`-w`) to the mounted volume
+3. Use relative paths for the output file
 
 ## Cron Schedule Examples
 
