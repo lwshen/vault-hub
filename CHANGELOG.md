@@ -1,3 +1,12 @@
+## [1.2.5] - 2025-09-10
+
+### 🚀 Features
+
+- *(docker)* Add go-cron binary and update Dockerfile for cron support (#214)
+
+### 📚 Documentation
+
+- Update CLAUDE.md (#212)
 ## [1.2.4] - 2025-09-08
 
 ### 🚀 Features
