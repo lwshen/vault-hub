@@ -23,6 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `vault-hub get --name/--id <vault-name-or-id>` - Get a specific vault by name or unique ID
     - `--exec` flag: Execute command if vault has been updated since last output
     - Example: `vault-hub get --name my-secrets --output .env --exec "source .env && npm start"`
+  - `vault-hub get --name <vault-name>` - Get vault by name using `/api/cli/vault/name/{name}` endpoint
   - `vault-hub version` - Show version and commit information
 - **Multi-platform builds**: See CI configuration for cross-compilation examples
 
@@ -56,12 +57,15 @@ VaultHub is a comprehensive secure environment variable and API key management s
 
 - **Location**: `apps/web/`
 - **Framework**: React 19 with TypeScript
-- **Build tool**: Vite with Lightning CSS
+- **Build tool**: Vite 7.1.3 with Tailwind CSS 4.1.12 (Lightning CSS)
+- **Package manager**: pnpm 10.15.0
 - **Routing**: Wouter (lightweight router)
-- **UI**: Tailwind CSS + Radix UI components
+- **UI**: Tailwind CSS 4.x + Radix UI components + Framer Motion for animations
 - **API client**: Custom generated TypeScript client (`@lwshen/vault-hub-ts-fetch-client`)
 - **State**: React Context for auth and theme management
 - **Components**: Organized into dashboard, layout, modals, and UI components
+- **Development proxy**: API requests proxied to `http://localhost:3000`
+- **Build optimization**: Manual chunking for UI libraries, vendor packages, and API client
 
 ### CLI (Go + Cobra)
 
@@ -151,6 +155,7 @@ The application enforces strict authentication rules via middleware (`route/midd
 **CLI API Vault Access:**
 - `GET /api/cli/vaults` - List accessible vaults (VaultLite format, no decrypted values)
 - `GET /api/cli/vault/{uniqueId}` - Get specific vault (full Vault format with decrypted value)
+- `GET /api/cli/vault/name/{name}` - Get specific vault by name (full Vault format with decrypted value)
 - Implements proper access control via `APIKey.HasVaultAccess()`
 - Includes audit logging for vault read operations
 - **Enhanced Security**: Supports optional client-side encryption via `X-Enable-Client-Encryption: true` header
@@ -189,21 +194,39 @@ ESLint configuration enforces:
 
 ## CI/CD Pipeline
 
-Both GitHub Actions and GitLab CI are configured for comprehensive builds:
+### GitHub Actions Workflows
 
-### GitHub Actions (`.github/workflows/ci.yml`)
+The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
+
+#### Main CI Workflow (`.github/workflows/ci.yml`)
 - **Triggers**: Push to main, pull requests to main
-- **Go Version**: 1.24 with module caching
-- **Frontend**: pnpm with Node.js 22, Lightning CSS
-- **Builds**: Cross-platform binaries for both server and CLI
+- **Go Version**: 1.24.2 with module caching
+- **Frontend**: pnpm 10.15.0 with Node.js 22
+- **Quality Checks**: golangci-lint, frontend typecheck and lint
+- **Testing**: Go tests with required environment variables
+- **Builds**: Cross-platform binaries for both server and CLI (Linux/Windows/macOS, amd64/arm64)
 - **Artifacts**: Uploads server, CLI binaries, and frontend build
-- **Client Generation**: TypeScript Axios client from OpenAPI spec
 
-### GitLab CI (`.gitlab-ci.yml`)
-- **Base Image**: `shenlw/vault-hub-base:latest` (pre-configured with tools)
-- **Stages**: build, build-openapi-typescript-client, build-openapi-go-client
-- **Cross-compilation**: Same platforms as GitHub Actions
-- **Client Libraries**: Generates both TypeScript fetch and Go clients
+#### Release Workflow (`.github/workflows/release.yml`)
+- **Triggers**: Git tags matching `v*`
+- **Client Publishing**: 
+  - TypeScript fetch client (`@lwshen/vault-hub-ts-fetch-client`) to npm
+  - Go client to separate repository (`vault-hub-go-client`)
+- **Changelog Generation**: Uses git-cliff with conventional commits
+- **Release Assets**: Uploads binaries to GitHub releases
+- **Automated PR**: Creates pull request to update CHANGELOG.md
+
+#### Additional Workflows
+- **Database Testing**: `db-test.yml` - Database-specific tests
+- **Docker Images**: `build-image.yml`, `build-cli-image.yml` - Container builds
+- **Client Publishing**: `publish-ts-client.yml`, `publish-go-client.yml` - Standalone client publishing
+- **Mirror**: `mirror.yml` - Repository mirroring
+- **Claude Integration**: `claude.yml`, `claude-code-review.yml` - AI-powered code reviews
+
+#### Release Management
+- **Changelog**: Automated generation using git-cliff with conventional commits
+- **Versioning**: Git tags drive version information in binaries
+- **Client Libraries**: Auto-published on releases with OpenAPI generators
 
 ### Build Outputs
 
@@ -221,22 +244,42 @@ Both GitHub Actions and GitLab CI are configured for comprehensive builds:
 
 ```
 vault-hub/
+├── .github/workflows/   # GitHub Actions CI/CD workflows
 ├── apps/
 │   ├── cli/              # Command-line interface (Go + Cobra)
+│   │   ├── main.go       # CLI entry point
+│   │   └── README.md     # CLI documentation
 │   ├── server/           # Backend server (Go + Fiber)
+│   │   └── main.go       # Server entry point
 │   └── web/              # Frontend application (React + TypeScript)
+│       ├── src/          # React source code
+│       ├── dist/         # Build output
+│       ├── public/       # Static assets
+│       ├── package.json  # Frontend dependencies
+│       ├── vite.config.ts # Vite configuration
+│       └── tsconfig.json # TypeScript configuration
 ├── packages/
 │   └── api/              # OpenAPI specification and generated code
 │       ├── openapi/      # OpenAPI 3.0 specification files
+│       │   ├── api.yaml  # Main specification
+│       │   ├── paths/    # Endpoint definitions
+│       │   └── schemas/  # Data model schemas
 │       ├── generated.go  # Auto-generated Go server code
+│       ├── tool.go       # Code generation tool
 │       └── *.go         # API implementation files
 ├── model/               # Database models (GORM)
 ├── handler/             # HTTP request handlers
 ├── route/               # Routing and middleware
 ├── internal/            # Internal packages
 │   ├── auth/           # Authentication (JWT, OIDC)
+│   ├── cli/            # CLI command implementations
 │   ├── config/         # Configuration management
-│   └── encryption/     # AES-256-GCM encryption
+│   ├── encryption/     # AES-256-GCM encryption
+│   └── version/        # Version information
 ├── docker/             # Docker build files
-└── scripts/            # Build and utility scripts
+├── docs/               # Documentation
+├── scripts/            # Build and utility scripts
+├── cliff.toml          # Changelog generation configuration
+├── go.mod              # Go module definition
+└── CLAUDE.md           # AI assistant guidance (this file)
 ```
