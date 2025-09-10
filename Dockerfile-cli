@@ -16,6 +16,9 @@ RUN go mod download
 
 RUN go build -o vault-hub-cli apps/cli/main.go
 
+# Build cron binary
+RUN go build -o go-cron apps/cron/main.go
+
 FROM alpine:3.22
 
 WORKDIR /app
@@ -24,16 +27,16 @@ WORKDIR /app
 RUN addgroup -g 1001 -S vaultuser && \
     adduser -u 1001 -S vaultuser -G vaultuser
 
-# Install cron and other necessary packages
+# Install necessary packages
 RUN apk add --no-cache \
     ca-certificates \
     tzdata \
-    dcron \
     bash \
     && mkdir -p /var/log/cron \
     && chown -R vaultuser:vaultuser /var/log/cron
 
 COPY --from=cli-builder /app/vault-hub-cli ./
+COPY --from=cli-builder /app/go-cron ./
 
 # Change ownership of app directory
 RUN chown -R vaultuser:vaultuser /app
@@ -48,20 +51,17 @@ RUN_MODE=${RUN_MODE:-"oneshot"}
 
 case "$RUN_MODE" in
   "cron")
-    echo "Starting in cron mode..."
+    echo "Starting in cron mode with go-cron..."
     # Create cron job from CRON_SCHEDULE (default every hour)
     CRON_SCHEDULE=${CRON_SCHEDULE:-"0 * * * *"}
     VAULT_HUB_CLI_ARGS=${VAULT_HUB_CLI_ARGS:-"list"}
-    
-    # Create cron job for vaultuser
-    echo "$CRON_SCHEDULE cd /app && ./vault-hub-cli $VAULT_HUB_CLI_ARGS >> /var/log/cron/vault-hub.log 2>&1" > /etc/crontabs/vaultuser
     
     echo "Cron job scheduled: $CRON_SCHEDULE"
     echo "CLI arguments: $VAULT_HUB_CLI_ARGS"
     echo "Logs will be written to /var/log/cron/vault-hub.log"
     
-    # Start cron daemon
-    crond -f -l 2
+    # Start go-cron with the vault-hub-cli command
+    exec ./go-cron "$CRON_SCHEDULE" /bin/bash -c "cd /app && ./vault-hub-cli $VAULT_HUB_CLI_ARGS >> /var/log/cron/vault-hub.log 2>&1"
     ;;
   "oneshot")
     echo "Running in one-shot mode..."
