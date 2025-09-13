@@ -203,7 +203,7 @@ func findVaultByUniqueID(uniqueID string, userID uint) (*model.Vault, error) {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("vault not found: %s", uniqueID)
 		}
-		return nil, fmt.Errorf("failed to validate vault: %v", err)
+		return nil, fmt.Errorf("failed to validate vault %s: %v", uniqueID, err)
 	}
 	return &vault, nil
 }
