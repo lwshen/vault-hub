@@ -37,33 +37,25 @@ Examples:
 	return cmd
 }
 
+// runGetCommand executes the vault retrieval operation
+// It validates parameters, fetches the vault, and handles output
 func runGetCommand(cmd *cobra.Command, _ []string, ctx *CommandContext) {
 	ctx.DebugLog("Executing get command")
 
-	name := ctx.MustGetStringFlag(cmd, "name")
-	id := ctx.MustGetStringFlag(cmd, "id")
-	outputFile := ctx.MustGetStringFlag(cmd, "output")
-	followUpCommand := ctx.MustGetStringFlag(cmd, "exec")
+	// Parse command flags
+	params := parseGetCommandFlags(cmd, ctx)
+	ctx.DebugLog("Parameters - name: '%s', id: '%s', output: '%s', exec: '%s'",
+		params.name, params.id, params.outputFile, params.followUpCommand)
 
-	ctx.DebugLog("Parameters - name: '%s', id: '%s', output: '%s', exec: '%s'", name, id, outputFile, followUpCommand)
-
-	if name == "" && id == "" {
-		ctx.DebugLog("Validation failed: neither name nor id provided")
-		fmt.Fprintf(os.Stderr, "Error: either name or id must be provided\n")
+	// Validate required parameters
+	if err := validateGetParams(params); err != nil {
+		ctx.DebugLog("Validation failed: %v", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
-	apiCtx := context.Background()
-	var vault *openapi.Vault
-	var err error
-	if name != "" {
-		ctx.DebugLog("Making API request to get vault by name: %s", name)
-		vault, _, err = ctx.GetClient().CliAPI.GetVaultByNameAPIKey(apiCtx, name).Execute()
-	} else {
-		ctx.DebugLog("Making API request to get vault by ID: %s", id)
-		vault, _, err = ctx.GetClient().CliAPI.GetVaultByAPIKey(apiCtx, id).Execute()
-	}
-
+	// Fetch vault from API
+	vault, err := fetchVault(params, ctx)
 	if err != nil {
 		ctx.DebugLog("API request failed: %v", err)
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -71,13 +63,60 @@ func runGetCommand(cmd *cobra.Command, _ []string, ctx *CommandContext) {
 	}
 	ctx.DebugLog("API request successful, vault retrieved")
 
-	if outputFile != "" {
-		handleFileOutput(vault, outputFile, followUpCommand, ctx.DebugLog)
+	// Handle output
+	handleVaultOutput(vault, params, ctx)
+	ctx.DebugLog("Get command completed successfully")
+}
+
+// getCommandParams holds the parsed command parameters
+type getCommandParams struct {
+	name            string
+	id              string
+	outputFile      string
+	followUpCommand string
+}
+
+// parseGetCommandFlags extracts and returns command flags
+func parseGetCommandFlags(cmd *cobra.Command, ctx *CommandContext) getCommandParams {
+	return getCommandParams{
+		name:            ctx.MustGetStringFlag(cmd, "name"),
+		id:              ctx.MustGetStringFlag(cmd, "id"),
+		outputFile:      ctx.MustGetStringFlag(cmd, "output"),
+		followUpCommand: ctx.MustGetStringFlag(cmd, "exec"),
+	}
+}
+
+// validateGetParams ensures required parameters are provided
+func validateGetParams(params getCommandParams) error {
+	if params.name == "" && params.id == "" {
+		return fmt.Errorf("either name or id must be provided")
+	}
+	return nil
+}
+
+// fetchVault retrieves a vault from the API by name or ID
+func fetchVault(params getCommandParams, ctx *CommandContext) (*openapi.Vault, error) {
+	apiCtx := context.Background()
+
+	if params.name != "" {
+		ctx.DebugLog("Making API request to get vault by name: %s", params.name)
+		vault, _, err := ctx.GetClient().CliAPI.GetVaultByNameAPIKey(apiCtx, params.name).Execute()
+		return vault, err
+	}
+
+	ctx.DebugLog("Making API request to get vault by ID: %s", params.id)
+	vault, _, err := ctx.GetClient().CliAPI.GetVaultByAPIKey(apiCtx, params.id).Execute()
+	return vault, err
+}
+
+// handleVaultOutput manages the output of vault data
+func handleVaultOutput(vault *openapi.Vault, params getCommandParams, ctx *CommandContext) {
+	if params.outputFile != "" {
+		handleFileOutput(vault, params.outputFile, params.followUpCommand, ctx.DebugLog)
 	} else {
 		ctx.DebugLog("Outputting vault value to stdout")
 		fmt.Println(vault.Value)
 	}
-	ctx.DebugLog("Get command completed successfully")
 }
 
 type UpdateResult struct {
@@ -88,60 +127,85 @@ type UpdateResult struct {
 	Reason           string
 }
 
+// isVaultUpdated determines if a vault has been updated since the last file write
+// It compares timestamps and content to decide if the file should be updated
 func isVaultUpdated(vault *openapi.Vault, filePath string, debugLog func(string, ...any)) (UpdateResult, error) {
 	var result UpdateResult
-	var fileModTime time.Time
 
-	// Check if file exists and get its modification time
-	if fileInfo, err := os.Stat(filePath); err == nil {
-		fileModTime = fileInfo.ModTime()
-		result.FileExists = true
-		debugLog("File exists, last modified: %s", fileModTime.Format(time.RFC3339))
+	// Check file existence and get modification info
+	fileModTime, fileExists := getFileModTime(filePath, debugLog)
+	result.FileExists = fileExists
 
-		// Compare file content with vault value
-		if existingContent, readErr := os.ReadFile(filePath); readErr == nil {
-			result.ContentChanged = string(existingContent) != vault.Value
-			debugLog("Content comparison - file differs from vault: %v", result.ContentChanged)
-		} else {
-			debugLog("Could not read existing file for content comparison: %v", readErr)
-			result.ContentChanged = true // Assume content changed if we can't read the file
-		}
-	} else {
-		debugLog("File does not exist")
-		result.ContentChanged = true // New file, so content is "changed"
-	}
+	// Compare file content with vault value
+	result.ContentChanged = checkContentChanged(vault.Value, filePath, fileExists, debugLog)
 
-	// Parse vault's updated timestamp
-	var vaultUpdatedAt time.Time
-	var hasValidTimestamp bool
-	if vault.UpdatedAt != nil {
-		vaultUpdatedAt = *vault.UpdatedAt
-		hasValidTimestamp = true
-		debugLog("Vault last updated: %s", vaultUpdatedAt.Format(time.RFC3339))
-	} else {
-		debugLog("Vault has no timestamp - treating as new vault")
-	}
+	// Check timestamp changes
+	vaultUpdatedAt, hasValidTimestamp := getVaultTimestamp(vault, debugLog)
+	result.TimestampChanged = hasValidTimestamp && fileExists && vaultUpdatedAt.After(fileModTime)
 
-	// Determine if vault has been updated
-	// Only proceed with update check if we have valid timestamps
-	result.TimestampChanged = hasValidTimestamp && result.FileExists && vaultUpdatedAt.After(fileModTime)
-	result.HasUpdates = !result.FileExists || result.TimestampChanged || result.ContentChanged
+	// Determine overall update status
+	result.HasUpdates = !fileExists || result.TimestampChanged || result.ContentChanged
+	result.Reason = determineUpdateReason(result)
 
-	// Set update reason
-	if !result.FileExists {
-		result.Reason = "new file"
-	} else if result.TimestampChanged && result.ContentChanged {
-		result.Reason = "vault updated and content differs"
-	} else if result.TimestampChanged {
-		result.Reason = "vault was updated"
-	} else if result.ContentChanged {
-		result.Reason = "content differs from vault"
-	} else {
-		result.Reason = "no updates - content matches vault"
-	}
-
-	debugLog("Vault has updates: %v (timestamp: %v, content: %v)", result.HasUpdates, result.TimestampChanged, result.ContentChanged)
+	debugLog("Vault has updates: %v (timestamp: %v, content: %v)",
+		result.HasUpdates, result.TimestampChanged, result.ContentChanged)
 	return result, nil
+}
+
+// getFileModTime returns file modification time and existence status
+func getFileModTime(filePath string, debugLog func(string, ...any)) (time.Time, bool) {
+	if fileInfo, err := os.Stat(filePath); err == nil {
+		fileModTime := fileInfo.ModTime()
+		debugLog("File exists, last modified: %s", fileModTime.Format(time.RFC3339))
+		return fileModTime, true
+	}
+	debugLog("File does not exist")
+	return time.Time{}, false
+}
+
+// checkContentChanged compares file content with vault value
+func checkContentChanged(vaultValue, filePath string, fileExists bool, debugLog func(string, ...any)) bool {
+	if !fileExists {
+		return true // New file, so content is "changed"
+	}
+
+	existingContent, readErr := os.ReadFile(filePath)
+	if readErr != nil {
+		debugLog("Could not read existing file for content comparison: %v", readErr)
+		return true // Assume content changed if we can't read the file
+	}
+
+	contentChanged := string(existingContent) != vaultValue
+	debugLog("Content comparison - file differs from vault: %v", contentChanged)
+	return contentChanged
+}
+
+// getVaultTimestamp extracts and validates vault timestamp
+func getVaultTimestamp(vault *openapi.Vault, debugLog func(string, ...any)) (time.Time, bool) {
+	if vault.UpdatedAt != nil {
+		vaultUpdatedAt := *vault.UpdatedAt
+		debugLog("Vault last updated: %s", vaultUpdatedAt.Format(time.RFC3339))
+		return vaultUpdatedAt, true
+	}
+	debugLog("Vault has no timestamp - treating as new vault")
+	return time.Time{}, false
+}
+
+// determineUpdateReason provides a human-readable reason for the update decision
+func determineUpdateReason(result UpdateResult) string {
+	if !result.FileExists {
+		return "new file"
+	}
+	if result.TimestampChanged && result.ContentChanged {
+		return "vault updated and content differs"
+	}
+	if result.TimestampChanged {
+		return "vault was updated"
+	}
+	if result.ContentChanged {
+		return "content differs from vault"
+	}
+	return "no updates - content matches vault"
 }
 
 func handleFileOutput(vault *openapi.Vault, outputFile, followUpCommand string, debugLog func(string, ...any)) {

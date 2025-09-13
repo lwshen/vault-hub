@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -118,52 +119,37 @@ func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-// CreateAPIKey - Create a new API key
+// CreateAPIKey handles the creation of a new API key
+// It validates the request, converts vault IDs, creates the key, and returns the response
 func (s Server) CreateAPIKey(c *fiber.Ctx) error {
+	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	var req CreateAPIKeyRequest
-	if err := c.BodyParser(&req); err != nil {
+	// Parse and validate request
+	req, err := parseCreateAPIKeyRequest(c)
+	if err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
 	// Convert vault unique IDs to database IDs
-	var vaultIDs []uint
-	if req.VaultUniqueIds != nil && len(*req.VaultUniqueIds) > 0 {
-		for _, uniqueID := range *req.VaultUniqueIds {
-			var vault model.Vault
-			err := model.DB.Where("unique_id = ? AND user_id = ?", uniqueID, user.ID).First(&vault).Error
-			if err != nil {
-				if err == gorm.ErrRecordNotFound {
-					return handler.SendError(c, fiber.StatusBadRequest, "vault not found: "+uniqueID)
-				}
-				return handler.SendError(c, fiber.StatusInternalServerError, "failed to validate vault")
-			}
-			vaultIDs = append(vaultIDs, vault.ID)
-		}
+	vaultIDs, err := convertVaultUniqueIDs(req.VaultUniqueIds, user.ID)
+	if err != nil {
+		return err
 	}
 
-	// Create API key parameters
-	params := model.CreateAPIKeyParams{
-		UserID:   user.ID,
-		Name:     req.Name,
-		VaultIDs: vaultIDs,
-	}
-
-	if req.ExpiresAt != nil {
-		params.ExpiresAt = req.ExpiresAt
-	}
+	// Build API key creation parameters
+	params := buildCreateAPIKeyParams(req, user.ID, vaultIDs)
 
 	// Validate parameters
-	if validationErrors := params.Validate(); len(validationErrors) > 0 {
+	if err := validateCreateAPIKeyParams(params); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, "validation failed")
 	}
 
 	// Create the API key
-	apiKey, plainKey, err := params.Create()
+	apiKey, plainKey, err := createAPIKey(params)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to create API key")
 	}
@@ -174,7 +160,7 @@ func (s Server) CreateAPIKey(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to convert API key")
 	}
 
-	// Create audit log for API key creation
+	// Log the creation for audit purposes
 	auditAPIKeyOperation(c, model.ActionCreateAPIKey, user.ID, apiKey.ID, apiKey.Name)
 
 	response := CreateAPIKeyResponse{
@@ -185,74 +171,180 @@ func (s Server) CreateAPIKey(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(response)
 }
 
-// UpdateAPIKey - Update an API key (enable/disable or modify properties)
+// parseCreateAPIKeyRequest parses the request body for API key creation
+func parseCreateAPIKeyRequest(c *fiber.Ctx) (CreateAPIKeyRequest, error) {
+	var req CreateAPIKeyRequest
+	err := c.BodyParser(&req)
+	return req, err
+}
+
+// convertVaultUniqueIDs converts vault unique IDs to database IDs
+func convertVaultUniqueIDs(vaultUniqueIds *[]string, userID uint) ([]uint, error) {
+	if vaultUniqueIds == nil || len(*vaultUniqueIds) == 0 {
+		return []uint{}, nil
+	}
+
+	var vaultIDs []uint
+	for _, uniqueID := range *vaultUniqueIds {
+		vault, err := findVaultByUniqueID(uniqueID, userID)
+		if err != nil {
+			return nil, err
+		}
+		vaultIDs = append(vaultIDs, vault.ID)
+	}
+	return vaultIDs, nil
+}
+
+// findVaultByUniqueID finds a vault by unique ID and user ID
+func findVaultByUniqueID(uniqueID string, userID uint) (*model.Vault, error) {
+	var vault model.Vault
+	err := model.DB.Where("unique_id = ? AND user_id = ?", uniqueID, userID).First(&vault).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("vault not found: %s", uniqueID)
+		}
+		return nil, fmt.Errorf("failed to validate vault: %v", err)
+	}
+	return &vault, nil
+}
+
+// buildCreateAPIKeyParams constructs API key creation parameters
+func buildCreateAPIKeyParams(req CreateAPIKeyRequest, userID uint, vaultIDs []uint) model.CreateAPIKeyParams {
+	params := model.CreateAPIKeyParams{
+		UserID:   userID,
+		Name:     req.Name,
+		VaultIDs: vaultIDs,
+	}
+
+	if req.ExpiresAt != nil {
+		params.ExpiresAt = req.ExpiresAt
+	}
+
+	return params
+}
+
+// validateCreateAPIKeyParams validates the API key creation parameters
+func validateCreateAPIKeyParams(params model.CreateAPIKeyParams) error {
+	if validationErrors := params.Validate(); len(validationErrors) > 0 {
+		return fmt.Errorf("validation errors occurred")
+	}
+	return nil
+}
+
+// createAPIKey creates a new API key with the given parameters
+func createAPIKey(params model.CreateAPIKeyParams) (*model.APIKey, string, error) {
+	return params.Create()
+}
+
+// UpdateAPIKey handles updating an existing API key's properties
+// It validates ownership, processes the update request, and returns the updated key
 func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
+	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	// Find the API key
-	var apiKey model.APIKey
-	err = model.DB.Where("id = ? AND user_id = ?", id, user.ID).First(&apiKey).Error
+	// Find and validate API key ownership
+	apiKey, err := findAPIKeyByID(id, user.ID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return handler.SendError(c, fiber.StatusNotFound, "API key not found")
-		}
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to get API key")
+		return err
 	}
 
-	var req UpdateAPIKeyRequest
-	if err := c.BodyParser(&req); err != nil {
+	// Parse update request
+	req, err := parseUpdateAPIKeyRequest(c)
+	if err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
 	// Convert vault unique IDs to database IDs if provided
-	var vaultIDs *[]uint
-	if req.VaultUniqueIds != nil {
-		var ids []uint
-		for _, uniqueID := range *req.VaultUniqueIds {
-			var vault model.Vault
-			err := model.DB.Where("unique_id = ? AND user_id = ?", uniqueID, user.ID).First(&vault).Error
-			if err != nil {
-				if err == gorm.ErrRecordNotFound {
-					return handler.SendError(c, fiber.StatusBadRequest, "vault not found: "+uniqueID)
-				}
-				return handler.SendError(c, fiber.StatusInternalServerError, "failed to validate vault")
-			}
-			ids = append(ids, vault.ID)
-		}
-		vaultIDs = &ids
+	vaultIDs, err := convertOptionalVaultUniqueIDs(req.VaultUniqueIds, user.ID)
+	if err != nil {
+		return err
 	}
 
-	// Update parameters
-	updateParams := model.UpdateAPIKeyParams{
-		Name:      req.Name,
-		VaultIDs:  vaultIDs,
-		ExpiresAt: req.ExpiresAt,
-	}
+	// Build update parameters
+	updateParams := buildUpdateAPIKeyParams(req, vaultIDs)
 
-	// Validate parameters
-	if validationErrors := updateParams.ValidateForUpdate(user.ID, apiKey.ID); len(validationErrors) > 0 {
+	// Validate update parameters
+	if err := validateUpdateAPIKeyParams(updateParams, user.ID, apiKey.ID); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, "validation failed")
 	}
 
-	// Update the API key
-	err = apiKey.Update(updateParams)
-	if err != nil {
+	// Perform the update
+	if err := updateAPIKey(apiKey, updateParams); err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to update API key")
 	}
 
 	// Convert to API format
-	apiAPIKey, err := convertToApiAPIKey(&apiKey)
+	apiAPIKey, err := convertToApiAPIKey(apiKey)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to convert API key")
 	}
 
-	// Create audit log for API key update
+	// Log the update for audit purposes
 	auditAPIKeyOperation(c, model.ActionUpdateAPIKey, user.ID, apiKey.ID, apiKey.Name)
 
 	return c.Status(fiber.StatusOK).JSON(*apiAPIKey)
+}
+
+// findAPIKeyByID finds an API key by ID and validates user ownership
+func findAPIKeyByID(id int64, userID uint) (*model.APIKey, error) {
+	var apiKey model.APIKey
+	err := model.DB.Where("id = ? AND user_id = ?", id, userID).First(&apiKey).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("API key not found")
+		}
+		return nil, fmt.Errorf("failed to get API key: %v", err)
+	}
+	return &apiKey, nil
+}
+
+// parseUpdateAPIKeyRequest parses the request body for API key updates
+func parseUpdateAPIKeyRequest(c *fiber.Ctx) (UpdateAPIKeyRequest, error) {
+	var req UpdateAPIKeyRequest
+	err := c.BodyParser(&req)
+	return req, err
+}
+
+// convertOptionalVaultUniqueIDs converts optional vault unique IDs to database IDs
+func convertOptionalVaultUniqueIDs(vaultUniqueIds *[]string, userID uint) (*[]uint, error) {
+	if vaultUniqueIds == nil {
+		return nil, nil
+	}
+
+	var ids []uint
+	for _, uniqueID := range *vaultUniqueIds {
+		vault, err := findVaultByUniqueID(uniqueID, userID)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, vault.ID)
+	}
+	return &ids, nil
+}
+
+// buildUpdateAPIKeyParams constructs API key update parameters
+func buildUpdateAPIKeyParams(req UpdateAPIKeyRequest, vaultIDs *[]uint) model.UpdateAPIKeyParams {
+	return model.UpdateAPIKeyParams{
+		Name:      req.Name,
+		VaultIDs:  vaultIDs,
+		ExpiresAt: req.ExpiresAt,
+	}
+}
+
+// validateUpdateAPIKeyParams validates the API key update parameters
+func validateUpdateAPIKeyParams(params model.UpdateAPIKeyParams, userID uint, apiKeyID uint) error {
+	if validationErrors := params.ValidateForUpdate(userID, apiKeyID); len(validationErrors) > 0 {
+		return fmt.Errorf("validation errors occurred")
+	}
+	return nil
+}
+
+// updateAPIKey performs the actual API key update
+func updateAPIKey(apiKey *model.APIKey, params model.UpdateAPIKeyParams) error {
+	return apiKey.Update(params)
 }
 
 // DeleteAPIKey - Delete an API key

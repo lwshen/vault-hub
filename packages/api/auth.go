@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log/slog"
 	"strings"
 
@@ -52,46 +53,36 @@ func (Server) Login(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
+// Signup handles user registration requests
+// It validates input, creates the user account, and returns a JWT token
 func (Server) Signup(c *fiber.Ctx) error {
-	var input SignupRequest
-	if err := c.BodyParser(&input); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
-	}
-
-	email, err := getEmail(input.Email)
+	// Parse request body
+	input, err := parseSignupRequest(c)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
+	// Extract client information for audit logging
 	clientIP, userAgent := getClientInfo(c)
 
-	createUserParams := model.CreateUserParams{
-		Email:    string(email),
-		Password: input.Password,
-		Name:     input.Name,
+	// Validate and create user parameters
+	createParams, err := buildUserCreateParams(input)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	errors := createUserParams.Validate()
-	if len(errors) > 0 {
-		var errorMsgs []string
-		for _, msg := range errors {
-			errorMsgs = append(errorMsgs, msg)
-		}
-		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMsgs, "; "))
-	}
-
-	user, err := createUserParams.Create()
+	// Create the user account
+	user, err := createUser(createParams)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
 	slog.Info("User created", "email", user.Email, "name", user.Name)
 
-	// Record successful registration audit log
-	if err := model.LogUserAction(model.ActionRegisterUser, user.ID, clientIP, userAgent); err != nil {
-		slog.Error("Failed to create audit log for signup", "error", err, "userID", user.ID)
-	}
+	// Log successful registration
+	logSignupAudit(user.ID, clientIP, userAgent)
 
+	// Generate authentication token
 	token, err := user.GenerateToken()
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
@@ -102,6 +93,54 @@ func (Server) Signup(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)
+}
+
+// parseSignupRequest parses and validates the signup request body
+func parseSignupRequest(c *fiber.Ctx) (SignupRequest, error) {
+	var input SignupRequest
+	if err := c.BodyParser(&input); err != nil {
+		return input, err
+	}
+	return input, nil
+}
+
+// buildUserCreateParams creates and validates user creation parameters
+func buildUserCreateParams(input SignupRequest) (model.CreateUserParams, error) {
+	email, err := getEmail(input.Email)
+	if err != nil {
+		return model.CreateUserParams{}, err
+	}
+
+	createUserParams := model.CreateUserParams{
+		Email:    string(email),
+		Password: input.Password,
+		Name:     input.Name,
+	}
+
+	errors := createUserParams.Validate()
+	if len(errors) > 0 {
+		// Convert map values to slice for joining
+		var errorMsgs []string
+		for _, msg := range errors {
+			errorMsgs = append(errorMsgs, msg)
+		}
+		errorMsg := strings.Join(errorMsgs, "; ")
+		return model.CreateUserParams{}, fmt.Errorf("%s", errorMsg)
+	}
+
+	return createUserParams, nil
+}
+
+// createUser creates a new user account
+func createUser(params model.CreateUserParams) (*model.User, error) {
+	return params.Create()
+}
+
+// logSignupAudit records the signup action in audit logs
+func logSignupAudit(userID uint, clientIP, userAgent string) {
+	if err := model.LogUserAction(model.ActionRegisterUser, userID, clientIP, userAgent); err != nil {
+		slog.Error("Failed to create audit log for signup", "error", err, "userID", userID)
+	}
 }
 
 func (Server) Logout(c *fiber.Ctx) error {
