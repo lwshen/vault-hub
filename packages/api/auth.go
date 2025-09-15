@@ -42,7 +42,7 @@ func (Server) Login(c *fiber.Ctx) error {
 	}
 
 	// Record successful login audit log
-	if err := model.LogUserAction(model.ActionLoginUser, user.ID, clientIP, userAgent); err != nil {
+	if err := model.LogUserAction(model.ActionLoginUser, user.ID, model.SourceWeb, clientIP, userAgent); err != nil {
 		slog.Error("Failed to create audit log for login", "error", err, "userID", user.ID)
 	}
 
@@ -138,7 +138,7 @@ func createUser(params model.CreateUserParams) (*model.User, error) {
 
 // logSignupAudit records the signup action in audit logs
 func logSignupAudit(userID uint, clientIP, userAgent string) {
-	if err := model.LogUserAction(model.ActionRegisterUser, userID, clientIP, userAgent); err != nil {
+	if err := model.LogUserAction(model.ActionRegisterUser, userID, model.SourceWeb, clientIP, userAgent); err != nil {
 		slog.Error("Failed to create audit log for signup", "error", err, "userID", userID)
 	}
 }
@@ -149,7 +149,7 @@ func (Server) Logout(c *fiber.Ctx) error {
 	user, ok := c.Locals("user").(*model.User)
 	if ok && user != nil {
 		clientIP, userAgent := getClientInfo(c)
-		if err := model.LogUserAction(model.ActionLogoutUser, user.ID, clientIP, userAgent); err != nil {
+		if err := model.LogUserAction(model.ActionLogoutUser, user.ID, model.SourceWeb, clientIP, userAgent); err != nil {
 			slog.Error("Failed to create audit log for logout", "error", err, "userID", user.ID)
 		}
 	}

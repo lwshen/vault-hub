@@ -103,7 +103,7 @@ func (Server) GetVault(c *fiber.Ctx, uniqueID string) error {
 
 	// Log read action
 	ip, userAgent := getClientInfo(c)
-	if err := model.LogVaultAction(vault.ID, model.ActionReadVault, user.ID, ip, userAgent); err != nil {
+	if err := model.LogVaultAction(vault.ID, model.ActionReadVault, user.ID, model.SourceWeb, nil, ip, userAgent); err != nil {
 		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
 	}
 
@@ -154,7 +154,7 @@ func (Server) CreateVault(c *fiber.Ctx) error {
 
 	// Log create action
 	ip, userAgent := getClientInfo(c)
-	if err := model.LogVaultAction(vault.ID, model.ActionCreateVault, user.ID, ip, userAgent); err != nil {
+	if err := model.LogVaultAction(vault.ID, model.ActionCreateVault, user.ID, model.SourceWeb, nil, ip, userAgent); err != nil {
 		slog.Error("Failed to create audit log for create vault", "error", err, "vaultID", vault.ID)
 	}
 
@@ -208,7 +208,7 @@ func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 
 	// Log update action
 	ip, userAgent := getClientInfo(c)
-	_ = model.LogVaultAction(vault.ID, model.ActionUpdateVault, user.ID, ip, userAgent)
+	_ = model.LogVaultAction(vault.ID, model.ActionUpdateVault, user.ID, model.SourceWeb, nil, ip, userAgent)
 
 	return c.Status(fiber.StatusOK).JSON(convertToApiVault(&vault))
 }
@@ -237,7 +237,7 @@ func (Server) DeleteVault(c *fiber.Ctx, uniqueID string) error {
 
 	// Log delete action
 	ip, userAgent := getClientInfo(c)
-	_ = model.LogVaultAction(vault.ID, model.ActionDeleteVault, user.ID, ip, userAgent)
+	_ = model.LogVaultAction(vault.ID, model.ActionDeleteVault, user.ID, model.SourceWeb, nil, ip, userAgent)
 
 	return c.SendStatus(fiber.StatusNoContent)
 }

@@ -32,6 +32,12 @@ const (
 	UpdateVault  AuditLogAction = "update_vault"
 )
 
+// Defines values for AuditLogSource.
+const (
+	Cli AuditLogSource = "cli"
+	Web AuditLogSource = "web"
+)
+
 // APIKeysResponse defines model for APIKeysResponse.
 type APIKeysResponse struct {
 	ApiKeys []VaultAPIKey `json:"apiKeys"`
@@ -58,6 +64,9 @@ type AuditLog struct {
 	// IpAddress IP address from which the action was performed
 	IpAddress *string `json:"ipAddress,omitempty"`
 
+	// Source Source of the request (web interface or CLI)
+	Source AuditLogSource `json:"source"`
+
 	// UserAgent User agent string from the client
 	UserAgent *string    `json:"userAgent,omitempty"`
 	Vault     *VaultLite `json:"vault,omitempty"`
@@ -65,6 +74,9 @@ type AuditLog struct {
 
 // AuditLogAction Type of action performed
 type AuditLogAction string
+
+// AuditLogSource Source of the request (web interface or CLI)
+type AuditLogSource string
 
 // AuditLogsResponse defines model for AuditLogsResponse.
 type AuditLogsResponse struct {

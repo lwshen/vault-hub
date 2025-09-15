@@ -22,6 +22,13 @@ const (
 	ActionDeleteAPIKey ActionType = "delete_api_key"
 )
 
+type SourceType string
+
+const (
+	SourceWeb SourceType = "web"
+	SourceCLI SourceType = "cli"
+)
+
 var (
 	vaultActions = []string{
 		string(ActionReadVault), string(ActionUpdateVault),
@@ -42,6 +49,7 @@ type AuditLog struct {
 	Action    ActionType `gorm:"size:50;index"`
 	UserID    uint       `gorm:"index;constraint:OnDelete:CASCADE"`
 	User      User       `gorm:"foreignKey:UserID"`
+	Source    SourceType `gorm:"size:10;index"`
 	IPAddress string     `gorm:"size:45"`
 	UserAgent string     `gorm:"size:500"`
 }
@@ -52,6 +60,7 @@ type CreateAuditLogParams struct {
 	APIKeyID  *uint
 	Action    ActionType
 	UserID    uint
+	Source    SourceType
 	IPAddress string
 	UserAgent string
 }
@@ -63,6 +72,7 @@ func CreateAuditLog(params CreateAuditLogParams) error {
 		APIKeyID:  params.APIKeyID,
 		Action:    params.Action,
 		UserID:    params.UserID,
+		Source:    params.Source,
 		IPAddress: params.IPAddress,
 		UserAgent: params.UserAgent,
 	}
@@ -76,32 +86,36 @@ func CreateAuditLog(params CreateAuditLogParams) error {
 }
 
 // LogVaultAction logs a vault-related action
-func LogVaultAction(vaultID uint, action ActionType, userID uint, ipAddress, userAgent string) error {
+func LogVaultAction(vaultID uint, action ActionType, userID uint, source SourceType, apiKeyID *uint, ipAddress, userAgent string) error {
 	return CreateAuditLog(CreateAuditLogParams{
 		VaultID:   &vaultID,
+		APIKeyID:  apiKeyID,
 		Action:    action,
 		UserID:    userID,
+		Source:    source,
 		IPAddress: ipAddress,
 		UserAgent: userAgent,
 	})
 }
 
 // LogUserAction logs a user-related action (login, register, logout)
-func LogUserAction(action ActionType, userID uint, ipAddress, userAgent string) error {
+func LogUserAction(action ActionType, userID uint, source SourceType, ipAddress, userAgent string) error {
 	return CreateAuditLog(CreateAuditLogParams{
 		Action:    action,
 		UserID:    userID,
+		Source:    source,
 		IPAddress: ipAddress,
 		UserAgent: userAgent,
 	})
 }
 
 // LogAPIKeyAction logs an API key-related action
-func LogAPIKeyAction(apiKeyID uint, action ActionType, userID uint, ipAddress, userAgent string) error {
+func LogAPIKeyAction(apiKeyID uint, action ActionType, userID uint, source SourceType, ipAddress, userAgent string) error {
 	return CreateAuditLog(CreateAuditLogParams{
 		APIKeyID:  &apiKeyID,
 		Action:    action,
 		UserID:    userID,
+		Source:    source,
 		IPAddress: ipAddress,
 		UserAgent: userAgent,
 	})
