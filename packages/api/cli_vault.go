@@ -79,7 +79,7 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, vaultGetter f
 
 	// Log read action (using the API key user ID)
 	ip, userAgent := getClientInfo(c)
-	if err := model.LogVaultAction(vault.ID, model.ActionReadVault, apiKey.UserID, ip, userAgent); err != nil {
+	if err := model.LogVaultAction(vault.ID, model.ActionReadVault, apiKey.UserID, model.SourceCLI, &apiKey.ID, ip, userAgent); err != nil {
 		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
 	}
 

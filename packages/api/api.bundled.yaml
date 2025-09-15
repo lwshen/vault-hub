@@ -595,6 +595,7 @@ components:
         - createdAt
         - userId
         - action
+        - source
       properties:
         createdAt:
           type: string
@@ -618,6 +619,12 @@ components:
             - update_api_key
             - delete_api_key
           description: Type of action performed
+        source:
+          type: string
+          enum:
+            - web
+            - cli
+          description: Source of the request (web interface or CLI)
         ipAddress:
           type: string
           description: IP address from which the action was performed

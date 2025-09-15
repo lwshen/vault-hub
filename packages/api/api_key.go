@@ -15,7 +15,7 @@ import (
 func auditAPIKeyOperation(c *fiber.Ctx, action model.ActionType, userID uint, apiKeyID uint, apiKeyName string) {
 	ip, userAgent := getClientInfo(c)
 
-	err := model.LogAPIKeyAction(apiKeyID, action, userID, ip, userAgent)
+	err := model.LogAPIKeyAction(apiKeyID, action, userID, model.SourceWeb, ip, userAgent)
 
 	if err != nil {
 		// Log the audit error but don't fail the main operation

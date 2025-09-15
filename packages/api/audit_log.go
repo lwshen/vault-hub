@@ -27,6 +27,7 @@ func convertToApiAuditLog(auditLog *model.AuditLog) AuditLog {
 		CreatedAt: auditLog.CreatedAt,
 		Vault:     vault,
 		ApiKey:    apiKey,
+		Source:    AuditLogSource(auditLog.Source),
 		IpAddress: &auditLog.IPAddress,
 		UserAgent: &auditLog.UserAgent,
 	}
