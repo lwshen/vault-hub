@@ -138,8 +138,8 @@ github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzG
 github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU5NdKM8=
 github.com/rogpeppe/go-internal v1.12.0/go.mod h1:E+RYuTGaKKdloAfM02xzb0FW3Paa99yedzYV+kq4uf4=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
-github.com/samber/slog-fiber v1.18.0 h1:SpqAiKcAK1LNv0YHuE9Qe+CwSWAJ9dicBJXT876K/jo=
-github.com/samber/slog-fiber v1.18.0/go.mod h1:3mIIpt5L4kTt+1zoNTGAWDL6gHtgWD4pUcbC52xNbr0=
+github.com/samber/slog-fiber v1.18.1 h1:VC1z+FtEk52nh1EWgT2oE185nIrceCyjXZwMYNjVXCA=
+github.com/samber/slog-fiber v1.18.1/go.mod h1:Luk/SVBZmNgzyEGWIZJpSMnczKkFUh8+BXVSJ8WwoXk=
 github.com/sergi/go-diff v1.1.0 h1:we8PVUC3FE2uYfodKH/nBHMSetSfHDR6scGdBi+erh0=
 github.com/sergi/go-diff v1.1.0/go.mod h1:STckp+ISIX8hZLjrqAeVduY0gWCT9IjLuqbuNXdaHfM=
 github.com/speakeasy-api/openapi-overlay v0.9.0 h1:Wrz6NO02cNlLzx1fB093lBlYxSI54VRhy1aSutx0PQg=
