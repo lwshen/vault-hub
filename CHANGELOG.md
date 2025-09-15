@@ -1,3 +1,12 @@
+## [1.2.6] - 2025-09-15
+
+### 🚀 Features
+
+- *(audit)* Include source in audit log (#219)
+
+### 🚜 Refactor
+
+- *(cli)* Streamline get and list commands (#218)
 ## [1.2.5] - 2025-09-10
 
 ### 🚀 Features
