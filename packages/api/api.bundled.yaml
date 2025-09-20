@@ -14,20 +14,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheckResponse'
-  /api/version:
+  /api/status:
     get:
-      summary: Get version information
-      description: Returns the current version and commit hash of the application
-      operationId: getVersion
+      summary: Get system status
+      description: Returns comprehensive system status including version, health, and performance metrics
+      operationId: getStatus
       tags:
-        - Version
+        - Status
       responses:
         '200':
-          description: Version information retrieved successfully
+          description: System status retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VersionResponse'
+                $ref: '#/components/schemas/StatusResponse'
   /api/auth/login:
     post:
       description: Login with email and password
@@ -758,7 +758,7 @@ components:
           type: string
           format: date-time
           description: Optional expiration date
-    VersionResponse:
+    StatusResponse:
       type: object
       required:
         - version

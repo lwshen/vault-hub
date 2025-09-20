@@ -1,4 +1,4 @@
-VersionResponse:
+StatusResponse:
   type: object
   required:
     - version

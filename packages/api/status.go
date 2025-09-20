@@ -12,14 +12,14 @@ import (
 	"github.com/lwshen/vault-hub/model"
 )
 
-func (s Server) GetVersion(ctx *fiber.Ctx) error {
+func (s Server) GetStatus(ctx *fiber.Ctx) error {
 	// Check database status with multiple health indicators
 	databaseStatus, dbConnections, dbResponseTime := checkDatabaseHealth()
 	
 	// Check system status based on multiple factors
 	systemStatus := checkSystemHealth(databaseStatus, dbConnections, dbResponseTime)
 
-	resp := VersionResponse{
+	resp := StatusResponse{
 		Version:        version.Version,
 		Commit:         version.Commit,
 		SystemStatus:   systemStatus,
@@ -32,36 +32,36 @@ func (s Server) GetVersion(ctx *fiber.Ctx) error {
 }
 
 // checkDatabaseHealth performs comprehensive database health checks
-func checkDatabaseHealth() (VersionResponseDatabaseStatus, int, int64) {
+func checkDatabaseHealth() (StatusResponseDatabaseStatus, int, int64) {
 	// Test basic connectivity
 	start := time.Now()
 	if err := model.DB.Exec("SELECT 1").Error; err != nil {
-		return VersionResponseDatabaseStatusUnavailable, 0, 0
+		return StatusResponseDatabaseStatusUnavailable, 0, 0
 	}
 	responseTime := time.Since(start).Milliseconds()
 
 	// Get database connection info
 	sqlDB, err := model.DB.DB()
 	if err != nil {
-		return VersionResponseDatabaseStatusDegraded, 0, responseTime
+		return StatusResponseDatabaseStatusDegraded, 0, responseTime
 	}
 
 	stats := sqlDB.Stats()
 	
 	// Determine status based on performance metrics
 	if responseTime > 5000 { // >5 seconds is severely degraded
-		return VersionResponseDatabaseStatusDegraded, stats.OpenConnections, responseTime
+		return StatusResponseDatabaseStatusDegraded, stats.OpenConnections, responseTime
 	}
 	
 	if responseTime > 1000 || stats.OpenConnections > 80 { // >1 second or >80% of max connections
-		return VersionResponseDatabaseStatusDegraded, stats.OpenConnections, responseTime
+		return StatusResponseDatabaseStatusDegraded, stats.OpenConnections, responseTime
 	}
 
-	return VersionResponseDatabaseStatusHealthy, stats.OpenConnections, responseTime
+	return StatusResponseDatabaseStatusHealthy, stats.OpenConnections, responseTime
 }
 
 // checkSystemHealth determines overall system status based on various factors
-func checkSystemHealth(dbStatus VersionResponseDatabaseStatus, dbConnections int, dbResponseTime int64) VersionResponseSystemStatus {
+func checkSystemHealth(dbStatus StatusResponseDatabaseStatus, dbConnections int, dbResponseTime int64) StatusResponseSystemStatus {
 	// Check critical system resources
 	memStats := &runtime.MemStats{}
 	runtime.ReadMemStats(memStats)
@@ -74,12 +74,12 @@ func checkSystemHealth(dbStatus VersionResponseDatabaseStatus, dbConnections int
 	
 	// Critical system failures that make system unavailable regardless of database
 	if memUsagePercent > 95 || diskUsage > 98 {
-		return VersionResponseSystemStatusUnavailable
+		return StatusResponseSystemStatusUnavailable
 	}
 	
 	// System is unavailable if database is completely down
-	if dbStatus == VersionResponseDatabaseStatusUnavailable {
-		return VersionResponseSystemStatusUnavailable
+	if dbStatus == StatusResponseDatabaseStatusUnavailable {
+		return StatusResponseSystemStatusUnavailable
 	}
 
 	// System degradation scenarios:
@@ -87,14 +87,14 @@ func checkSystemHealth(dbStatus VersionResponseDatabaseStatus, dbConnections int
 	// 2. High memory usage (>80%)
 	// 3. High disk usage (>90%)
 	// 4. High database response time (>2 seconds)
-	if dbStatus == VersionResponseDatabaseStatusDegraded ||
+	if dbStatus == StatusResponseDatabaseStatusDegraded ||
 		memUsagePercent > 80 ||
 		diskUsage > 90 ||
 		dbResponseTime > 2000 {
-		return VersionResponseSystemStatusDegraded
+		return StatusResponseSystemStatusDegraded
 	}
 
-	return VersionResponseSystemStatusHealthy
+	return StatusResponseSystemStatusHealthy
 }
 
 // checkDiskSpace returns disk usage percentage
