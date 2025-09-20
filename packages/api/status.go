@@ -15,7 +15,7 @@ import (
 func (s Server) GetStatus(ctx *fiber.Ctx) error {
 	// Check database status with multiple health indicators
 	databaseStatus, dbConnections, dbResponseTime := checkDatabaseHealth()
-	
+
 	// Check system status based on multiple factors
 	systemStatus := checkSystemHealth(databaseStatus, dbConnections, dbResponseTime)
 
@@ -47,12 +47,12 @@ func checkDatabaseHealth() (StatusResponseDatabaseStatus, int, int64) {
 	}
 
 	stats := sqlDB.Stats()
-	
+
 	// Determine status based on performance metrics
 	if responseTime > 5000 { // >5 seconds is severely degraded
 		return StatusResponseDatabaseStatusDegraded, stats.OpenConnections, responseTime
 	}
-	
+
 	if responseTime > 1000 || stats.OpenConnections > 80 { // >1 second or >80% of max connections
 		return StatusResponseDatabaseStatusDegraded, stats.OpenConnections, responseTime
 	}
@@ -65,18 +65,18 @@ func checkSystemHealth(dbStatus StatusResponseDatabaseStatus, dbConnections int,
 	// Check critical system resources
 	memStats := &runtime.MemStats{}
 	runtime.ReadMemStats(memStats)
-	
+
 	// Check disk space
 	diskUsage := checkDiskSpace()
-	
+
 	// Memory usage check - if using >90% of allocated memory, system is degraded
 	memUsagePercent := float64(memStats.Alloc) / float64(memStats.Sys) * 100
-	
+
 	// Critical system failures that make system unavailable regardless of database
-	if memUsagePercent > 95 || diskUsage > 98 {
+	if memUsagePercent > 90 || diskUsage > 90 {
 		return StatusResponseSystemStatusUnavailable
 	}
-	
+
 	// System is unavailable if database is completely down
 	if dbStatus == StatusResponseDatabaseStatusUnavailable {
 		return StatusResponseSystemStatusUnavailable
@@ -104,20 +104,20 @@ func checkDiskSpace() float64 {
 	if err != nil {
 		return 0 // If we can't check, assume it's fine
 	}
-	
+
 	err = syscall.Statfs(wd, &stat)
 	if err != nil {
 		return 0 // If we can't check, assume it's fine
 	}
 
 	// Calculate disk usage percentage
-	total := stat.Blocks * uint64(stat.Bsize)
-	available := stat.Bavail * uint64(stat.Bsize)
+	total := int64(stat.Blocks) * stat.Bsize
+	available := int64(stat.Bavail) * stat.Bsize
 	used := total - available
-	
+
 	if total == 0 {
 		return 0
 	}
-	
+
 	return float64(used) / float64(total) * 100
 }
