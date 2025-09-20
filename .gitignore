@@ -35,5 +35,7 @@ data.db
 
 .claude/settings.local.json
 
+.serena
+
 # Generated OpenAPI bundle
 api/api.bundled.yaml
