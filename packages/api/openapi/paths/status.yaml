@@ -1,0 +1,14 @@
+status:
+  get:
+    summary: Get system status
+    description: Returns comprehensive system status including version, health, and performance metrics
+    operationId: getStatus
+    tags:
+      - Status
+    responses:
+      "200":
+        description: System status retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/status.yaml#/StatusResponse

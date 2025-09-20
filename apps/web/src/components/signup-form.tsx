@@ -45,7 +45,7 @@ export function SignupForm({
     setLoading(true);
     try {
       await signup(form.email, form.password, form.name);
-      navigateToLogin();
+      navigate(PATH.DASHBOARD);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Signup failed');
     } finally {
@@ -53,9 +53,6 @@ export function SignupForm({
     }
   };
 
-  const navigateToLogin = () => {
-    navigate(PATH.LOGIN);
-  };
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
@@ -127,7 +124,7 @@ export function SignupForm({
               </div>
               <div className="text-center text-sm">
                 Already have an account?{' '}
-                <Button variant="link" onClick={navigateToLogin}>
+                <Button variant="link" onClick={() => navigate(PATH.LOGIN)}>
                   Sign in
                 </Button>
               </div>

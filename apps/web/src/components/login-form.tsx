@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PATH } from '@/const/path';
 import { FaOpenid, FaGoogle, FaApple } from 'react-icons/fa';
 import { useLocation } from 'wouter';
 import useAuth from '@/hooks/use-auth';
@@ -37,7 +38,7 @@ export function LoginForm({
     setLoading(true);
     try {
       await login(form.email, form.password);
-      // TODO: handle successful login (e.g., redirect)
+      navigate(PATH.DASHBOARD);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {

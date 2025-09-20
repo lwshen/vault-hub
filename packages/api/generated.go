@@ -38,6 +38,20 @@ const (
 	Web AuditLogSource = "web"
 )
 
+// Defines values for StatusResponseDatabaseStatus.
+const (
+	StatusResponseDatabaseStatusDegraded    StatusResponseDatabaseStatus = "degraded"
+	StatusResponseDatabaseStatusHealthy     StatusResponseDatabaseStatus = "healthy"
+	StatusResponseDatabaseStatusUnavailable StatusResponseDatabaseStatus = "unavailable"
+)
+
+// Defines values for StatusResponseSystemStatus.
+const (
+	StatusResponseSystemStatusDegraded    StatusResponseSystemStatus = "degraded"
+	StatusResponseSystemStatusHealthy     StatusResponseSystemStatus = "healthy"
+	StatusResponseSystemStatusUnavailable StatusResponseSystemStatus = "unavailable"
+)
+
 // APIKeysResponse defines model for APIKeysResponse.
 type APIKeysResponse struct {
 	ApiKeys []VaultAPIKey `json:"apiKeys"`
@@ -178,6 +192,27 @@ type SignupResponse struct {
 	Token string `json:"token"`
 }
 
+// StatusResponse defines model for StatusResponse.
+type StatusResponse struct {
+	// Commit Git commit hash
+	Commit string `json:"commit"`
+
+	// DatabaseStatus Database connection status
+	DatabaseStatus StatusResponseDatabaseStatus `json:"databaseStatus"`
+
+	// SystemStatus System operational status
+	SystemStatus StatusResponseSystemStatus `json:"systemStatus"`
+
+	// Version Application version
+	Version string `json:"version"`
+}
+
+// StatusResponseDatabaseStatus Database connection status
+type StatusResponseDatabaseStatus string
+
+// StatusResponseSystemStatus System operational status
+type StatusResponseSystemStatus string
+
 // UpdateAPIKeyRequest defines model for UpdateAPIKeyRequest.
 type UpdateAPIKeyRequest struct {
 	// ExpiresAt Optional expiration date
@@ -271,15 +306,6 @@ type VaultLite struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
-// VersionResponse defines model for VersionResponse.
-type VersionResponse struct {
-	// Commit Git commit hash
-	Commit string `json:"commit"`
-
-	// Version Application version
-	Version string `json:"version"`
-}
-
 // GetAPIKeysParams defines parameters for GetAPIKeys.
 type GetAPIKeysParams struct {
 	// PageSize Number of API keys per page (default 20, max 1000)
@@ -366,6 +392,9 @@ type ServerInterface interface {
 
 	// (GET /api/health)
 	Health(c *fiber.Ctx) error
+	// Get system status
+	// (GET /api/status)
+	GetStatus(c *fiber.Ctx) error
 
 	// (GET /api/user)
 	GetCurrentUser(c *fiber.Ctx) error
@@ -384,9 +413,6 @@ type ServerInterface interface {
 
 	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(c *fiber.Ctx, uniqueId string) error
-	// Get version information
-	// (GET /api/version)
-	GetVersion(c *fiber.Ctx) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -623,6 +649,12 @@ func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
 	return siw.Handler.Health(c)
 }
 
+// GetStatus operation middleware
+func (siw *ServerInterfaceWrapper) GetStatus(c *fiber.Ctx) error {
+
+	return siw.Handler.GetStatus(c)
+}
+
 // GetCurrentUser operation middleware
 func (siw *ServerInterfaceWrapper) GetCurrentUser(c *fiber.Ctx) error {
 
@@ -689,12 +721,6 @@ func (siw *ServerInterfaceWrapper) UpdateVault(c *fiber.Ctx) error {
 	return siw.Handler.UpdateVault(c, uniqueId)
 }
 
-// GetVersion operation middleware
-func (siw *ServerInterfaceWrapper) GetVersion(c *fiber.Ctx) error {
-
-	return siw.Handler.GetVersion(c)
-}
-
 // FiberServerOptions provides options for the Fiber server.
 type FiberServerOptions struct {
 	BaseURL     string
@@ -742,6 +768,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Get(options.BaseURL+"/api/health", wrapper.Health)
 
+	router.Get(options.BaseURL+"/api/status", wrapper.GetStatus)
+
 	router.Get(options.BaseURL+"/api/user", wrapper.GetCurrentUser)
 
 	router.Get(options.BaseURL+"/api/vaults", wrapper.GetVaults)
@@ -753,8 +781,6 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/api/vaults/:uniqueId", wrapper.GetVault)
 
 	router.Put(options.BaseURL+"/api/vaults/:uniqueId", wrapper.UpdateVault)
-
-	router.Get(options.BaseURL+"/api/version", wrapper.GetVersion)
 
 }
 
@@ -974,6 +1000,22 @@ func (response Health200JSONResponse) VisitHealthResponse(ctx *fiber.Ctx) error 
 	return ctx.JSON(&response)
 }
 
+type GetStatusRequestObject struct {
+}
+
+type GetStatusResponseObject interface {
+	VisitGetStatusResponse(ctx *fiber.Ctx) error
+}
+
+type GetStatus200JSONResponse StatusResponse
+
+func (response GetStatus200JSONResponse) VisitGetStatusResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 type GetCurrentUserRequestObject struct {
 }
 
@@ -1074,22 +1116,6 @@ func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.C
 	return ctx.JSON(&response)
 }
 
-type GetVersionRequestObject struct {
-}
-
-type GetVersionResponseObject interface {
-	VisitGetVersionResponse(ctx *fiber.Ctx) error
-}
-
-type GetVersion200JSONResponse VersionResponse
-
-func (response GetVersion200JSONResponse) VisitGetVersionResponse(ctx *fiber.Ctx) error {
-	ctx.Response().Header.Set("Content-Type", "application/json")
-	ctx.Status(200)
-
-	return ctx.JSON(&response)
-}
-
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
@@ -1131,6 +1157,9 @@ type StrictServerInterface interface {
 
 	// (GET /api/health)
 	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
+	// Get system status
+	// (GET /api/status)
+	GetStatus(ctx context.Context, request GetStatusRequestObject) (GetStatusResponseObject, error)
 
 	// (GET /api/user)
 	GetCurrentUser(ctx context.Context, request GetCurrentUserRequestObject) (GetCurrentUserResponseObject, error)
@@ -1149,9 +1178,6 @@ type StrictServerInterface interface {
 
 	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(ctx context.Context, request UpdateVaultRequestObject) (UpdateVaultResponseObject, error)
-	// Get version information
-	// (GET /api/version)
-	GetVersion(ctx context.Context, request GetVersionRequestObject) (GetVersionResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *fiber.Ctx, args interface{}) (interface{}, error)
@@ -1528,6 +1554,31 @@ func (sh *strictHandler) Health(ctx *fiber.Ctx) error {
 	return nil
 }
 
+// GetStatus operation middleware
+func (sh *strictHandler) GetStatus(ctx *fiber.Ctx) error {
+	var request GetStatusRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetStatus(ctx.UserContext(), request.(GetStatusRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetStatus")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetStatusResponseObject); ok {
+		if err := validResponse.VisitGetStatusResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // GetCurrentUser operation middleware
 func (sh *strictHandler) GetCurrentUser(ctx *fiber.Ctx) error {
 	var request GetCurrentUserRequestObject
@@ -1688,31 +1739,6 @@ func (sh *strictHandler) UpdateVault(ctx *fiber.Ctx, uniqueId string) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(UpdateVaultResponseObject); ok {
 		if err := validResponse.VisitUpdateVaultResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// GetVersion operation middleware
-func (sh *strictHandler) GetVersion(ctx *fiber.Ctx) error {
-	var request GetVersionRequestObject
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetVersion(ctx.UserContext(), request.(GetVersionRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetVersion")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(GetVersionResponseObject); ok {
-		if err := validResponse.VisitGetVersionResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
