@@ -1,4 +1,3 @@
-import { auditApi } from '@/apis/api';
 import DashboardHeader from '@/components/layout/dashboard-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -30,8 +29,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import type { AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
-import { AuditLogActionEnum, type AuditLog } from '@lwshen/vault-hub-ts-fetch-client';
+import { useAuditLogStore } from '@/stores/audit-store';
+import { AuditLogActionEnum } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
   AlertCircle,
@@ -45,7 +44,7 @@ import {
   Trash2,
   UserPlus,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 // Icon mapping for different audit actions - using correct enum values
 const getIconForAction = (action: AuditLogActionEnum) => {
@@ -120,66 +119,35 @@ const formatTimestamp = (timestamp: string | Date) => {
 
 
 export default function AuditLogContent() {
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [metricsLoading, setMetricsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
-
-  const fetchMetrics = useCallback(async () => {
-    try {
-      setMetricsLoading(true);
-      const metricsData = await auditApi.getAuditMetrics();
-      setMetrics(metricsData);
-    } catch (err) {
-      console.error('Failed to fetch metrics:', err);
-    } finally {
-      setMetricsLoading(false);
-    }
-  }, []);
-
-  const fetchAuditLogs = useCallback(async (page: number) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await auditApi.getAuditLogs(pageSize, page);
-      const newLogs = response.auditLogs || [];
-
-      setAuditLogs(newLogs);
-      setTotalCount(response.totalCount || 0);
-      setTotalPages(Math.ceil((response.totalCount || 0) / pageSize));
-      setCurrentPage(page);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch audit logs');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pageSize]);
+  const {
+    auditLogs,
+    metrics,
+    isLoading,
+    metricsLoading,
+    error,
+    currentPage,
+    totalCount,
+    totalPages,
+    pageSize,
+    fetchMetrics,
+    fetchAuditLogs,
+    setPageSize,
+    setCurrentPage,
+  } = useAuditLogStore();
 
   useEffect(() => {
     fetchMetrics();
-  }, [fetchMetrics]);
+    fetchAuditLogs(1);
+  }, [fetchMetrics, fetchAuditLogs]);
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      fetchAuditLogs(page);
-    }
+    setCurrentPage(page);
   };
 
   const handlePageSizeChange = (newPageSize: string) => {
     const size = parseInt(newPageSize);
     setPageSize(size);
-    setCurrentPage(1);
   };
-
-  useEffect(() => {
-    fetchAuditLogs(1);
-  }, [pageSize, fetchAuditLogs]);
 
   const renderContent = () => {
     if (error) {

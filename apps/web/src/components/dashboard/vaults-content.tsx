@@ -12,8 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useVaults } from '@/hooks/use-vaults';
-import { vaultApi } from '@/apis/api';
+import { useVaultStore } from '@/stores/vault-store';
 import type { VaultLite } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   AlertCircle,
@@ -26,22 +25,33 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export default function VaultsContent() {
-  const { vaults, isLoading, error, refetch } = useVaults();
+  const {
+    vaults,
+    isLoading,
+    error,
+    isDeleting,
+    fetchVaults,
+    deleteVault,
+  } = useVaultStore();
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditValueModalOpen, setIsEditValueModalOpen] = useState(false);
   const [isViewValueModalOpen, setIsViewValueModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedVault, setSelectedVault] = useState<VaultLite | null>(null);
+
+  useEffect(() => {
+    fetchVaults();
+  }, [fetchVaults]);
 
   const handleVaultCreated = () => {
     toast.success('Vault created successfully');
-    refetch(); // Refresh the vault list after creation
+    fetchVaults(); // Refresh the vault list after creation
   };
 
   const handleEditVault = (vault: VaultLite) => {
@@ -67,24 +77,20 @@ export default function VaultsContent() {
   const confirmDeleteVault = async () => {
     if (!selectedVault) return;
 
-    setIsDeleting(true);
     try {
-      await vaultApi.deleteVault(selectedVault.uniqueId);
+      await deleteVault(selectedVault.uniqueId);
       setDeleteConfirmOpen(false);
       toast.success(`Vault "${selectedVault.name}" has been deleted successfully`);
-      refetch(); // Refresh the vault list after deletion
     } catch (err) {
       console.error('Failed to delete vault:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete vault';
       toast.error(`Failed to delete vault: ${errorMessage}`);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
   const handleVaultUpdated = () => {
     toast.success('Vault updated successfully');
-    refetch(); // Refresh the vault list after update
+    fetchVaults(); // Refresh the vault list after update
   };
 
   const renderContent = () => {
@@ -99,7 +105,7 @@ export default function VaultsContent() {
                 <p className="text-muted-foreground mb-4">{error}</p>
                 <Button onClick={() => {
                   toast.info('Retrying to load vaults...');
-                  refetch();
+                  fetchVaults();
                 }}>Try Again</Button>
               </div>
             </div>

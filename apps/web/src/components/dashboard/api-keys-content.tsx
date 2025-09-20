@@ -1,23 +1,33 @@
-import { apiKeyApi } from '@/apis/api';
 import DashboardHeader from '@/components/layout/dashboard-header';
 import CreateApiKeyModal from '@/components/modals/create-api-key-modal';
 import EditApiKeyModal from '@/components/modals/edit-api-key-modal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useApiKeys } from '@/hooks/use-api-keys';
+import { useApiKeyStore } from '@/stores/api-key-store';
 import type { VaultAPIKey } from '@lwshen/vault-hub-ts-fetch-client';
 import { AlertCircle, Edit, Key, Loader2, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 
 export default function ApiKeysContent() {
-  const { apiKeys, isLoading, error, refetch } = useApiKeys();
+  const {
+    apiKeys,
+    isLoading,
+    error,
+    fetchApiKeys,
+    deleteApiKey,
+  } = useApiKeyStore();
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedApiKey, setSelectedApiKey] = useState<VaultAPIKey | null>(null);
 
+  useEffect(() => {
+    fetchApiKeys();
+  }, [fetchApiKeys]);
+
   const handleKeyCreated = () => {
-    refetch();
+    fetchApiKeys();
   };
 
   const renderContent = () => {
@@ -30,7 +40,7 @@ export default function ApiKeysContent() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold">Failed to load API keys</h3>
                 <p className="text-muted-foreground mb-4">{error}</p>
-                <Button onClick={refetch}>Try Again</Button>
+                <Button onClick={fetchApiKeys}>Try Again</Button>
               </div>
             </div>
           </Card>
@@ -97,8 +107,7 @@ export default function ApiKeysContent() {
                         const confirmed = confirm('Delete this API key? This action cannot be undone.');
                         if (!confirmed) return;
                         try {
-                          await apiKeyApi.deleteAPIKey(key.id);
-                          refetch();
+                          await deleteApiKey(key.id);
                         } catch (err) {
                           alert(err instanceof Error ? err.message : 'Failed to delete API key');
                         }
