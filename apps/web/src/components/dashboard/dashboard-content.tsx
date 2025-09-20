@@ -1,14 +1,14 @@
 import { auditApi, versionApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import type { AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
+import type { AuditLog, AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
+import { formatTimestamp, getActionTitle, getIconForAction } from '@/utils/audit-log';
 import {
   Activity,
   Key,
   Loader2,
   Lock,
   MoreVertical,
-  Plus,
   Unlock,
   Users,
   Vault,
@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react';
 export default function DashboardContent() {
   const [version, setVersion] = useState<{ version: string; commit: string; } | null>(null);
   const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
+  const [recentAuditLogs, setRecentAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,6 +28,9 @@ export default function DashboardContent() {
         setVersion(versionResponse);
         const metricsResponse = await auditApi.getAuditMetrics();
         setMetrics(metricsResponse);
+        // Fetch recent audit logs (first 5 items from page 1)
+        const auditResponse = await auditApi.getAuditLogs(5, 1);
+        setRecentAuditLogs(auditResponse.auditLogs || []);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -189,31 +193,43 @@ export default function DashboardContent() {
           </Card>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Audit Logs */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
+          <h2 className="text-lg font-semibold mb-4">Recent Audit Logs</h2>
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-              <Activity className="h-4 w-4 text-blue-500" />
-              <div className="flex-1">
-                <p className="font-medium">Vault "Production API Keys" was accessed</p>
-                <p className="text-sm text-muted-foreground">by john@example.com • 2 hours ago</p>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-sm text-muted-foreground">Loading recent audit logs...</span>
               </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-              <Plus className="h-4 w-4 text-green-500" />
-              <div className="flex-1">
-                <p className="font-medium">New vault "SSL Certificates" created</p>
-                <p className="text-sm text-muted-foreground">by admin@example.com • 1 day ago</p>
+            ) : recentAuditLogs.length > 0 ? (
+              recentAuditLogs.map((log) => {
+                const { icon: ActionIcon, color } = getIconForAction(log.action);
+                const actionTitle = getActionTitle(log.action);
+                const resourceName = log.vault?.name || log.apiKey?.name;
+                const uniqueKey = `${log.action}-${log.createdAt}-${log.vault?.uniqueId || log.apiKey?.id || 'user'}`;
+                return (
+                  <div key={uniqueKey} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <ActionIcon className={`h-4 w-4 ${color}`} />
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {actionTitle}{resourceName && ` (${resourceName})`}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {log.apiKey ? 'via API Key' : 'via Web UI'} • {formatTimestamp(log.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex items-center justify-center py-8 text-center">
+                <div>
+                  <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No recent audit logs</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-              <Users className="h-4 w-4 text-purple-500" />
-              <div className="flex-1">
-                <p className="font-medium">Team member invited</p>
-                <p className="text-sm text-muted-foreground">sarah@example.com invited by admin@example.com • 2 days ago</p>
-              </div>
-            </div>
+            )}
           </div>
         </Card>
       </main>
