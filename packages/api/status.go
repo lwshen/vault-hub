@@ -111,8 +111,10 @@ func checkDiskSpace() float64 {
 	}
 
 	// Calculate disk usage percentage
-	total := int64(stat.Blocks) * stat.Bsize
-	available := int64(stat.Bavail) * stat.Bsize
+	//nolint:gosec // G115
+	total := stat.Blocks * uint64(stat.Bsize)
+	//nolint:gosec // G115
+	available := stat.Bavail * uint64(stat.Bsize)
 	used := total - available
 
 	if total == 0 {
