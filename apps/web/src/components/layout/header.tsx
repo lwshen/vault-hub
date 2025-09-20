@@ -30,17 +30,18 @@ export default function Header() {
     pathname.startsWith('/audit-log')
   );
 
-  const navigation = isAuthenticated ? [
-    { name: 'Dashboard', href: PATH.DASHBOARD },
-    { name: 'Features', href: '/features' },
-    { name: 'Pricing', href: '/pricing' },
-    { name: 'Documentation', href: '/docs' },
-  ] : [
-    { name: 'Home', href: '/' },
-    { name: 'Features', href: '/features' },
-    { name: 'Pricing', href: '/pricing' },
-    { name: 'Documentation', href: '/docs' },
-  ];
+  // const navigation = isAuthenticated ? [
+  //   { name: 'Dashboard', href: PATH.DASHBOARD },
+  //   { name: 'Features', href: '/features' },
+  //   { name: 'Pricing', href: '/pricing' },
+  //   { name: 'Documentation', href: '/docs' },
+  // ] : [
+  //   { name: 'Home', href: '/' },
+  //   { name: 'Features', href: '/features' },
+  //   { name: 'Pricing', href: '/pricing' },
+  //   { name: 'Documentation', href: '/docs' },
+  // ];
+  const navigation: { name: string; href: string; }[] = [];
 
 
   const handleLogin = () => {
