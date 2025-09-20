@@ -1,3 +1,14 @@
+## [1.2.7] - 2025-09-20
+
+### 🚀 Features
+
+- Using Zustand for state management for audit log, api key, vault (#225)
+- *(dashboard)* Update recent audit logs (#226)
+- *(dashboard)* Update recent vaults (#228)
+
+### ⚙️ Miscellaneous Tasks
+
+- Hide navigation bar (#227)
 ## [1.2.6] - 2025-09-15
 
 ### 🚀 Features
