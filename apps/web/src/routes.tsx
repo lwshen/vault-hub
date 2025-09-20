@@ -19,9 +19,6 @@ export const AppRoutes = () => (
     <Route path={PATH.FEATURES}>
       <Features />
     </Route>
-    <Route path={PATH.PRICING}>
-      <div>Pricing</div>
-    </Route>
     <Route path={PATH.DOCS}>
       <div>Docs</div>
     </Route>
