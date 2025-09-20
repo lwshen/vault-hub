@@ -7,7 +7,6 @@ export const PATH = {
   AUDIT_LOG: '/dashboard/audit-log',
   API_KEYS: '/dashboard/api-keys',
   FEATURES: '/features',
-  PRICING: '/pricing',
   ABOUT: '/about',
   DOCS: '/docs',
   MOCK: '/mock',
