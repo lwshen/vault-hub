@@ -1,4 +1,4 @@
-import { auditApi } from '@/apis/api';
+import { auditApi, statusApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import ViewVaultValueModal from '@/components/modals/view-vault-value-modal';
@@ -28,18 +28,8 @@ export default function DashboardContent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch status information from new endpoint
-        const response = await fetch('/api/status', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const statusResponse = await response.json();
+        // Fetch status information using the API client
+        const statusResponse = await statusApi.getStatus();
         setStatus(statusResponse);
         const metricsResponse = await auditApi.getAuditMetrics();
         setMetrics(metricsResponse);
