@@ -1,15 +1,15 @@
 import { auditApi, versionApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import ViewVaultValueModal from '@/components/modals/view-vault-value-modal';
 import { useVaultStore } from '@/stores/vault-store';
-import type { AuditLog, AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
+import type { AuditLog, AuditMetricsResponse, VaultLite } from '@lwshen/vault-hub-ts-fetch-client';
 import { formatTimestamp, getActionTitle, getIconForAction } from '@/utils/audit-log';
 import {
   Activity,
   Key,
   Loader2,
   Lock,
-  MoreVertical,
   Users,
   Vault,
 } from 'lucide-react';
@@ -20,6 +20,8 @@ export default function DashboardContent() {
   const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
   const [recentAuditLogs, setRecentAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isViewValueModalOpen, setIsViewValueModalOpen] = useState(false);
+  const [selectedVault, setSelectedVault] = useState<VaultLite | null>(null);
 
   const { vaults, isLoading: vaultsLoading, fetchVaults } = useVaultStore();
 
@@ -80,6 +82,11 @@ export default function DashboardContent() {
     .sort((a, b) => new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime())
     .slice(0, 4);
 
+  const handleViewVaultValue = (vault: VaultLite) => {
+    setSelectedVault(vault);
+    setIsViewValueModalOpen(true);
+  };
+
   return (
     <>
       {/* Top Header */}
@@ -133,9 +140,6 @@ export default function DashboardContent() {
           <Card className="lg:col-span-2 p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Recent Vaults</h2>
-              <Button variant="ghost" size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
             </div>
             <div className="space-y-3">
               {vaultsLoading ? (
@@ -162,7 +166,11 @@ export default function DashboardContent() {
                         </div>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewVaultValue(vault)}
+                    >
                       Access
                     </Button>
                   </div>
@@ -252,6 +260,12 @@ export default function DashboardContent() {
           </div>
         </Card>
       </main>
+
+      <ViewVaultValueModal
+        open={isViewValueModalOpen}
+        onOpenChange={setIsViewValueModalOpen}
+        vault={selectedVault}
+      />
     </>
   );
 }
