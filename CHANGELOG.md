@@ -1,3 +1,13 @@
+## [1.2.9] - 2025-09-20
+
+### 🚀 Features
+
+- Redirect to dashboard after login and signup (#230)
+- Integrate system status display (#233)
+
+### 📚 Documentation
+
+- Update claude document (#234)
 ## [1.2.8] - 2025-09-20
 
 ### 🚀 Features
