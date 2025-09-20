@@ -31,6 +31,11 @@ export default function ViewVaultValueModal({ open, onOpenChange, vault }: ViewV
         } finally {
           setIsFetchingValue(false);
         }
+      } else if (!open) {
+        // Clear sensitive data when modal is closed
+        setValue('');
+        setError(null);
+        setCopySuccess(false);
       }
     };
 
@@ -51,6 +56,7 @@ export default function ViewVaultValueModal({ open, onOpenChange, vault }: ViewV
     onOpenChange(false);
     setError(null);
     setCopySuccess(false);
+    setValue(''); // Clear sensitive data from memory
   };
 
   if (!open || !vault) return null;
