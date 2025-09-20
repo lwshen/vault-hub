@@ -1,9 +1,9 @@
-import { auditApi, versionApi } from '@/apis/api';
+import { auditApi, statusApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import ViewVaultValueModal from '@/components/modals/view-vault-value-modal';
 import { useVaultStore } from '@/stores/vault-store';
-import type { AuditLog, AuditMetricsResponse, VaultLite } from '@lwshen/vault-hub-ts-fetch-client';
+import type { AuditLog, AuditMetricsResponse, StatusResponse, VaultLite } from '@lwshen/vault-hub-ts-fetch-client';
 import { formatTimestamp, getActionTitle, getIconForAction } from '@/utils/audit-log';
 import {
   Activity,
@@ -16,7 +16,7 @@ import {
 import { useEffect, useState } from 'react';
 
 export default function DashboardContent() {
-  const [version, setVersion] = useState<{ version: string; commit: string; } | null>(null);
+  const [status, setStatus] = useState<StatusResponse | null>(null);
   const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
   const [recentAuditLogs, setRecentAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,8 +28,9 @@ export default function DashboardContent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const versionResponse = await versionApi.getVersion();
-        setVersion(versionResponse);
+        // Fetch status information using the API client
+        const statusResponse = await statusApi.getStatus();
+        setStatus(statusResponse);
         const metricsResponse = await auditApi.getAuditMetrics();
         setMetrics(metricsResponse);
         // Fetch recent audit logs (first 5 items from page 1)
@@ -85,6 +86,32 @@ export default function DashboardContent() {
   const handleViewVaultValue = (vault: VaultLite) => {
     setSelectedVault(vault);
     setIsViewValueModalOpen(true);
+  };
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'healthy':
+        return 'bg-green-500';
+      case 'degraded':
+        return 'bg-yellow-500';
+      case 'unavailable':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const getStatusText = (status?: string) => {
+    switch (status) {
+      case 'healthy':
+        return 'Healthy';
+      case 'degraded':
+        return 'Degraded';
+      case 'unavailable':
+        return 'Unavailable';
+      default:
+        return 'Unknown';
+    }
   };
 
   return (
@@ -191,28 +218,28 @@ export default function DashboardContent() {
             <h2 className="text-lg font-semibold mb-4">System Status</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">API Status</span>
+                <span className="text-sm font-medium">System Status</span>
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">Online</span>
+                  <div className={`h-2 w-2 ${getStatusColor(status?.systemStatus)} rounded-full`}></div>
+                  <span className="text-sm text-muted-foreground">{getStatusText(status?.systemStatus)}</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Database</span>
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">Healthy</span>
+                  <div className={`h-2 w-2 ${getStatusColor(status?.databaseStatus)} rounded-full`}></div>
+                  <span className="text-sm text-muted-foreground">{getStatusText(status?.databaseStatus)}</span>
                 </div>
               </div>
-              {version && (
+              {status && (
                 <div className="pt-3 border-t border-border">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Version</span>
-                    <span className="text-sm text-muted-foreground">{version.version}</span>
+                    <span className="text-sm text-muted-foreground">{status.version}</span>
                   </div>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-sm font-medium">Commit</span>
-                    <span className="text-sm text-muted-foreground font-mono">{version.commit.substring(0, 7)}</span>
+                    <span className="text-sm text-muted-foreground font-mono">{status.commit}</span>
                   </div>
                 </div>
               )}
