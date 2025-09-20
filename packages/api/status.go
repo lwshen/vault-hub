@@ -2,9 +2,6 @@ package api
 
 import (
 	"net/http"
-	"os"
-	"runtime"
-	"syscall"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -62,21 +59,6 @@ func checkDatabaseHealth() (StatusResponseDatabaseStatus, int, int64) {
 
 // checkSystemHealth determines overall system status based on various factors
 func checkSystemHealth(dbStatus StatusResponseDatabaseStatus, dbConnections int, dbResponseTime int64) StatusResponseSystemStatus {
-	// Check critical system resources
-	memStats := &runtime.MemStats{}
-	runtime.ReadMemStats(memStats)
-
-	// Check disk space
-	diskUsage := checkDiskSpace()
-
-	// Memory usage check - if using >90% of allocated memory, system is degraded
-	memUsagePercent := float64(memStats.Alloc) / float64(memStats.Sys) * 100
-
-	// Critical system failures that make system unavailable regardless of database
-	if memUsagePercent > 90 || diskUsage > 90 {
-		return StatusResponseSystemStatusUnavailable
-	}
-
 	// System is unavailable if database is completely down
 	if dbStatus == StatusResponseDatabaseStatusUnavailable {
 		return StatusResponseSystemStatusUnavailable
@@ -84,42 +66,11 @@ func checkSystemHealth(dbStatus StatusResponseDatabaseStatus, dbConnections int,
 
 	// System degradation scenarios:
 	// 1. Database is degraded
-	// 2. High memory usage (>80%)
-	// 3. High disk usage (>90%)
-	// 4. High database response time (>2 seconds)
+	// 2. High database response time (>2 seconds)
 	if dbStatus == StatusResponseDatabaseStatusDegraded ||
-		memUsagePercent > 80 ||
-		diskUsage > 90 ||
 		dbResponseTime > 2000 {
 		return StatusResponseSystemStatusDegraded
 	}
 
 	return StatusResponseSystemStatusHealthy
-}
-
-// checkDiskSpace returns disk usage percentage
-func checkDiskSpace() float64 {
-	var stat syscall.Statfs_t
-	wd, err := os.Getwd()
-	if err != nil {
-		return 0 // If we can't check, assume it's fine
-	}
-
-	err = syscall.Statfs(wd, &stat)
-	if err != nil {
-		return 0 // If we can't check, assume it's fine
-	}
-
-	// Calculate disk usage percentage
-	//nolint:gosec // G115
-	total := stat.Blocks * uint64(stat.Bsize)
-	//nolint:gosec // G115
-	available := stat.Bavail * uint64(stat.Bsize)
-	used := total - available
-
-	if total == 0 {
-		return 0
-	}
-
-	return float64(used) / float64(total) * 100
 }
