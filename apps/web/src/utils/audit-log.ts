@@ -48,8 +48,8 @@ export const getActionTitle = (action: AuditLogActionEnum) => {
   return titleMap[action] || action;
 };
 
-// Format timestamp to show precise date and time
-export const formatTimestamp = (timestamp: string | Date) => {
+// Format timestamp with different levels of detail
+export const formatTimestamp = (timestamp: string | Date, detailed: boolean = false) => {
   const date = new Date(timestamp);
   const now = new Date();
   const diffInMs = now.getTime() - date.getTime();
@@ -61,24 +61,31 @@ export const formatTimestamp = (timestamp: string | Date) => {
   if (diffInMinutes < 1) return 'Just now';
   if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
 
-  // For older events, show precise date and time
-  const timeString = date.toLocaleTimeString('en-US', {
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-
-  if (diffInHours < 24) {
-    return `Today ${timeString}`;
-  } else if (diffInDays === 1) {
-    return `Yesterday ${timeString}`;
-  } else {
-    const dateString = date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+  if (detailed) {
+    // Detailed format for audit log table - shows precise time with seconds
+    const timeString = date.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
     });
-    return `${dateString} ${timeString}`;
+
+    if (diffInHours < 24) {
+      return `Today ${timeString}`;
+    } else if (diffInDays === 1) {
+      return `Yesterday ${timeString}`;
+    } else {
+      const dateString = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      return `${dateString} ${timeString}`;
+    }
+  } else {
+    // Concise format for dashboard - simpler relative time
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
+    if (diffInDays < 7) return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+    return date.toLocaleDateString();
   }
 };

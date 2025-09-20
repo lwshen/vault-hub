@@ -296,7 +296,7 @@ export default function AuditLogContent() {
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
-                              <span className="text-sm">{formatTimestamp(audit.createdAt)}</span>
+                              <span className="text-sm">{formatTimestamp(audit.createdAt, true)}</span>
                               <span className="text-xs text-muted-foreground lg:hidden">
                                 {audit.ipAddress && `IP: ${audit.ipAddress}`}
                               </span>
