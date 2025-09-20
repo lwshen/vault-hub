@@ -62,7 +62,7 @@ VaultHub is a comprehensive secure environment variable and API key management s
 - **Routing**: Wouter (lightweight router)
 - **UI**: Tailwind CSS 4.x + Radix UI components + Framer Motion for animations
 - **API client**: Custom generated TypeScript client (`@lwshen/vault-hub-ts-fetch-client`)
-- **State**: React Context for auth and theme management
+- **State**: Zustand stores for component state, React Context for auth and theme management
 - **Components**: Organized into dashboard, layout, modals, and UI components
 - **Development proxy**: API requests proxied to `http://localhost:3000`
 - **Build optimization**: Manual chunking for UI libraries, vendor packages, and API client
@@ -86,6 +86,16 @@ VaultHub is a comprehensive secure environment variable and API key management s
 - Transparent encryption/decryption at model layer
 - Audit logging for all vault operations
 - Strict authentication middleware with route-based credential enforcement
+
+### Health Monitoring
+
+The `/api/status` endpoint provides comprehensive system monitoring:
+
+- **Database Health**: Response time, connection pool status, availability checks
+- **System Health**: Memory usage, disk space, overall system status  
+- **Status Levels**: `healthy`, `degraded`, `unavailable` with specific thresholds
+- **Performance Metrics**: Database response times, connection counts, resource utilization
+- **Multi-factor Assessment**: System status determined by database health, memory usage, disk space
 
 ## Required Environment Variables
 
@@ -150,7 +160,7 @@ The application enforces strict authentication rules via middleware (`route/midd
 ### API Endpoints
 
 **Public API:**
-- `GET /api/version` - Get current version and commit information (no authentication required)
+- `GET /api/status` - Get comprehensive system status including version, health, and performance metrics (no authentication required)
 
 **CLI API Vault Access:**
 - `GET /api/cli/vaults` - List accessible vaults (VaultLite format, no decrypted values)
@@ -180,6 +190,16 @@ The application enforces strict authentication rules via middleware (`route/midd
 - Database model tests (`model/db_test.go`)
 - Configuration tests (`internal/config/config_test.go`)
 - Frontend uses standard React testing patterns
+
+## Frontend State Management
+
+The frontend uses Zustand for component-level state management:
+
+- **Zustand stores**: Located in `src/stores/` for audit logs, API keys, and vaults
+- **Store pattern**: Each store contains state, actions, and loading states with comprehensive error handling
+- **Input validation**: All user inputs (pagination, deletion) include validation and error boundaries
+- **API integration**: Stores directly use generated API clients with proper error handling
+- **React Context**: Still used for global auth and theme state
 
 ## Frontend Code Style
 
