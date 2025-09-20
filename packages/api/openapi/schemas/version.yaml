@@ -3,6 +3,8 @@ VersionResponse:
   required:
     - version
     - commit
+    - systemStatus
+    - databaseStatus
   properties:
     version:
       type: string
@@ -12,3 +14,19 @@ VersionResponse:
       type: string
       description: Git commit hash
       example: abc1234
+    systemStatus:
+      type: string
+      description: System operational status
+      enum:
+        - healthy
+        - degraded
+        - unavailable
+      example: healthy
+    databaseStatus:
+      type: string
+      description: Database connection status
+      enum:
+        - healthy
+        - degraded
+        - unavailable
+      example: healthy

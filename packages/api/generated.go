@@ -38,6 +38,20 @@ const (
 	Web AuditLogSource = "web"
 )
 
+// Defines values for VersionResponseDatabaseStatus.
+const (
+	VersionResponseDatabaseStatusDegraded    VersionResponseDatabaseStatus = "degraded"
+	VersionResponseDatabaseStatusHealthy     VersionResponseDatabaseStatus = "healthy"
+	VersionResponseDatabaseStatusUnavailable VersionResponseDatabaseStatus = "unavailable"
+)
+
+// Defines values for VersionResponseSystemStatus.
+const (
+	VersionResponseSystemStatusDegraded    VersionResponseSystemStatus = "degraded"
+	VersionResponseSystemStatusHealthy     VersionResponseSystemStatus = "healthy"
+	VersionResponseSystemStatusUnavailable VersionResponseSystemStatus = "unavailable"
+)
+
 // APIKeysResponse defines model for APIKeysResponse.
 type APIKeysResponse struct {
 	ApiKeys []VaultAPIKey `json:"apiKeys"`
@@ -276,9 +290,21 @@ type VersionResponse struct {
 	// Commit Git commit hash
 	Commit string `json:"commit"`
 
+	// DatabaseStatus Database connection status
+	DatabaseStatus VersionResponseDatabaseStatus `json:"databaseStatus"`
+
+	// SystemStatus System operational status
+	SystemStatus VersionResponseSystemStatus `json:"systemStatus"`
+
 	// Version Application version
 	Version string `json:"version"`
 }
+
+// VersionResponseDatabaseStatus Database connection status
+type VersionResponseDatabaseStatus string
+
+// VersionResponseSystemStatus System operational status
+type VersionResponseSystemStatus string
 
 // GetAPIKeysParams defines parameters for GetAPIKeys.
 type GetAPIKeysParams struct {
