@@ -78,7 +78,7 @@ export default function DashboardContent() {
 
   // Get recent vaults (sorted by updatedAt, limit to 4)
   const recentVaults = vaults
-    .filter(vault => vault.updatedAt)
+    .filter(vault => vault.updatedAt && !isNaN(new Date(vault.updatedAt).getTime()))
     .sort((a, b) => new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime())
     .slice(0, 4);
 
