@@ -1,3 +1,8 @@
+## [1.2.8] - 2025-09-20
+
+### 🚀 Features
+
+- Add system and database status (#231)
 ## [1.2.7] - 2025-09-20
 
 ### 🚀 Features
