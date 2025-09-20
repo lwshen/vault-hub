@@ -1,6 +1,7 @@
 import { auditApi, versionApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useVaultStore } from '@/stores/vault-store';
 import type { AuditLog, AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
 import { formatTimestamp, getActionTitle, getIconForAction } from '@/utils/audit-log';
 import {
@@ -9,7 +10,6 @@ import {
   Loader2,
   Lock,
   MoreVertical,
-  Unlock,
   Users,
   Vault,
 } from 'lucide-react';
@@ -20,6 +20,8 @@ export default function DashboardContent() {
   const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
   const [recentAuditLogs, setRecentAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { vaults, isLoading: vaultsLoading, fetchVaults } = useVaultStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,7 +40,8 @@ export default function DashboardContent() {
       }
     };
     fetchData();
-  }, []);
+    fetchVaults();
+  }, [fetchVaults]);
 
   const stats = [
     {
@@ -71,12 +74,11 @@ export default function DashboardContent() {
     },
   ];
 
-  const recentVaults = [
-    { name: 'Production API Keys', status: 'locked', lastAccessed: '2 hours ago' },
-    { name: 'Database Credentials', status: 'unlocked', lastAccessed: '1 day ago' },
-    { name: 'SSL Certificates', status: 'locked', lastAccessed: '3 days ago' },
-    { name: 'OAuth Tokens', status: 'locked', lastAccessed: '1 week ago' },
-  ];
+  // Get recent vaults (sorted by updatedAt, limit to 4)
+  const recentVaults = vaults
+    .filter(vault => vault.updatedAt)
+    .sort((a, b) => new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime())
+    .slice(0, 4);
 
   return (
     <>
@@ -136,26 +138,43 @@ export default function DashboardContent() {
               </Button>
             </div>
             <div className="space-y-3">
-              {recentVaults.map((vault) => (
-                <div key={vault.name} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex items-center gap-3">
-                    {vault.status === 'locked' ? (
-                      <Lock className="h-4 w-4 text-red-500" />
-                    ) : (
-                      <Unlock className="h-4 w-4 text-green-500" />
-                    )}
-                    <div>
-                      <p className="font-medium">{vault.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Last accessed {vault.lastAccessed}
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    Access
-                  </Button>
+              {vaultsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading vaults...</span>
                 </div>
-              ))}
+              ) : recentVaults.length > 0 ? (
+                recentVaults.map((vault) => (
+                  <div key={vault.uniqueId} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <Lock className="h-4 w-4 text-blue-500" />
+                      <div>
+                        <p className="font-medium">{vault.name}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          {vault.category && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+                              {vault.category}
+                            </span>
+                          )}
+                          {vault.updatedAt && (
+                            <span>Updated {formatTimestamp(vault.updatedAt)}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      Access
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center justify-center py-8 text-center">
+                  <div>
+                    <Vault className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No vaults found</p>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
 
