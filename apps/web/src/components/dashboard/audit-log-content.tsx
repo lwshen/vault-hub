@@ -201,7 +201,7 @@ export default function AuditLogContent() {
                     )}
                   </p>
                   <p className="text-sm text-muted-foreground">Last 24 Hours</p>
-                  <p className="text-xs text-muted-foreground">Recent activity</p>
+                  <p className="text-xs text-muted-foreground">Recent audit logs</p>
                 </div>
               </div>
             </Card>

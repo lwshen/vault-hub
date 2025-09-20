@@ -1,7 +1,8 @@
 import { auditApi, versionApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import type { AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
+import type { AuditLog, AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
+import { AuditLogActionEnum } from '@lwshen/vault-hub-ts-fetch-client';
 import {
   Activity,
   Key,
@@ -12,12 +13,16 @@ import {
   Unlock,
   Users,
   Vault,
+  Eye,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function DashboardContent() {
   const [version, setVersion] = useState<{ version: string; commit: string; } | null>(null);
   const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
+  const [recentAuditLogs, setRecentAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,6 +32,9 @@ export default function DashboardContent() {
         setVersion(versionResponse);
         const metricsResponse = await auditApi.getAuditMetrics();
         setMetrics(metricsResponse);
+        // Fetch recent audit logs (first 5 items from page 1)
+        const auditResponse = await auditApi.getAuditLogs(5, 1);
+        setRecentAuditLogs(auditResponse.auditLogs || []);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -35,6 +43,57 @@ export default function DashboardContent() {
     };
     fetchData();
   }, []);
+
+  // Icon mapping for different audit actions - using correct enum values
+  const getIconForAction = (action: AuditLogActionEnum) => {
+    const iconMap: { [key in AuditLogActionEnum]: { icon: typeof Lock; color: string; }; } = {
+      [AuditLogActionEnum.ReadVault]: { icon: Eye, color: 'text-blue-500' },
+      [AuditLogActionEnum.CreateVault]: { icon: Plus, color: 'text-green-500' },
+      [AuditLogActionEnum.UpdateVault]: { icon: Edit, color: 'text-yellow-500' },
+      [AuditLogActionEnum.DeleteVault]: { icon: Trash2, color: 'text-red-500' },
+      [AuditLogActionEnum.LoginUser]: { icon: Users, color: 'text-purple-500' },
+      [AuditLogActionEnum.LogoutUser]: { icon: Users, color: 'text-gray-500' },
+      [AuditLogActionEnum.RegisterUser]: { icon: Users, color: 'text-purple-500' },
+      [AuditLogActionEnum.CreateApiKey]: { icon: Key, color: 'text-green-500' },
+      [AuditLogActionEnum.UpdateApiKey]: { icon: Key, color: 'text-yellow-500' },
+      [AuditLogActionEnum.DeleteApiKey]: { icon: Key, color: 'text-red-500' },
+    };
+
+    return iconMap[action] || { icon: Activity, color: 'text-gray-500' };
+  };
+
+  // Convert action to readable title
+  const getActionTitle = (action: AuditLogActionEnum) => {
+    const titleMap: { [key in AuditLogActionEnum]: string; } = {
+      [AuditLogActionEnum.ReadVault]: 'Vault accessed',
+      [AuditLogActionEnum.CreateVault]: 'Vault created',
+      [AuditLogActionEnum.UpdateVault]: 'Vault updated',
+      [AuditLogActionEnum.DeleteVault]: 'Vault deleted',
+      [AuditLogActionEnum.LoginUser]: 'User logged in',
+      [AuditLogActionEnum.LogoutUser]: 'User logged out',
+      [AuditLogActionEnum.RegisterUser]: 'User registered',
+      [AuditLogActionEnum.CreateApiKey]: 'API key created',
+      [AuditLogActionEnum.UpdateApiKey]: 'API key updated',
+      [AuditLogActionEnum.DeleteApiKey]: 'API key deleted',
+    };
+
+    return titleMap[action] || action;
+  };
+
+  const formatTimestamp = (timestamp: string | Date) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    return date.toLocaleDateString();
+  };
 
   const stats = [
     {
@@ -189,31 +248,43 @@ export default function DashboardContent() {
           </Card>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Audit Logs */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
+          <h2 className="text-lg font-semibold mb-4">Recent Audit Logs</h2>
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-              <Activity className="h-4 w-4 text-blue-500" />
-              <div className="flex-1">
-                <p className="font-medium">Vault "Production API Keys" was accessed</p>
-                <p className="text-sm text-muted-foreground">by john@example.com • 2 hours ago</p>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-sm text-muted-foreground">Loading recent audit logs...</span>
               </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-              <Plus className="h-4 w-4 text-green-500" />
-              <div className="flex-1">
-                <p className="font-medium">New vault "SSL Certificates" created</p>
-                <p className="text-sm text-muted-foreground">by admin@example.com • 1 day ago</p>
+            ) : recentAuditLogs.length > 0 ? (
+              recentAuditLogs.map((log) => {
+                const { icon: ActionIcon, color } = getIconForAction(log.action);
+                const actionTitle = getActionTitle(log.action);
+                const resourceName = log.vault?.name || log.apiKey?.name || 'User Account';
+                const uniqueKey = `${log.action}-${log.createdAt}-${log.vault?.uniqueId || log.apiKey?.id || 'user'}`;
+                return (
+                  <div key={uniqueKey} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                    <ActionIcon className={`h-4 w-4 ${color}`} />
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {actionTitle}{resourceName && ` (${resourceName})`}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {log.apiKey ? 'via API Key' : 'via Web UI'} • {formatTimestamp(log.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex items-center justify-center py-8 text-center">
+                <div>
+                  <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No recent audit logs</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-              <Users className="h-4 w-4 text-purple-500" />
-              <div className="flex-1">
-                <p className="font-medium">Team member invited</p>
-                <p className="text-sm text-muted-foreground">sarah@example.com invited by admin@example.com • 2 days ago</p>
-              </div>
-            </div>
+            )}
           </div>
         </Card>
       </main>
