@@ -2,20 +2,16 @@ import { auditApi, versionApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { AuditLog, AuditMetricsResponse } from '@lwshen/vault-hub-ts-fetch-client';
-import { AuditLogActionEnum } from '@lwshen/vault-hub-ts-fetch-client';
+import { formatTimestamp, getActionTitle, getIconForAction } from '@/utils/audit-log';
 import {
   Activity,
   Key,
   Loader2,
   Lock,
   MoreVertical,
-  Plus,
   Unlock,
   Users,
   Vault,
-  Eye,
-  Edit,
-  Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -43,57 +39,6 @@ export default function DashboardContent() {
     };
     fetchData();
   }, []);
-
-  // Icon mapping for different audit actions - using correct enum values
-  const getIconForAction = (action: AuditLogActionEnum) => {
-    const iconMap: { [key in AuditLogActionEnum]: { icon: typeof Lock; color: string; }; } = {
-      [AuditLogActionEnum.ReadVault]: { icon: Eye, color: 'text-blue-500' },
-      [AuditLogActionEnum.CreateVault]: { icon: Plus, color: 'text-green-500' },
-      [AuditLogActionEnum.UpdateVault]: { icon: Edit, color: 'text-yellow-500' },
-      [AuditLogActionEnum.DeleteVault]: { icon: Trash2, color: 'text-red-500' },
-      [AuditLogActionEnum.LoginUser]: { icon: Users, color: 'text-purple-500' },
-      [AuditLogActionEnum.LogoutUser]: { icon: Users, color: 'text-gray-500' },
-      [AuditLogActionEnum.RegisterUser]: { icon: Users, color: 'text-purple-500' },
-      [AuditLogActionEnum.CreateApiKey]: { icon: Key, color: 'text-green-500' },
-      [AuditLogActionEnum.UpdateApiKey]: { icon: Key, color: 'text-yellow-500' },
-      [AuditLogActionEnum.DeleteApiKey]: { icon: Key, color: 'text-red-500' },
-    };
-
-    return iconMap[action] || { icon: Activity, color: 'text-gray-500' };
-  };
-
-  // Convert action to readable title
-  const getActionTitle = (action: AuditLogActionEnum) => {
-    const titleMap: { [key in AuditLogActionEnum]: string; } = {
-      [AuditLogActionEnum.ReadVault]: 'Vault accessed',
-      [AuditLogActionEnum.CreateVault]: 'Vault created',
-      [AuditLogActionEnum.UpdateVault]: 'Vault updated',
-      [AuditLogActionEnum.DeleteVault]: 'Vault deleted',
-      [AuditLogActionEnum.LoginUser]: 'User logged in',
-      [AuditLogActionEnum.LogoutUser]: 'User logged out',
-      [AuditLogActionEnum.RegisterUser]: 'User registered',
-      [AuditLogActionEnum.CreateApiKey]: 'API key created',
-      [AuditLogActionEnum.UpdateApiKey]: 'API key updated',
-      [AuditLogActionEnum.DeleteApiKey]: 'API key deleted',
-    };
-
-    return titleMap[action] || action;
-  };
-
-  const formatTimestamp = (timestamp: string | Date) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-    return date.toLocaleDateString();
-  };
 
   const stats = [
     {
