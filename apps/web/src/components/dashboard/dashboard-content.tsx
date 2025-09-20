@@ -261,7 +261,7 @@ export default function DashboardContent() {
               recentAuditLogs.map((log) => {
                 const { icon: ActionIcon, color } = getIconForAction(log.action);
                 const actionTitle = getActionTitle(log.action);
-                const resourceName = log.vault?.name || log.apiKey?.name || 'User Account';
+                const resourceName = log.vault?.name || log.apiKey?.name;
                 const uniqueKey = `${log.action}-${log.createdAt}-${log.vault?.uniqueId || log.apiKey?.id || 'user'}`;
                 return (
                   <div key={uniqueKey} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
