@@ -56,14 +56,18 @@ VaultHub is a comprehensive secure environment variable and API key management s
 ### Frontend (React + TypeScript + Vite)
 
 - **Location**: `apps/web/`
-- **Framework**: React 19 with TypeScript
-- **Build tool**: Vite 7.1.3 with Tailwind CSS 4.1.12 (Lightning CSS)
-- **Package manager**: pnpm 10.15.0
+- **Framework**: React 19.1.1 with TypeScript 5.9.2
+- **Build tool**: Vite 7.1.5 with Tailwind CSS 4.1.13 (Lightning CSS)
+- **Package manager**: pnpm 10.15.1
 - **Routing**: Wouter (lightweight router)
 - **UI**: Tailwind CSS 4.x + Radix UI components + Framer Motion for animations
 - **API client**: Custom generated TypeScript client (`@lwshen/vault-hub-ts-fetch-client`)
 - **State**: Zustand stores for component state, React Context for auth and theme management
 - **Components**: Organized into dashboard, layout, modals, and UI components
+- **Documentation System**: Built-in markdown-based documentation with TOC configuration
+- **Features Page**: Marketing page showcasing VaultHub capabilities with advanced animations
+- **Markdown Rendering**: `react-markdown` v10.1.0 with `remark-gfm` for GitHub Flavored Markdown
+- **Typography**: `@tailwindcss/typography` v0.5.18 for prose styling
 - **Development proxy**: API requests proxied to `http://localhost:3000`
 - **Build optimization**: Manual chunking for UI libraries, vendor packages, and API client
 
@@ -191,6 +195,34 @@ The application enforces strict authentication rules via middleware (`route/midd
 - Configuration tests (`internal/config/config_test.go`)
 - Frontend uses standard React testing patterns
 
+## Documentation System
+
+The project includes a comprehensive built-in documentation system:
+
+### Documentation Structure
+- **Location**: `apps/web/src/docs/`
+- **Format**: Markdown files with TypeScript TOC configuration
+- **Sections**: CLI Guide, Server Setup, API Reference, Security
+- **Navigation**: Hash-based routing with browser history support (e.g., `/docs#cli-guide`)
+
+### Key Components
+- **MarkdownContent**: Reusable component (`src/components/ui/markdown-content.tsx`) with configurable prose sizes
+- **TOC Configuration**: Type-safe table of contents in `src/docs/toc.ts`
+- **Markdown Rendering**: Uses `react-markdown` with `remark-gfm` for GitHub Flavored Markdown
+- **Typography**: Tailwind CSS Typography plugin for consistent prose styling
+
+### Documentation Files
+- `cli-guide.md` - CLI installation, authentication, and usage examples
+- `server-setup.md` - Server configuration and deployment
+- `api-reference.md` - API endpoint documentation with OpenAPI references
+- `security.md` - Security features, encryption, and best practices
+
+### Features
+- **URL-based Navigation**: Direct linking to sections with `/docs#section-id`
+- **Dark Mode Support**: Automatic theme switching with `prose-invert`
+- **Mobile Responsive**: Optimized for all screen sizes
+- **Search Friendly**: Semantic HTML with proper heading structure
+
 ## Frontend State Management
 
 The frontend uses Zustand for component-level state management:
@@ -212,6 +244,28 @@ ESLint configuration enforces:
 - React-specific rules and hooks validation
 - TypeScript strict mode
 
+## Tailwind CSS 4.x Configuration
+
+The project uses Tailwind CSS 4.x with the new CSS-first configuration approach:
+
+### Configuration Method
+- **No `tailwind.config.js`**: Uses CSS-first approach via `@import` and `@plugin` directives
+- **Main CSS file**: `apps/web/src/index.css` contains all Tailwind configuration
+- **Typography Plugin**: Added via `@plugin "@tailwindcss/typography";` directive
+- **Vite Integration**: Uses `@tailwindcss/vite` plugin for seamless integration
+
+### Important CSS Directives
+```css
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+```
+
+### Theme Configuration
+- **CSS Custom Properties**: Extensive design tokens defined in `:root` and `.dark`
+- **OKLCH Color Space**: Modern color system for better perceptual uniformity
+- **Custom Variants**: Dark mode via `@custom-variant dark (&:is(.dark *))`
+
 ## CI/CD Pipeline
 
 ### GitHub Actions Workflows
@@ -221,7 +275,7 @@ The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
 #### Main CI Workflow (`.github/workflows/ci.yml`)
 - **Triggers**: Push to main, pull requests to main
 - **Go Version**: 1.24.2 with module caching
-- **Frontend**: pnpm 10.15.0 with Node.js 22
+- **Frontend**: pnpm 10.15.1 with Node.js 22
 - **Quality Checks**: golangci-lint, frontend typecheck and lint
 - **Testing**: Go tests with required environment variables
 - **Builds**: Cross-platform binaries for both server and CLI (Linux/Windows/macOS, amd64/arm64)
@@ -273,6 +327,14 @@ vault-hub/
 │   │   └── main.go       # Server entry point
 │   └── web/              # Frontend application (React + TypeScript)
 │       ├── src/          # React source code
+│       │   ├── docs/     # Documentation system
+│       │   │   ├── cli-guide.md     # CLI installation and usage
+│       │   │   ├── server-setup.md  # Server configuration
+│       │   │   ├── api-reference.md # API endpoint documentation
+│       │   │   ├── security.md      # Security features and best practices
+│       │   │   └── toc.ts           # Table of contents configuration
+│       │   ├── pages/    # Page components including features and documentation
+│       │   └── components/ui/markdown-content.tsx # Reusable markdown renderer
 │       ├── dist/         # Build output
 │       ├── public/       # Static assets
 │       ├── package.json  # Frontend dependencies
