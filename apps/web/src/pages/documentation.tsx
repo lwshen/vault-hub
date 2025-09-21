@@ -124,18 +124,13 @@ export default function Documentation() {
                     key={section.id}
                     type="button"
                     onClick={() => handleSectionChange(section.id)}
-                    className={`block w-full text-left transition-colors px-3 py-3 rounded-lg ${
+                    className={`block w-full text-left font-medium text-sm transition-colors px-3 py-2 rounded-lg ${
                       activeSection === section.id
-                        ? 'text-primary bg-primary/10 border border-primary/20'
+                        ? 'text-primary bg-primary/10'
                         : 'text-foreground hover:text-primary hover:bg-muted/50'
                     }`}
                   >
-                    <div className="font-medium text-sm">{section.title}</div>
-                    {section.description && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {section.description}
-                      </div>
-                    )}
+                    {section.title}
                   </button>
                 ))}
               </nav>

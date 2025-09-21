@@ -8,9 +8,11 @@ The VaultHub CLI is the primary way to interact with VaultHub. It provides secur
 
 Download the latest CLI binary for your platform from the [GitHub releases page](https://github.com/lwshen/vault-hub/releases/latest).
 
-> **📦 Latest Release**  
-> Get the most recent version of VaultHub CLI  
-> [Download Latest →](https://github.com/lwshen/vault-hub/releases/latest)
+**Latest Release**
+
+Download the latest version of VaultHub CLI from our GitHub releases page:
+
+[👉 Download Latest Release](https://github.com/lwshen/vault-hub/releases/latest)
 
 **Supported Platforms:**
 - **Linux** - amd64, arm64

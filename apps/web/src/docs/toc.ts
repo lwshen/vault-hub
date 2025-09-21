@@ -7,7 +7,6 @@ import securityContent from './security.md?raw';
 export interface TOCItem {
   id: string;
   title: string;
-  description?: string;
   content: string;
 }
 
@@ -15,25 +14,21 @@ export const documentationTOC: TOCItem[] = [
   {
     id: 'cli-guide',
     title: 'CLI Guide',
-    description: 'Get started with the VaultHub CLI',
     content: cliGuideContent,
   },
   {
     id: 'server-setup',
     title: 'Server Setup',
-    description: 'Install and configure VaultHub server',
     content: serverSetupContent,
   },
   {
     id: 'api-reference',
     title: 'API Reference',
-    description: 'Complete API documentation',
     content: apiReferenceContent,
   },
   {
     id: 'security',
     title: 'Security',
-    description: 'Security features and best practices',
     content: securityContent,
   },
 ];
