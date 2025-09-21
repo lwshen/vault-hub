@@ -1,6 +1,7 @@
 import { Route, Switch } from 'wouter';
 import HeroSection from '@/components/hero/hero-section';
 import Features from '@/pages/features';
+import Documentation from '@/pages/documentation';
 import Login from '@/pages/auth/login';
 import Signup from '@/pages/auth/signup';
 import Dashboard from '@/pages/dashboard/dashboard';
@@ -20,7 +21,7 @@ export const AppRoutes = () => (
       <Features />
     </Route>
     <Route path={PATH.DOCS}>
-      <div>Docs</div>
+      <Documentation />
     </Route>
     <Route path={PATH.MOCK}>
       <Mock />
