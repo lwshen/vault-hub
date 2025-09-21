@@ -1,3 +1,12 @@
+## [1.3.0] - 2025-09-21
+
+### 🚀 Features
+
+- Add Documentation page (#238)
+
+### 📚 Documentation
+
+- Enhance README and CLAUDE.md (#239)
 ## [1.2.10] - 2025-09-20
 
 ### 🚀 Features
