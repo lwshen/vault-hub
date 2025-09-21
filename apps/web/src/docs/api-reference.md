@@ -6,4 +6,4 @@ VaultHub provides a RESTful API with OpenAPI 3.0 specification. All API endpoint
 
 The complete API specification is available in OpenAPI 3.0 format:
 
-**Location:** [`packages/api/openapi/api.bundled.yaml`](https://github.com/lwshen/vault-hub/blob/v1.2.10/packages/api/api.bundled.yaml)
+**Location:** [`packages/api/openapi/api.bundled.yaml`](https://github.com/lwshen/vault-hub/blob/main/packages/api/api.bundled.yaml)
