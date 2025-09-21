@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -34,15 +34,41 @@ const fadeInVariants: Variants = {
 };
 
 export default function Documentation() {
-  const [activeSection, setActiveSection] = useState(() => getDefaultDocumentation().id);
+  // Get initial section from URL hash or default
+  const getInitialSection = () => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.slice(1); // Remove #
+      return getDocumentationItem(hash) ? hash : getDefaultDocumentation().id;
+    }
+    return getDefaultDocumentation().id;
+  };
+
+  const [activeSection, setActiveSection] = useState(() => getInitialSection());
 
   const navigationItems = documentationTOC;
   const currentItem = getDocumentationItem(activeSection) || getDefaultDocumentation();
   const currentContent = currentItem.content;
 
+  // Update URL hash when section changes
   const handleSectionChange = (sectionId: string) => {
     setActiveSection(sectionId);
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', `#${sectionId}`);
+    }
   };
+
+  // Listen for hash changes (back/forward navigation)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash && getDocumentationItem(hash)) {
+        setActiveSection(hash);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
