@@ -6,11 +6,8 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-// Import markdown content
-import cliGuideContent from '@/docs/cli-guide.md?raw';
-import serverSetupContent from '@/docs/server-setup.md?raw';
-import apiReferenceContent from '@/docs/api-reference.md?raw';
-import securityContent from '@/docs/security.md?raw';
+// Import TOC configuration
+import { documentationTOC, getDocumentationItem, getDefaultDocumentation } from '@/docs/toc';
 
 const fadeUpVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -36,39 +33,12 @@ const fadeInVariants: Variants = {
   },
 };
 
-interface NavItem {
-  id: string;
-  title: string;
-  content: string;
-}
-
-const navigationItems: NavItem[] = [
-  {
-    id: 'cli-guide',
-    title: 'CLI Guide',
-    content: cliGuideContent,
-  },
-  {
-    id: 'server-setup',
-    title: 'Server Setup',
-    content: serverSetupContent,
-  },
-  {
-    id: 'api-reference',
-    title: 'API Reference',
-    content: apiReferenceContent,
-  },
-  {
-    id: 'security',
-    title: 'Security',
-    content: securityContent,
-  },
-];
-
 export default function Documentation() {
-  const [activeSection, setActiveSection] = useState('cli-guide');
+  const [activeSection, setActiveSection] = useState(() => getDefaultDocumentation().id);
 
-  const currentContent = navigationItems.find(item => item.id === activeSection)?.content || cliGuideContent;
+  const navigationItems = documentationTOC;
+  const currentItem = getDocumentationItem(activeSection) || getDefaultDocumentation();
+  const currentContent = currentItem.content;
 
   const handleSectionChange = (sectionId: string) => {
     setActiveSection(sectionId);
@@ -154,13 +124,18 @@ export default function Documentation() {
                     key={section.id}
                     type="button"
                     onClick={() => handleSectionChange(section.id)}
-                    className={`block w-full text-left font-medium text-sm transition-colors px-3 py-2 rounded-lg ${
+                    className={`block w-full text-left transition-colors px-3 py-3 rounded-lg ${
                       activeSection === section.id
-                        ? 'text-primary bg-primary/10'
+                        ? 'text-primary bg-primary/10 border border-primary/20'
                         : 'text-foreground hover:text-primary hover:bg-muted/50'
                     }`}
                   >
-                    {section.title}
+                    <div className="font-medium text-sm">{section.title}</div>
+                    {section.description && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {section.description}
+                      </div>
+                    )}
                   </button>
                 ))}
               </nav>
