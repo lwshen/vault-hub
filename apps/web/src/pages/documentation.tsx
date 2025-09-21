@@ -3,11 +3,10 @@
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 // Import TOC configuration
 import { documentationTOC, getDocumentationItem, getDefaultDocumentation } from '@/docs/toc';
+import { MarkdownContent } from '@/components/ui/markdown-content';
 
 const fadeUpVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -172,11 +171,9 @@ export default function Documentation() {
             custom={0}
             className="flex-1 max-w-4xl"
           >
-            <div className="prose prose-lg max-w-none dark:prose-invert">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {currentContent}
-              </ReactMarkdown>
-            </div>
+            <MarkdownContent>
+              {currentContent}
+            </MarkdownContent>
           </motion.main>
         </div>
       </div>
