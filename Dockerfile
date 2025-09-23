@@ -1,5 +1,7 @@
 ARG NODE_VERSION=22
 ARG GO_VERSION=1.24
+ARG VERSION=dev
+ARG COMMIT=unknown
 
 FROM node:${NODE_VERSION}-alpine AS frontend-builder
 
@@ -29,7 +31,7 @@ COPY --from=frontend-builder /app/dist ./apps/web/dist
 
 RUN go mod download
 
-RUN go build -o vault-hub-server apps/server/main.go
+RUN go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}" -o vault-hub-server apps/server/main.go
 
 FROM alpine:3.22
 
