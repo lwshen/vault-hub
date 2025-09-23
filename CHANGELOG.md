@@ -1,3 +1,8 @@
+## [1.3.1] - 2025-09-23
+
+### ⚙️ Miscellaneous Tasks
+
+- Update image tagging strategy in workflows (#242)
 ## [1.3.0] - 2025-09-21
 
 ### 🚀 Features
