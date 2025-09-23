@@ -1,3 +1,8 @@
+## [1.3.2] - 2025-09-23
+
+### ⚙️ Miscellaneous Tasks
+
+- Add versioning support in Dockerfiles and workflows (#244)
 ## [1.3.1] - 2025-09-23
 
 ### ⚙️ Miscellaneous Tasks
