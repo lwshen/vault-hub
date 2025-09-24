@@ -33,7 +33,9 @@ RUN apk add --no-cache \
     && chown -R vaultuser:vaultuser /var/log/cron
 
 # Copy pre-built CLI binary (expected to be built by CI)
-COPY bin/vault-hub-cli-linux-amd64 ./vault-hub-cli
+# Use build arg to determine which binary to copy based on target platform
+ARG TARGETARCH
+COPY bin/vault-hub-cli-linux-${TARGETARCH} ./vault-hub-cli
 COPY --from=cron-builder /app/go-cron ./
 
 # Change ownership of app directory
