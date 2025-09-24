@@ -1,3 +1,8 @@
+## [1.3.3] - 2025-09-24
+
+### ⚙️ Miscellaneous Tasks
+
+- Enhance Dockerfiles to dynamically retrieve version and commit info (#246)
 ## [1.3.2] - 2025-09-23
 
 ### ⚙️ Miscellaneous Tasks
