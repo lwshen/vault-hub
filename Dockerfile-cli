@@ -1,22 +1,17 @@
-ARG GO_VERSION=1.24
-
-FROM golang:${GO_VERSION}-alpine AS cli-builder
+FROM golang:1.24-alpine AS cron-builder
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc libc-dev git
+RUN apk add --no-cache gcc libc-dev
 
 ENV GO111MODULE=on \
     CGO_ENABLED=1 \
     GOOS=linux
 
-COPY . .
+COPY go.mod go.sum ./
+COPY apps/cron ./apps/cron
 
 RUN go mod download
-
-RUN VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') && \
-    COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown') && \
-    go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}" -o vault-hub-cli apps/cli/main.go
 
 # Build cron binary
 RUN go build -o go-cron apps/cron/main.go
@@ -37,8 +32,9 @@ RUN apk add --no-cache \
     && mkdir -p /var/log/cron \
     && chown -R vaultuser:vaultuser /var/log/cron
 
-COPY --from=cli-builder /app/vault-hub-cli ./
-COPY --from=cli-builder /app/go-cron ./
+# Copy pre-built CLI binary (expected to be built by CI)
+COPY bin/vault-hub-cli-linux-amd64 ./vault-hub-cli
+COPY --from=cron-builder /app/go-cron ./
 
 # Change ownership of app directory
 RUN chown -R vaultuser:vaultuser /app
