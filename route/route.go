@@ -1,17 +1,17 @@
 package route
 
 import (
-	"embed"
 	"io/fs"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/lwshen/vault-hub/handler"
+	"github.com/lwshen/vault-hub/internal/web"
 	openapi "github.com/lwshen/vault-hub/packages/api"
 )
 
-func SetupRoutes(app *fiber.App, webDistFS ...embed.FS) {
+func SetupRoutes(app *fiber.App) {
 	app.Use(jwtMiddleware)
 
 	server := openapi.NewServer()
@@ -25,11 +25,11 @@ func SetupRoutes(app *fiber.App, webDistFS ...embed.FS) {
 	auth.Get("/callback/oidc", handler.LoginOidcCallback)
 
 	// Web - Serve static files (embedded or filesystem)
-	if len(webDistFS) > 0 {
+	if web.HasAssets() {
 		// Serve from embedded filesystem
-		distFS, err := fs.Sub(webDistFS[0], "apps/web/dist")
+		distFS, err := web.GetDistFS()
 		if err != nil {
-			panic("Failed to create sub filesystem for web dist: " + err.Error())
+			panic("Failed to get embedded web assets: " + err.Error())
 		}
 
 		app.Use("/", filesystem.New(filesystem.Config{
