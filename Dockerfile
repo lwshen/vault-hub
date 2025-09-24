@@ -8,7 +8,7 @@ RUN addgroup -g 1001 -S vaultuser && \
 
 # Copy pre-built binary and frontend assets (expected to be built by CI)
 # Use build arg to determine which binary to copy based on target platform
-ARG TARGETARCH
+ARG TARGETARCH=amd64
 COPY bin/vault-hub-server-linux-${TARGETARCH} ./vault-hub-server
 COPY apps/web/dist ./apps/web/dist
 
