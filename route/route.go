@@ -1,9 +1,14 @@
 package route
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/lwshen/vault-hub/handler"
-	openapi "github.com/lwshen/vault-hub/packages/api"
+    "io/fs"
+    "net/http"
+
+    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v2/middleware/filesystem"
+    "github.com/lwshen/vault-hub/apps"
+    "github.com/lwshen/vault-hub/handler"
+    openapi "github.com/lwshen/vault-hub/packages/api"
 )
 
 func SetupRoutes(app *fiber.App) {
@@ -19,12 +24,18 @@ func SetupRoutes(app *fiber.App) {
 	auth.Get("/login/oidc", handler.LoginOidc)
 	auth.Get("/callback/oidc", handler.LoginOidcCallback)
 
-	// Web
-	app.Static("/", "./apps/web/dist")
-	app.Get("/*", func(c *fiber.Ctx) error {
-		if err := c.SendFile("./apps/web/dist/index.html"); err != nil {
-			return c.SendStatus(fiber.StatusInternalServerError)
-		}
-		return nil
-	})
+    // Web (embedded)
+    app.Use("/", filesystem.New(filesystem.Config{
+        Root: http.FS(apps.WebDistFS),
+    }))
+
+    // SPA fallback to index.html for client-side routes
+    app.Get("/*", func(c *fiber.Ctx) error {
+        index, err := fs.ReadFile(apps.WebDistFS, "index.html")
+        if err != nil {
+            return c.SendStatus(fiber.StatusInternalServerError)
+        }
+        c.Type("html")
+        return c.Send(index)
+    })
 }
