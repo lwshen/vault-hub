@@ -34,7 +34,7 @@ RUN apk add --no-cache \
 
 # Copy pre-built CLI binary (expected to be built by CI)
 # Use build arg to determine which binary to copy based on target platform
-ARG TARGETARCH
+ARG TARGETARCH=amd64
 COPY bin/vault-hub-cli-linux-${TARGETARCH} ./vault-hub-cli
 COPY --from=cron-builder /app/go-cron ./
 
