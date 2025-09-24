@@ -25,7 +25,8 @@ ENV GO111MODULE=on \
 
 COPY . .
 
-COPY --from=frontend-builder /app/dist ./apps/web/dist
+# Copy built frontend into embed path so it is included in the Go binary
+COPY --from=frontend-builder /app/dist ./internal/staticfs/dist
 
 RUN go mod download
 
@@ -42,7 +43,7 @@ RUN addgroup -g 1001 -S vaultuser && \
     adduser -u 1001 -S vaultuser -G vaultuser
 
 COPY --from=backend-builder /app/vault-hub-server ./
-COPY --from=backend-builder /app/apps/web/dist ./apps/web/dist
+# No need to copy dist at runtime; assets are embedded in the binary
 
 # Change ownership of app directory
 RUN chown -R vaultuser:vaultuser /app
