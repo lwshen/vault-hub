@@ -1,7 +1,5 @@
 ARG NODE_VERSION=22
 ARG GO_VERSION=1.24
-ARG VERSION=dev
-ARG COMMIT=unknown
 
 FROM node:${NODE_VERSION}-alpine AS frontend-builder
 
@@ -19,7 +17,7 @@ FROM golang:${GO_VERSION}-alpine AS backend-builder
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc libc-dev
+RUN apk add --no-cache gcc libc-dev git
 
 ENV GO111MODULE=on \
     CGO_ENABLED=1 \
@@ -31,7 +29,9 @@ COPY --from=frontend-builder /app/dist ./apps/web/dist
 
 RUN go mod download
 
-RUN go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}" -o vault-hub-server apps/server/main.go
+RUN VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') && \
+    COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo 'unknown') && \
+    go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}" -o vault-hub-server apps/server/main.go
 
 FROM alpine:3.22
 
