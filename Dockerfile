@@ -25,7 +25,7 @@ ENV GO111MODULE=on \
 
 COPY . .
 
-COPY --from=frontend-builder /app/dist ./apps/web/dist
+COPY --from=frontend-builder /internal/embed/dist ./internal/embed/dist
 
 RUN go mod download
 
@@ -42,7 +42,6 @@ RUN addgroup -g 1001 -S vaultuser && \
     adduser -u 1001 -S vaultuser -G vaultuser
 
 COPY --from=backend-builder /app/vault-hub-server ./
-COPY --from=backend-builder /app/apps/web/dist ./apps/web/dist
 
 # Change ownership of app directory
 RUN chown -R vaultuser:vaultuser /app
