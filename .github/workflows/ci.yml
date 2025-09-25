@@ -90,4 +90,4 @@ jobs:
           name: vault-hub-server
           path: |
             bin/
-            apps/web/dist
+            internal/embed/dist
