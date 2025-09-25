@@ -1,7 +1,9 @@
 package route
 
 import (
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
@@ -26,7 +28,8 @@ func SetupRoutes(app *fiber.App) {
 	// Web
 	embedFS, err := embed.GetDistFS()
 	if err != nil {
-		panic(err)
+		slog.Error("Failed to initialize embedded filesystem", "error", err)
+		os.Exit(1)
 	}
 	app.Use("/", filesystem.New(filesystem.Config{
 		Root:         http.FS(embedFS),
