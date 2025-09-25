@@ -6,7 +6,7 @@ import (
 )
 
 // Embed the web dist directory
-// This will be populated when the web app is built
+// This will be populated when the web app is built and copied here
 //go:embed dist
 var distFS embed.FS
 
@@ -17,6 +17,7 @@ func GetDistFS() (fs.FS, error) {
 
 // HasAssets returns true if web assets are embedded
 func HasAssets() bool {
+	// Try to read the dist directory
 	entries, err := distFS.ReadDir(".")
 	if err != nil {
 		return false

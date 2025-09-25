@@ -39,3 +39,14 @@ data.db
 
 # Generated OpenAPI bundle
 api/api.bundled.yaml
+
+# Frontend build folders
+apps/web/dist/
+internal/web/dist/
+dist/
+build/
+node_modules/
+
+# Build artifacts
+vault-hub
+vault-hub-embedded
