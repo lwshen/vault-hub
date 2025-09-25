@@ -1,8 +1,12 @@
 package route
 
 import (
+	"net/http"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/lwshen/vault-hub/handler"
+	"github.com/lwshen/vault-hub/internal/embed"
 	openapi "github.com/lwshen/vault-hub/packages/api"
 )
 
@@ -20,11 +24,14 @@ func SetupRoutes(app *fiber.App) {
 	auth.Get("/callback/oidc", handler.LoginOidcCallback)
 
 	// Web
-	app.Static("/", "./apps/web/dist")
-	app.Get("/*", func(c *fiber.Ctx) error {
-		if err := c.SendFile("./apps/web/dist/index.html"); err != nil {
-			return c.SendStatus(fiber.StatusInternalServerError)
-		}
-		return nil
-	})
+	embedFS, err := embed.GetDistFS()
+	if err != nil {
+		panic(err)
+	}
+	app.Use("/", filesystem.New(filesystem.Config{
+		Root:         http.FS(embedFS),
+		Browse:       false,
+		Index:        "index.html",
+		NotFoundFile: "index.html",
+	}))
 }
