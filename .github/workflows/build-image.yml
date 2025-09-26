@@ -59,7 +59,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           load: true
-      - name: Test version in Docker image
+
         run: |
           # Get the first tag for testing
           TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
