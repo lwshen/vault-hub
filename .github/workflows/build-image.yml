@@ -41,7 +41,7 @@ jobs:
           else
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev')
           fi
-          COMMIT=$(git rev-parse --short HEAD)
+          COMMIT=${GITHUB_SHA::7}
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "COMMIT=${COMMIT}" >> $GITHUB_OUTPUT
       - name: Build and push Docker image
@@ -58,3 +58,30 @@ jobs:
             COMMIT=${{ steps.version.outputs.COMMIT }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          load: true
+      - name: Test version in Docker image
+        run: |
+          # Get the first tag for testing
+          TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          echo "Testing version in image: $TAG"
+          
+          # Test that the version command works and shows expected version/commit
+          docker run --rm "$TAG" ./vault-hub-server --version
+          
+          # Verify the version output contains our expected values
+          VERSION_OUTPUT=$(docker run --rm "$TAG" ./vault-hub-server --version)
+          echo "Version output: $VERSION_OUTPUT"
+          
+          if [[ "$VERSION_OUTPUT" == *"${{ steps.version.outputs.VERSION }}"* ]]; then
+            echo "✓ Version matches: ${{ steps.version.outputs.VERSION }}"
+          else
+            echo "✗ Version mismatch. Expected: ${{ steps.version.outputs.VERSION }}"
+            exit 1
+          fi
+          
+          if [[ "$VERSION_OUTPUT" == *"${{ steps.version.outputs.COMMIT }}"* ]]; then
+            echo "✓ Commit matches: ${{ steps.version.outputs.COMMIT }}"
+          else
+            echo "✗ Commit mismatch. Expected: ${{ steps.version.outputs.COMMIT }}"
+            exit 1
+          fi
