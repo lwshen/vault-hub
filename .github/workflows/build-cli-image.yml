@@ -39,7 +39,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
           else
-            VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev')
+            VERSION=${GITHUB_REF#refs/heads/}
           fi
           COMMIT=${GITHUB_SHA::7}
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
