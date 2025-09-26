@@ -58,4 +58,3 @@ jobs:
             COMMIT=${{ steps.version.outputs.COMMIT }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          load: true
