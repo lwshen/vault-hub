@@ -141,8 +141,8 @@ func (params *CreateAPIKeyParams) Create() (*APIKey, string, error) {
 // GetByKeyHash finds an API key by its hash
 func GetAPIKeyByHash(keyHash string) (*APIKey, error) {
 	var apiKey APIKey
-	err := DB.Where("key_hash = ? AND is_active = ? AND (expires_at IS NULL OR expires_at > ?)",
-		keyHash, true, time.Now()).
+	err := DB.Where("key_hash = ? AND (expires_at IS NULL OR expires_at > ?)",
+		keyHash, time.Now()).
 		First(&apiKey).Error
 
 	if err != nil {
