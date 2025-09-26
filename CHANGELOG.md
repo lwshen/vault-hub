@@ -1,3 +1,8 @@
+## [1.3.8] - 2025-09-26
+
+### 🐛 Bug Fixes
+
+- Remove unnecessary condition in GetAPIKeyByHash query (#261)
 ## [1.3.7] - 2025-09-26
 
 ### 🚀 Features
