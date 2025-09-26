@@ -1,3 +1,4 @@
+# Production Dockerfile - expects pre-built binaries from CI
 FROM alpine:3.22
 
 WORKDIR /app
@@ -10,7 +11,7 @@ RUN addgroup -g 1001 -S vaultuser && \
 # Use build arg to determine which binary to copy based on target platform
 ARG TARGETARCH=amd64
 COPY bin/vault-hub-server-linux-${TARGETARCH} ./vault-hub-server
-COPY apps/web/dist ./apps/web/dist
+COPY internal/embed/dist ./internal/embed/dist
 
 # Change ownership of app directory
 RUN chown -R vaultuser:vaultuser /app

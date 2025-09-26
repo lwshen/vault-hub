@@ -1,3 +1,13 @@
+## [1.3.5] - 2025-09-25
+
+### 🚀 Features
+
+- Integrate embedded static files into the web server (#255)
+## [1.3.4] - 2025-09-24
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix build version and commit (#248)
 ## [1.3.3] - 2025-09-24
 
 ### ⚙️ Miscellaneous Tasks

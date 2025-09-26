@@ -20,6 +20,7 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: '../../internal/embed/dist',
     rollupOptions: {
       output: {
         manualChunks(id) {

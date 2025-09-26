@@ -91,4 +91,4 @@ jobs:
           name: vault-hub-binaries
           path: |
             bin/
-            apps/web/dist
+            internal/embed/dist
