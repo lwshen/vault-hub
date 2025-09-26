@@ -1,3 +1,8 @@
+## [1.3.7] - 2025-09-26
+
+### 🚀 Features
+
+- Add environment variable support for CLI flags (#259)
 ## [1.3.6] - 2025-09-26
 
 ### ⚙️ Miscellaneous Tasks
