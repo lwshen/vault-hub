@@ -1,3 +1,8 @@
+## [1.3.6] - 2025-09-26
+
+### ⚙️ Miscellaneous Tasks
+
+- Enhance Dockerfiles and workflows to include version and commit for builds (#257)
 ## [1.3.5] - 2025-09-25
 
 ### 🚀 Features
