@@ -125,7 +125,7 @@ docker run -d \
   -e ENCRYPTION_KEY="$(openssl rand -base64 32)" \
   -e DATABASE_URL="/app/data/vault.db" \
   --restart unless-stopped \
-  vaulthub/server:latest
+  ghcr.io/lwshen/vault-hub:latest
 
 # Health check
 curl http://localhost:3000/api/status
@@ -191,7 +191,7 @@ version: '3.8'
 
 services:
   vault-hub:
-    image: vaulthub/server:latest
+    image: ghcr.io/lwshen/vault-hub:latest
     ports:
       - "3000:3000"
     environment:
@@ -286,7 +286,7 @@ spec:
     spec:
       containers:
       - name: vault-hub
-        image: vaulthub/server:latest
+        image: ghcr.io/lwshen/vault-hub:latest
         ports:
         - containerPort: 3000
           name: http

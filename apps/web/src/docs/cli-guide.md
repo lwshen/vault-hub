@@ -147,7 +147,7 @@ vault-hub get --name production-secrets --exec "docker build -t myapp ."
 docker run --rm \
   -e VAULT_HUB_API_KEY=vhub_your_api_key_here \
   -e VAULT_HUB_BASE_URL=https://your-server.com \
-  vaulthub/cli:latest list
+  ghcr.io/lwshen/vault-hub-cli:latest list
 
 # Get vault and save to mounted volume
 docker run --rm \
@@ -155,7 +155,7 @@ docker run --rm \
   -e VAULT_HUB_API_KEY=vhub_your_api_key_here \
   -e VAULT_HUB_BASE_URL=https://your-server.com \
   -e VAULT_HUB_CLI_ARGS="get --name prod-secrets --output /output/.env" \
-  vaulthub/cli:latest
+  ghcr.io/lwshen/vault-hub-cli:latest
 ```
 
 ### Scheduled Execution with Cron
@@ -171,7 +171,7 @@ docker run -d \
   -e VAULT_HUB_API_KEY=vhub_your_api_key_here \
   -e VAULT_HUB_BASE_URL=https://your-server.com \
   -e VAULT_HUB_CLI_ARGS="get --name prod-secrets --output /output/.env" \
-  vaulthub/cli:latest
+  ghcr.io/lwshen/vault-hub-cli:latest
 
 # Check logs
 docker logs vault-hub-sync
