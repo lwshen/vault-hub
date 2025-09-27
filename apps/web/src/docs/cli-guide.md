@@ -203,23 +203,6 @@ vault-hub --debug list
 
 ### Common Issues
 
-**Authentication Failed**
-```bash
-# Verify your API key
-vault-hub --debug list
-# Check the debug output for authentication errors
-```
-
-**Connection Issues**
-```bash
-# Test connectivity to your server
-curl -H "Authorization: Bearer vhub_your_api_key" https://your-server.com/api/status
-
-# Verify base URL is correct
-export VAULT_HUB_DEBUG=true
-vault-hub --base-url https://your-server.com list
-```
-
 **File Permissions**
 ```bash
 # CLI creates output files with 0600 permissions (owner read/write only)
