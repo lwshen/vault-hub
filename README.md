@@ -21,8 +21,11 @@ A comprehensive secure environment variable and API key management system with A
 ### ⌨️ Command-Line Interface
 - **Cross-platform binaries** (Linux, Windows, macOS)
 - **Simple commands**: `list`, `get` with name/ID support
-- **Environment file export** (.env file generation)
+- **Environment file export** (.env file generation with 0600 permissions)
 - **Command execution** with injected environment variables
+- **Intelligent update detection** (timestamp and content comparison)
+- **Scheduled execution** with Docker cron support for automation
+- **Automated synchronization** for CI/CD and production environments
 
 ### 🗄️ Database Support
 - **SQLite** (default, zero-config)
@@ -78,7 +81,6 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 
 # Execute command with vault environment
 ./vault-hub-cli get --name dev-secrets --exec "npm start"
-```
 
 ## 🏗️ Architecture
 
@@ -147,7 +149,7 @@ vault-hub/
 │   ├── server/           # Go backend (Fiber web server)
 │   ├── cli/              # Go CLI (Cobra commands)
 │   ├── web/              # React frontend (Vite + TypeScript)
-│   └── cron/             # Go cron service
+│   └── cron/             # Go cron service for scheduled CLI execution
 ├── packages/api/         # OpenAPI 3.0 spec + generated code
 ├── internal/             # Internal Go packages
 │   ├── auth/            # JWT + OIDC authentication
@@ -179,6 +181,7 @@ vault-hub/
 - **User and API key attribution** for all actions
 - **IP address and user agent** tracking
 - **Queryable audit metrics** for compliance
+- **Timestamped logging** for operations
 
 ## 🌍 Environment Variables
 
@@ -203,8 +206,8 @@ Download the latest releases from [GitHub Releases](https://github.com/lwshen/va
 ### Docker
 ```bash
 # Pull from Docker Hub (when available)
-docker pull vaulthub/server:latest
-docker pull vaulthub/cli:latest
+docker pull ghcr.io/lwshen/vault-hub:latest
+docker pull ghcr.io/lwshen/vault-hub-cli:latest
 ```
 
 ### Package Managers
