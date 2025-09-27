@@ -45,17 +45,19 @@ The CLI uses API keys for authentication. First, create an API key in the web in
 
 ### Setting Up Authentication
 
+You can configure the CLI using environment variables or command-line flags:
+
+| Variable | Flag Equivalent | Required | Description |
+|----------|-----------------|----------|-------------|
+| `VAULT_HUB_API_KEY` | `--api-key` | Yes | API key for authentication (starts with `vhub_`) |
+| `VAULT_HUB_BASE_URL` | `--base-url` | No | VaultHub server URL (default: `http://localhost:3000`) |
+| `VAULT_HUB_DEBUG` or `DEBUG` | `--debug` | No | Enable debug logging (default: `false`) |
+
 ```bash
-# Set the API key as an environment variable
+# Set environment variables (recommended)
 export VAULT_HUB_API_KEY=vhub_your_api_key_here
-
-# Set the server URL (if different from default)
 export VAULT_HUB_BASE_URL=https://your-vaulthub-server.com
-
-# Enable debug mode for troubleshooting
 export VAULT_HUB_DEBUG=true
-# or
-export DEBUG=true
 
 # Or pass flags directly to commands
 vault-hub --api-key vhub_your_api_key_here --base-url https://your-server.com list
@@ -140,6 +142,21 @@ vault-hub get --name production-secrets --exec "docker build -t myapp ."
 
 ## Docker Usage
 
+The VaultHub CLI is also available as a Docker image for containerized environments.
+
+### Docker Environment Variables
+
+In addition to the standard CLI environment variables, the Docker image supports:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VAULT_HUB_API_KEY` | - | API key for authentication (required) |
+| `VAULT_HUB_BASE_URL` | `http://localhost:3000` | VaultHub server URL |
+| `VAULT_HUB_DEBUG` | `false` | Enable debug logging |
+| `VAULT_HUB_CLI_ARGS` | - | CLI arguments to pass to the command |
+| `RUN_MODE` | `oneshot` | Run mode: `oneshot` or `cron` |
+| `CRON_SCHEDULE` | `0 * * * *` | Cron schedule for scheduled execution (hourly by default) |
+
 ### One-shot Execution
 
 ```bash
@@ -161,7 +178,7 @@ docker run --rm \
 ### Scheduled Execution with Cron
 
 ```bash
-# Run CLI on a schedule (default: every hour)
+# Run CLI on a schedule (every 30 minutes)
 docker run -d \
   --name vault-hub-sync \
   -v $(pwd)/logs:/var/log/cron \
@@ -178,15 +195,25 @@ docker logs vault-hub-sync
 tail -f ./logs/vault-hub.log
 ```
 
-## Environment Variables
+## Environment Variables Reference
 
-The CLI supports the following environment variables:
+For a complete reference of all CLI environment variables:
 
-| Variable | Flag Equivalent | Description |
-|----------|-----------------|-------------|
-| `VAULT_HUB_API_KEY` | `--api-key` | API key for authentication |
-| `VAULT_HUB_BASE_URL` | `--base-url` | VaultHub server URL |
-| `VAULT_HUB_DEBUG` or `DEBUG` | `--debug` | Enable debug logging |
+### Core CLI Variables
+
+| Variable | Flag Equivalent | Default | Required | Description |
+|----------|-----------------|---------|----------|-------------|
+| `VAULT_HUB_API_KEY` | `--api-key` | - | Yes | API key for authentication (starts with `vhub_`) |
+| `VAULT_HUB_BASE_URL` | `--base-url` | `http://localhost:3000` | No | VaultHub server URL |
+| `VAULT_HUB_DEBUG` or `DEBUG` | `--debug` | `false` | No | Enable debug logging |
+
+### Docker-Specific Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VAULT_HUB_CLI_ARGS` | - | CLI arguments to pass when using Docker image |
+| `RUN_MODE` | `oneshot` | Docker run mode: `oneshot` or `cron` |
+| `CRON_SCHEDULE` | `0 * * * *` | Cron schedule for scheduled execution in Docker |
 
 ## Troubleshooting
 
