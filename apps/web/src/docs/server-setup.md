@@ -56,16 +56,10 @@ VaultHub can be configured using environment variables. Here are the essential s
 export JWT_SECRET="your-super-secret-jwt-key"
 export ENCRYPTION_KEY="$(openssl rand -base64 32)"
 export APP_PORT=3000
+
+# Database configuration (see Database Configuration section below for detailed setup)
 export DATABASE_TYPE=sqlite
 export DATABASE_URL=./data.db
-
-# MySQL configuration
-export DATABASE_TYPE=mysql
-export DATABASE_URL="user:password@tcp(localhost:3306)/vaulthub?charset=utf8mb4&parseTime=True&loc=Local"
-
-# PostgreSQL configuration
-export DATABASE_TYPE=postgres
-export DATABASE_URL="postgres://user:password@localhost:5432/vaulthub?sslmode=disable"
 
 # OIDC configuration (optional - all three must be provided if using OIDC)
 export OIDC_CLIENT_ID="your-oidc-client-id"
@@ -395,13 +389,31 @@ server {
 }
 ```
 
-## Database Setup
+## Database Configuration
 
-### SQLite (Default)
+VaultHub supports SQLite (default), MySQL, and PostgreSQL. Choose the database that best fits your deployment needs.
+
+### Connection String Examples
 
 ```bash
-# SQLite requires no additional setup
-# Database file will be created automatically
+# SQLite (recommended for development and small deployments)
+export DATABASE_TYPE=sqlite
+export DATABASE_URL=./data/vault.db
+
+# MySQL (production ready)
+export DATABASE_TYPE=mysql
+export DATABASE_URL="user:password@tcp(localhost:3306)/vaulthub?charset=utf8mb4&parseTime=True&loc=Local"
+
+# PostgreSQL (production ready)
+export DATABASE_TYPE=postgres
+export DATABASE_URL="postgres://user:password@localhost:5432/vaulthub?sslmode=require"
+```
+
+### SQLite Setup (Default)
+
+SQLite requires no additional setup - the database file will be created automatically.
+
+```bash
 export DATABASE_TYPE=sqlite
 export DATABASE_URL=./data/vault.db
 
@@ -409,7 +421,10 @@ export DATABASE_URL=./data/vault.db
 mkdir -p ./data
 ```
 
-### PostgreSQL
+**Pros**: No installation required, perfect for development and small deployments  
+**Cons**: Not suitable for high-concurrency or multi-instance deployments
+
+### PostgreSQL Setup
 
 ```bash
 # Install PostgreSQL
@@ -428,7 +443,10 @@ export DATABASE_TYPE=postgres
 export DATABASE_URL="postgres://vaulthub:your-secure-password@localhost:5432/vaulthub?sslmode=require"
 ```
 
-### MySQL
+**Pros**: Excellent performance, ACID compliance, advanced features, great for production  
+**Cons**: Requires separate database server
+
+### MySQL Setup
 
 ```bash
 # Install MySQL
@@ -446,6 +464,18 @@ EOF
 export DATABASE_TYPE=mysql
 export DATABASE_URL="vaulthub:your-secure-password@tcp(localhost:3306)/vaulthub?charset=utf8mb4&parseTime=True&loc=Local"
 ```
+
+**Pros**: Widely supported, good performance, familiar to many developers  
+**Cons**: Requires separate database server
+
+### Database Migration
+
+VaultHub automatically handles database migrations on startup. When switching between database types:
+
+1. Export your current data (see backup commands below)
+2. Update `DATABASE_TYPE` and `DATABASE_URL`
+3. Restart VaultHub - tables will be created automatically
+4. Import your data if migrating from another system
 
 ## OIDC Authentication Setup
 
@@ -508,7 +538,7 @@ chown vaulthub:vaulthub /etc/vaulthub/.env
 echo "$ENCRYPTION_KEY" | base64 > encryption-key.backup
 # Store this backup in a secure, separate location
 
-# Backup database
+# Database backup (choose method based on your database type from Database Configuration section)
 # SQLite
 cp /path/to/vault.db vault-backup-$(date +%Y%m%d).db
 
