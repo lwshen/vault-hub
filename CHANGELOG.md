@@ -1,3 +1,16 @@
+## [1.3.10] - 2025-09-28
+
+### 🚀 Features
+
+- Enhance VaultValueEditor with dynamic textarea sizing (#268)
+
+### 📚 Documentation
+
+- Add repository guidelines (#269)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Claude workflows to use ANTHROPIC_API_KEY and add ANTHROPIC_BASE_URL (#267)
 ## [1.3.9] - 2025-09-28
 
 ### 🚀 Features
