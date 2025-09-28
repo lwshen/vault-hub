@@ -134,7 +134,7 @@
   @import 'highlight.js/styles/atom-one-dark.css';
 }
 
-pre {
+.prose pre {
   background-color: transparent;
   padding: 0;
 }
