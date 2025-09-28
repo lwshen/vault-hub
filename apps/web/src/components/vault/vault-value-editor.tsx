@@ -111,8 +111,7 @@ export function VaultValueEditor({
               readOnly={!isEditMode}
               rows={textareaProps.rows}
               className={`
-                flex w-full rounded-md border border-input px-3 py-2 text-sm shadow-xs transition-all duration-200
-                ${textareaProps.analysis.isLong ? 'resize-y' : 'resize-none'}
+                flex w-full rounded-md border border-input px-3 py-2 text-sm shadow-xs transition-all duration-200 resize-y
                 ${isEditMode
       ? 'bg-transparent placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       : 'bg-muted cursor-text select-all'
