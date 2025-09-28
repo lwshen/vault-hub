@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
 import { cn } from '@/lib/utils';
 
 interface MarkdownContentProps {
@@ -32,7 +33,10 @@ export function MarkdownContent({
 
   return (
     <div className={proseClasses}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
+      >
         {children}
       </ReactMarkdown>
     </div>
