@@ -7,16 +7,15 @@ import { AlertCircle, Info } from 'lucide-react';
 interface VaultValueEditorProps {
   isEditMode: boolean;
   vaultActions: UseVaultActionsReturn;
+  originalValue: string;
 }
 
-export function VaultValueEditor({ isEditMode, vaultActions }: VaultValueEditorProps) {
-  const {
-    editedValue,
-    setEditedValue,
-    error,
-    setError,
-    hasUnsavedChanges,
-  } = vaultActions;
+export function VaultValueEditor({
+  isEditMode,
+  vaultActions,
+  originalValue,
+}: VaultValueEditorProps) {
+  const { error, setError, hasUnsavedChanges } = vaultActions;
 
   return (
     <Card>
@@ -33,10 +32,10 @@ export function VaultValueEditor({ isEditMode, vaultActions }: VaultValueEditorP
             </Label>
             <textarea
               id="vault-value"
-              value={isEditMode ? editedValue : vaultActions.editedValue}
+              value={isEditMode ? vaultActions.editedValue : originalValue}
               onChange={(e) => {
                 if (isEditMode) {
-                  setEditedValue(e.target.value);
+                  vaultActions.setEditedValue(e.target.value);
                   if (error) setError(null);
                 }
               }}
