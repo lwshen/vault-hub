@@ -125,3 +125,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+.light {
+  @import 'highlight.js/styles/atom-one-light.css';
+}
+
+.dark {
+  @import 'highlight.js/styles/atom-one-dark.css';
+}
+
+.prose pre {
+  background-color: transparent;
+  padding: 0;
+}
