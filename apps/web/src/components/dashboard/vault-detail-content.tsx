@@ -1,7 +1,18 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { useState } from 'react';
 import { useVaultData, useVaultActions } from '@/hooks/useVaultData';
 import { useEditMode } from '@/hooks/useEditMode';
 import { VaultDetailHeader } from '@/components/vault/vault-detail-header';
@@ -15,6 +26,7 @@ interface VaultDetailContentProps {
 
 export default function VaultDetailContent({ vaultId }: VaultDetailContentProps) {
   const [, navigate] = useLocation();
+  const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
 
   // Custom hooks for clean separation of concerns
   const vaultData = useVaultData(vaultId);
@@ -28,14 +40,19 @@ export default function VaultDetailContent({ vaultId }: VaultDetailContentProps)
   const goBack = () => {
     // Check if user is in edit mode with unsaved changes
     if (editMode.isEditMode && vaultActions.hasUnsavedChanges) {
-      const confirmed = window.confirm(
-        'You have unsaved changes. Are you sure you want to leave without saving? Your changes will be lost.',
-      );
-      if (!confirmed) {
-        return; // Don't navigate if user cancels
-      }
+      setShowUnsavedChangesDialog(true);
+      return; // Show dialog instead of navigating
     }
     navigate('/dashboard/vaults');
+  };
+
+  const handleConfirmLeave = () => {
+    setShowUnsavedChangesDialog(false);
+    navigate('/dashboard/vaults');
+  };
+
+  const handleCancelLeave = () => {
+    setShowUnsavedChangesDialog(false);
   };
 
   // Loading state
@@ -112,6 +129,26 @@ export default function VaultDetailContent({ vaultId }: VaultDetailContentProps)
           <VaultValueEditor isEditMode={editMode.isEditMode} vaultActions={vaultActions} />
         </div>
       </main>
+
+      {/* Unsaved Changes Confirmation Dialog */}
+      <AlertDialog open={showUnsavedChangesDialog} onOpenChange={setShowUnsavedChangesDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes that will be lost if you leave this page. Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelLeave}>
+              Stay and Continue Editing
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmLeave}>
+              Leave Without Saving
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
