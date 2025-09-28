@@ -1,3 +1,16 @@
+## [1.3.9] - 2025-09-28
+
+### 🚀 Features
+
+- Add vault detail page (#265)
+
+### 🐛 Bug Fixes
+
+- Markdown css style (#264)
+
+### 📚 Documentation
+
+- Update douments and readme (#263)
 ## [1.3.8] - 2025-09-26
 
 ### 🐛 Bug Fixes
