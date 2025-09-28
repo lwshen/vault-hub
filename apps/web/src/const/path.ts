@@ -4,6 +4,7 @@ export const PATH = {
   HOME: '/',
   DASHBOARD: '/dashboard',
   VAULTS: '/dashboard/vaults',
+  VAULT_DETAIL: '/dashboard/vaults/:vaultId',
   AUDIT_LOG: '/dashboard/audit-log',
   API_KEYS: '/dashboard/api-keys',
   FEATURES: '/features',
