@@ -26,6 +26,15 @@ export default function VaultDetailContent({ vaultId }: VaultDetailContentProps)
   });
 
   const goBack = () => {
+    // Check if user is in edit mode with unsaved changes
+    if (editMode.isEditMode && vaultActions.hasUnsavedChanges) {
+      const confirmed = window.confirm(
+        'You have unsaved changes. Are you sure you want to leave without saving? Your changes will be lost.',
+      );
+      if (!confirmed) {
+        return; // Don't navigate if user cancels
+      }
+    }
     navigate('/dashboard/vaults');
   };
 
