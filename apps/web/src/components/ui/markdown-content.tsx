@@ -9,10 +9,10 @@ interface MarkdownContentProps {
 }
 
 const sizeClasses = {
-  sm: 'prose-sm',
+  sm: 'prose prose-sm',
   base: 'prose',
-  lg: 'prose-lg',
-  xl: 'prose-xl',
+  lg: 'prose prose-lg',
+  xl: 'prose prose-xl',
 };
 
 export function MarkdownContent({ 
