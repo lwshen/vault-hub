@@ -74,13 +74,11 @@ export function useVaultActions({
   const [editedValue, setEditedValue] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize edited value when original value is available
-  if (originalValue && !isInitialized) {
+  useEffect(() => {
+    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
     setEditedValue(originalValue);
-    setIsInitialized(true);
-  }
+  }, [originalValue]);
 
   const hasUnsavedChanges = editedValue !== originalValue;
 
