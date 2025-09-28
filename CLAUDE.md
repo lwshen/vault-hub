@@ -314,6 +314,55 @@ The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
 - `vault-hub-cli-windows-amd64.exe`
 - `vault-hub-cli-darwin-{amd64,arm64}`
 
+## Vault Detail Page Implementation
+
+### Recent UX Improvement (January 2025)
+
+The vault viewing and editing experience was significantly improved by replacing modal dialogs with dedicated full-page views:
+
+#### Previous Implementation (Modal-based)
+- Used `ViewVaultValueModal` and `EditVaultValueModal` components
+- Limited screen real estate, especially on mobile devices
+- Cramped editing experience with small text areas
+
+#### Current Implementation (Full-page)
+- **Dedicated Route**: `/dashboard/vaults/:vaultId` with URL-based mode switching
+- **Responsive Design**: Mobile-first approach with sticky action bar for better thumb access
+- **Components**:
+  - `VaultDetail` page wrapper using `DashboardLayout`
+  - `VaultDetailContent` component containing all vault logic
+- **Layout Structure**: Proper height management without scroll bar issues
+
+#### Key Implementation Details
+
+**Route Configuration** (`src/routes.tsx`):
+```tsx
+<Route path={PATH.VAULT_DETAIL}>
+  {(params: { vaultId: string; }) => (
+    <ProtectedRoute>
+      <VaultDetail vaultId={params.vaultId} />
+    </ProtectedRoute>
+  )}
+</Route>
+```
+
+**Mode Switching**: Uses URL query parameters (`?mode=edit`) for view/edit state
+**Navigation Pattern**: `navigate(\`/dashboard/vaults/\${vault.uniqueId}\`)` from vault list
+**Mobile UX**: Dedicated sticky action bar at bottom for better mobile interaction
+
+#### Responsive Features
+- **Desktop**: Header actions with text labels
+- **Mobile**: Icon-only header actions + sticky bottom action bar
+- **Textarea**: Responsive height (6 rows mobile, 8 rows tablet, 12 rows desktop)
+- **Warnings**: Context-aware messages for edit/view modes
+
+#### Files Modified
+- **Deleted**: `view-vault-value-modal.tsx`, `edit-vault-value-modal.tsx`
+- **Modified**: `vaults-content.tsx`, `dashboard-content.tsx`, `routes.tsx`, `path.ts`
+- **Created**: `vault-detail.tsx`, `vault-detail-content.tsx`
+
+This implementation provides a much better user experience with proper responsive design and eliminates the cramped modal limitations.
+
 ## Project Structure
 
 ```
@@ -334,7 +383,11 @@ vault-hub/
 │       │   │   ├── security.md      # Security features and best practices
 │       │   │   └── toc.ts           # Table of contents configuration
 │       │   ├── pages/    # Page components including features and documentation
-│       │   └── components/ui/markdown-content.tsx # Reusable markdown renderer
+│       │   │   └── dashboard/vault-detail.tsx # Vault detail page wrapper
+│       │   ├── components/
+│       │   │   ├── dashboard/vault-detail-content.tsx # Main vault detail logic
+│       │   │   └── ui/markdown-content.tsx # Reusable markdown renderer
+│       │   └── stores/   # Zustand state management
 │       ├── dist/         # Build output
 │       ├── public/       # Static assets
 │       ├── package.json  # Frontend dependencies
