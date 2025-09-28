@@ -1,7 +1,8 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { StatusAlert } from '@/components/ui/status-alert';
 import type { UseVaultActionsReturn } from '@/hooks/useVaultData';
+import { AlertCircle, Info } from 'lucide-react';
 
 interface VaultValueEditorProps {
   isEditMode: boolean;
@@ -57,27 +58,43 @@ export function VaultValueEditor({ isEditMode, vaultActions }: VaultValueEditorP
 
           {/* Alert Messages */}
           {isEditMode && (
-            <StatusAlert variant="warning" title="Warning">
-              This will replace the current encrypted value. This action cannot be undone.
-            </StatusAlert>
+            <Alert variant="warning">
+              <AlertCircle />
+              <AlertTitle>Warning</AlertTitle>
+              <AlertDescription>
+                This will replace the current encrypted value. This action cannot be undone.
+              </AlertDescription>
+            </Alert>
           )}
 
           {!isEditMode && (
-            <StatusAlert variant="info" title="Info">
-              This value is decrypted and displayed in plain text. Use the copy button to copy it to clipboard.
-            </StatusAlert>
+            <Alert variant="info">
+              <Info />
+              <AlertTitle>Info</AlertTitle>
+              <AlertDescription>
+                This value is decrypted and displayed in plain text. Use the copy button to copy it to clipboard.
+              </AlertDescription>
+            </Alert>
           )}
 
           {error && (
-            <StatusAlert variant="error">
-              {error}
-            </StatusAlert>
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
+            </Alert>
           )}
 
           {hasUnsavedChanges && (
-            <StatusAlert variant="warning" title="Unsaved changes">
-              You have modified the vault value. Save or cancel to continue.
-            </StatusAlert>
+            <Alert variant="warning">
+              <AlertCircle />
+              <AlertTitle>Unsaved changes</AlertTitle>
+              <AlertDescription>
+                You have modified the vault value. Save or cancel to continue.
+              </AlertDescription>
+            </Alert>
           )}
         </div>
       </CardContent>
