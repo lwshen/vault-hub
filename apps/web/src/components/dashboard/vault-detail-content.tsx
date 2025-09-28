@@ -12,13 +12,25 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useVaultData, useVaultActions } from '@/hooks/useVaultData';
-import { useEditMode } from '@/hooks/useEditMode';
+import { useEditMode, type ViewMode } from '@/hooks/useEditMode';
 import { VaultDetailHeader } from '@/components/vault/vault-detail-header';
 import { VaultMetadata } from '@/components/vault/vault-metadata';
 import { VaultValueEditor } from '@/components/vault/vault-value-editor';
 import DashboardHeader from '@/components/layout/dashboard-header';
+
+// Helper function to parse URL query parameters
+function getQueryParam(param: string): string | null {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
+
+// Helper function to get initial mode from URL
+function getInitialModeFromUrl(): ViewMode {
+  const modeParam = getQueryParam('mode');
+  return modeParam === 'edit' ? 'edit' : 'view';
+}
 
 interface VaultDetailContentProps {
   vaultId: string;
@@ -30,7 +42,7 @@ export default function VaultDetailContent({ vaultId }: VaultDetailContentProps)
 
   // Custom hooks for clean separation of concerns
   const vaultData = useVaultData(vaultId);
-  const editMode = useEditMode();
+  const editMode = useEditMode(getInitialModeFromUrl());
   const vaultActions = useVaultActions({
     vault: vaultData.vault,
     originalValue: vaultData.originalValue,
@@ -54,6 +66,25 @@ export default function VaultDetailContent({ vaultId }: VaultDetailContentProps)
   const handleCancelLeave = () => {
     setShowUnsavedChangesDialog(false);
   };
+
+  // Sync URL when mode changes for proper browser history
+  useEffect(() => {
+    const currentUrl = new URL(window.location.href);
+    const currentMode = currentUrl.searchParams.get('mode');
+    const newMode = editMode.mode;
+
+    // Only update URL if mode has actually changed
+    if (currentMode !== newMode) {
+      if (newMode === 'edit') {
+        currentUrl.searchParams.set('mode', 'edit');
+      } else {
+        currentUrl.searchParams.delete('mode');
+      }
+
+      // Update URL without causing a page reload
+      window.history.replaceState({}, '', currentUrl.toString());
+    }
+  }, [editMode.mode]);
 
   // Loading state
   if (vaultData.isLoading) {
