@@ -46,9 +46,9 @@ export default function VaultDetailContent({ vaultId }: VaultDetailContentProps)
   const vaultActions = useVaultActions({
     vault: vaultData.vault,
     originalValue: vaultData.originalValue,
-    onSaveSuccess: () => {
+    onSaveSuccess: (updatedVault) => {
       editMode.exitEditMode();
-      vaultData.refetch();
+      vaultData.updateLocalVault(updatedVault);
     },
   });
 

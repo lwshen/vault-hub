@@ -9,6 +9,7 @@ export interface UseVaultDataReturn {
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
+  updateLocalVault: (updatedVault: Vault) => void;
 }
 
 export function useVaultData(vaultId: string): UseVaultDataReturn {
@@ -39,19 +40,25 @@ export function useVaultData(vaultId: string): UseVaultDataReturn {
     refetch();
   }, [refetch]);
 
+  const updateLocalVault = (updatedVault: Vault) => {
+    setVault(updatedVault);
+    setOriginalValue(updatedVault.value || '');
+  };
+
   return {
     vault,
     originalValue,
     isLoading,
     error,
     refetch,
+    updateLocalVault,
   };
 }
 
 export interface UseVaultActionsOptions {
   vault: Vault | null;
   originalValue: string;
-  onSaveSuccess?: () => void;
+  onSaveSuccess?: (updatedVault: Vault) => void;
 }
 
 export interface UseVaultActionsReturn {
@@ -94,12 +101,12 @@ export function useVaultActions({
     setError(null);
 
     try {
-      await vaultApi.updateVault(vault.uniqueId, {
+      const updatedVault = await vaultApi.updateVault(vault.uniqueId, {
         value: editedValue.trim(),
       });
 
       toast.success('Vault value updated successfully');
-      onSaveSuccess?.();
+      onSaveSuccess?.(updatedVault);
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update vault value';
