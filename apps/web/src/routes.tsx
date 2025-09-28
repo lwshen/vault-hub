@@ -6,6 +6,7 @@ import Login from '@/pages/auth/login';
 import Signup from '@/pages/auth/signup';
 import Dashboard from '@/pages/dashboard/dashboard';
 import Vaults from '@/pages/dashboard/vaults';
+import VaultDetail from '@/pages/dashboard/vault-detail';
 import AuditLog from '@/pages/dashboard/audit-log';
 import ApiKeys from '@/pages/dashboard/api-keys';
 import Mock from '@/pages/mock';
@@ -42,6 +43,13 @@ export const AppRoutes = () => (
       <ProtectedRoute>
         <Vaults />
       </ProtectedRoute>
+    </Route>
+    <Route path={PATH.VAULT_DETAIL}>
+      {(params: { vaultId: string; }) => (
+        <ProtectedRoute>
+          <VaultDetail vaultId={params.vaultId} />
+        </ProtectedRoute>
+      )}
     </Route>
     <Route path={PATH.API_KEYS}>
       <ProtectedRoute>

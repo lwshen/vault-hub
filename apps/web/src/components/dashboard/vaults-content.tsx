@@ -1,8 +1,6 @@
 import DashboardHeader from '@/components/layout/dashboard-header';
 import CreateVaultModal from '@/components/modals/create-vault-modal';
 import EditVaultModal from '@/components/modals/edit-vault-modal';
-import EditVaultValueModal from '@/components/modals/edit-vault-value-modal';
-import ViewVaultValueModal from '@/components/modals/view-vault-value-modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -27,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useLocation } from 'wouter';
 
 export default function VaultsContent() {
   const {
@@ -38,10 +37,10 @@ export default function VaultsContent() {
     deleteVault,
   } = useVaultStore();
 
+  const [, navigate] = useLocation();
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isEditValueModalOpen, setIsEditValueModalOpen] = useState(false);
-  const [isViewValueModalOpen, setIsViewValueModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedVault, setSelectedVault] = useState<VaultLite | null>(null);
 
@@ -59,14 +58,12 @@ export default function VaultsContent() {
     setIsEditModalOpen(true);
   };
 
-  const handleEditVaultValue = (vault: VaultLite) => {
-    setSelectedVault(vault);
-    setIsEditValueModalOpen(true);
+  const handleViewVaultValue = (vault: VaultLite) => {
+    navigate(`/dashboard/vaults/${vault.uniqueId}`);
   };
 
-  const handleViewVaultValue = (vault: VaultLite) => {
-    setSelectedVault(vault);
-    setIsViewValueModalOpen(true);
+  const handleEditVaultValue = (vault: VaultLite) => {
+    navigate(`/dashboard/vaults/${vault.uniqueId}?mode=edit`);
   };
 
   const handleDeleteVault = (vault: VaultLite) => {
@@ -143,7 +140,6 @@ export default function VaultsContent() {
               <Card key={vault.uniqueId} className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    {/* Show lock icon - could be based on category or other logic */}
                     <Lock className="h-5 w-5 text-blue-500" />
                     <div>
                       <h3 className="text-lg font-semibold">{vault.name}</h3>
@@ -229,19 +225,6 @@ export default function VaultsContent() {
         onOpenChange={setIsEditModalOpen}
         vault={selectedVault}
         onVaultUpdated={handleVaultUpdated}
-      />
-
-      <EditVaultValueModal
-        open={isEditValueModalOpen}
-        onOpenChange={setIsEditValueModalOpen}
-        vault={selectedVault}
-        onVaultUpdated={handleVaultUpdated}
-      />
-
-      <ViewVaultValueModal
-        open={isViewValueModalOpen}
-        onOpenChange={setIsViewValueModalOpen}
-        vault={selectedVault}
       />
 
       {/* Delete Confirmation Modal */}

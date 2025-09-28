@@ -94,7 +94,7 @@ export default function EditVaultModal({ open, onOpenChange, vault, onVaultUpdat
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={handleClose} />
-      <Card className="relative z-10 w-full max-w-md mx-4">
+      <Card className="relative z-10 w-full max-w-lg mx-4">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xl">Edit Vault</CardTitle>
           <Button variant="ghost" size="icon" onClick={handleClose} disabled={isLoading}>

@@ -1,7 +1,6 @@
 import { auditApi, statusApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import ViewVaultValueModal from '@/components/modals/view-vault-value-modal';
 import { useVaultStore } from '@/stores/vault-store';
 import type { AuditLog, AuditMetricsResponse, StatusResponse, VaultLite } from '@lwshen/vault-hub-ts-fetch-client';
 import { formatTimestamp, getActionTitle, getIconForAction } from '@/utils/audit-log';
@@ -14,16 +13,16 @@ import {
   Vault,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
 
 export default function DashboardContent() {
   const [status, setStatus] = useState<StatusResponse | null>(null);
   const [metrics, setMetrics] = useState<AuditMetricsResponse | null>(null);
   const [recentAuditLogs, setRecentAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isViewValueModalOpen, setIsViewValueModalOpen] = useState(false);
-  const [selectedVault, setSelectedVault] = useState<VaultLite | null>(null);
 
   const { vaults, isLoading: vaultsLoading, fetchVaults } = useVaultStore();
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,8 +83,7 @@ export default function DashboardContent() {
     .slice(0, 4);
 
   const handleViewVaultValue = (vault: VaultLite) => {
-    setSelectedVault(vault);
-    setIsViewValueModalOpen(true);
+    navigate(`/dashboard/vaults/${vault.uniqueId}`);
   };
 
   const getStatusColor = (status?: string) => {
@@ -288,11 +286,6 @@ export default function DashboardContent() {
         </Card>
       </main>
 
-      <ViewVaultValueModal
-        open={isViewValueModalOpen}
-        onOpenChange={setIsViewValueModalOpen}
-        vault={selectedVault}
-      />
     </>
   );
 }
