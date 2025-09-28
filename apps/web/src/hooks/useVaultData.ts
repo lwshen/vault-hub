@@ -61,7 +61,7 @@ export interface UseVaultActionsReturn {
   error: string | null;
   setError: (error: string | null) => void;
   hasUnsavedChanges: boolean;
-  handleSave: () => Promise<void>;
+  handleSave: () => Promise<boolean>;
   handleCopy: () => Promise<void>;
   resetChanges: () => void;
 }
@@ -84,12 +84,12 @@ export function useVaultActions({
 
   const hasUnsavedChanges = editedValue !== originalValue;
 
-  const handleSave = async () => {
-    if (!vault) return;
+  const handleSave = async (): Promise<boolean> => {
+    if (!vault) return false;
 
     if (!editedValue.trim()) {
       setError('Value is required');
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -102,9 +102,11 @@ export function useVaultActions({
 
       toast.success('Vault value updated successfully');
       onSaveSuccess?.();
+      return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update vault value';
       setError(errorMessage);
+      return false;
     } finally {
       setIsSaving(false);
     }

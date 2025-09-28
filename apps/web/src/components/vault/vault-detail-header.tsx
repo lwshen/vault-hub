@@ -29,8 +29,10 @@ export function VaultDetailHeader({
   const { handleSave, handleCopy, resetChanges, isSaving } = vaultActions;
 
   const handleSaveAndExit = async () => {
-    await handleSave();
-    exitEditMode();
+    const saveSuccessful = await handleSave();
+    if (saveSuccessful) {
+      exitEditMode();
+    }
   };
 
   const handleCancel = () => {
