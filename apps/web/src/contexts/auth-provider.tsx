@@ -35,9 +35,9 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
           // Remove token from URL
           const newUrl = window.location.pathname;
           window.history.replaceState({}, document.title, newUrl);
-          // Navigate to home after successful OIDC login
+          // Navigate to dashboard after successful OIDC login
           setIsLoading(false);
-          navigate(PATH.HOME);
+          navigate(PATH.DASHBOARD);
           return; // Skip regular token check since we already set the OIDC token
         } catch (error) {
           console.error('Failed to set OIDC token:', error);
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       });
       if (resp.token) {
         await setToken(resp.token);
-        navigate(PATH.HOME);
+        navigate(PATH.DASHBOARD);
       }
     },
     [setToken],
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       });
       if (resp.token) {
         await setToken(resp.token);
-        navigate(PATH.HOME);
+        navigate(PATH.DASHBOARD);
       }
     },
     [setToken],
