@@ -17,8 +17,33 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     navigate(PATH.HOME);
   }, []);
 
+  const loginWithOidc = useCallback(async () => {
+    // Redirect to OIDC login endpoint
+    window.location.href = '/api/auth/login/oidc';
+  }, []);
+
   useEffect(() => {
     const initializeAuth = async () => {
+      // Check for OIDC token in URL first
+      const urlParams = new URLSearchParams(window.location.search);
+      const oidcToken = urlParams.get('token');
+      const source = urlParams.get('source');
+
+      if (oidcToken && source === 'oidc') {
+        // Clean up URL and set token from OIDC
+        try {
+          await setToken(oidcToken);
+          // Remove token from URL
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, document.title, newUrl);
+          return; // Skip regular token check since we already set the OIDC token
+        } catch (error) {
+          console.error('Failed to set OIDC token:', error);
+          // Continue with regular token check if OIDC fails
+        }
+      }
+
+      // Regular token check
       const token = localStorage.getItem('token');
       if (token) {
         try {
@@ -32,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     };
 
     initializeAuth();
-  }, []);
+  }, [setToken]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -82,11 +107,12 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       isAuthenticated,
       user,
       login,
+      loginWithOidc,
       signup,
       logout,
       isLoading,
     }),
-    [isAuthenticated, user, login, signup, logout, isLoading],
+    [isAuthenticated, user, login, loginWithOidc, signup, logout, isLoading],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

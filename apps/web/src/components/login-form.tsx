@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PATH } from '@/const/path';
-import { FaOpenid, FaGoogle, FaApple } from 'react-icons/fa';
+import { FaOpenid } from 'react-icons/fa';
 import { useLocation } from 'wouter';
 import useAuth from '@/hooks/use-auth';
 import { useState } from 'react';
@@ -20,7 +20,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<'div'>) {
   const [, navigate] = useLocation();
-  const { login } = useAuth();
+  const { login, loginWithOidc } = useAuth();
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -48,6 +48,10 @@ export function LoginForm({
 
   const navigateToSignup = () => {
     navigate('/signup');
+  };
+
+  const handleOidcLogin = () => {
+    loginWithOidc();
   };
 
   return (
@@ -90,15 +94,7 @@ export function LoginForm({
               </div>
 
               <div className="flex flex-col gap-4">
-                <Button variant="outline" className="w-full">
-                  <FaApple />
-                  Login with Apple
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <FaGoogle />
-                  Login with Google
-                </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleOidcLogin}>
                   <FaOpenid />
                   Login with OIDC
                 </Button>
