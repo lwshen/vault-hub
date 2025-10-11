@@ -14,11 +14,42 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     localStorage.setItem('token', token);
     const user = await userApi.getCurrentUser();
     setUser(user);
-    navigate(PATH.HOME);
+  }, []);
+
+  const loginWithOidc = useCallback(async () => {
+    // Redirect to OIDC login endpoint
+    window.location.href = '/api/auth/login/oidc';
   }, []);
 
   useEffect(() => {
     const initializeAuth = async () => {
+      // Check for OIDC token in URL fragment (hash) first
+      // URL fragments are never sent to the server, providing better security
+      const fragment = window.location.hash.substring(1); // Remove '#' prefix
+      const fragmentParams = new URLSearchParams(fragment);
+      const oidcToken = fragmentParams.get('token');
+      const source = fragmentParams.get('source');
+
+      if (oidcToken && source === 'oidc') {
+        // Clean up URL and set token from OIDC
+        try {
+          await setToken(oidcToken);
+          // Remove fragment from URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          // Navigate to dashboard after successful OIDC login
+          setIsLoading(false);
+          navigate(PATH.DASHBOARD);
+          return; // Skip regular token check since we already set the OIDC token
+        } catch (error) {
+          console.error('Failed to set OIDC token:', error);
+          // Remove invalid token from localStorage
+          localStorage.removeItem('token');
+          // Clear the fragment and continue with regular token check
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+
+      // Regular token check
       const token = localStorage.getItem('token');
       if (token) {
         try {
@@ -32,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     };
 
     initializeAuth();
-  }, []);
+  }, [setToken]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -42,6 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       });
       if (resp.token) {
         await setToken(resp.token);
+        navigate(PATH.DASHBOARD);
       }
     },
     [setToken],
@@ -56,6 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       });
       if (resp.token) {
         await setToken(resp.token);
+        navigate(PATH.DASHBOARD);
       }
     },
     [setToken],
@@ -82,11 +115,12 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       isAuthenticated,
       user,
       login,
+      loginWithOidc,
       signup,
       logout,
       isLoading,
     }),
-    [isAuthenticated, user, login, signup, logout, isLoading],
+    [isAuthenticated, user, login, loginWithOidc, signup, logout, isLoading],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;
