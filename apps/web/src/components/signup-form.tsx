@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FaOpenid, FaGoogle, FaApple } from 'react-icons/fa';
+import { FaOpenid } from 'react-icons/fa';
 import { useLocation } from 'wouter';
 import { PATH } from '@/const/path';
 import useAuth from '@/hooks/use-auth';
@@ -20,7 +20,7 @@ export function SignupForm({
   ...props
 }: React.ComponentProps<'div'>) {
   const [, navigate] = useLocation();
-  const { signup } = useAuth();
+  const { signup, loginWithOidc } = useAuth();
 
   const [form, setForm] = useState({
     name: '',
@@ -51,6 +51,10 @@ export function SignupForm({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOidcLogin = () => {
+    loginWithOidc();
   };
 
 
@@ -109,15 +113,7 @@ export function SignupForm({
               </div>
 
               <div className="flex flex-col gap-4">
-                <Button variant="outline" className="w-full">
-                  <FaApple />
-                  Sign up with Apple
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <FaGoogle />
-                  Sign up with Google
-                </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={handleOidcLogin}>
                   <FaOpenid />
                   Sign up with OIDC
                 </Button>
