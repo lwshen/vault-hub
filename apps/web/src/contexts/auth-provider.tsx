@@ -14,7 +14,6 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     localStorage.setItem('token', token);
     const user = await userApi.getCurrentUser();
     setUser(user);
-    navigate(PATH.HOME);
   }, []);
 
   const loginWithOidc = useCallback(async () => {
@@ -36,6 +35,9 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
           // Remove token from URL
           const newUrl = window.location.pathname;
           window.history.replaceState({}, document.title, newUrl);
+          // Navigate to home after successful OIDC login
+          setIsLoading(false);
+          navigate(PATH.HOME);
           return; // Skip regular token check since we already set the OIDC token
         } catch (error) {
           console.error('Failed to set OIDC token:', error);
@@ -67,6 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       });
       if (resp.token) {
         await setToken(resp.token);
+        navigate(PATH.HOME);
       }
     },
     [setToken],
@@ -81,6 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       });
       if (resp.token) {
         await setToken(resp.token);
+        navigate(PATH.HOME);
       }
     },
     [setToken],
