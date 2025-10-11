@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"log/slog"
+	"net/url"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/internal/auth"
@@ -101,9 +102,9 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 		slog.Error("Failed to create audit log for OIDC login", "error", err, "userID", user.ID)
 	}
 
-	// Redirect back to frontend with token in URL hash for security
-	// This prevents the token from being logged in server logs or browser history
-	redirectUrl := "/login?token=" + jwtToken + "&source=oidc"
+	// Redirect back to frontend with token in URL fragment (hash) for security
+	// URL fragments are never sent to the server, preventing token leakage in logs, Referer headers, and browser history
+	redirectUrl := "/login#token=" + url.QueryEscape(jwtToken) + "&source=oidc"
 	return c.Redirect(redirectUrl)
 }
 

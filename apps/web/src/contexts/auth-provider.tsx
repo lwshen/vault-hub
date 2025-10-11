@@ -23,25 +23,29 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      // Check for OIDC token in URL first
-      const urlParams = new URLSearchParams(window.location.search);
-      const oidcToken = urlParams.get('token');
-      const source = urlParams.get('source');
+      // Check for OIDC token in URL fragment (hash) first
+      // URL fragments are never sent to the server, providing better security
+      const fragment = window.location.hash.substring(1); // Remove '#' prefix
+      const fragmentParams = new URLSearchParams(fragment);
+      const oidcToken = fragmentParams.get('token');
+      const source = fragmentParams.get('source');
 
       if (oidcToken && source === 'oidc') {
         // Clean up URL and set token from OIDC
         try {
           await setToken(oidcToken);
-          // Remove token from URL
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, document.title, newUrl);
+          // Remove fragment from URL
+          window.history.replaceState({}, document.title, window.location.pathname);
           // Navigate to dashboard after successful OIDC login
           setIsLoading(false);
           navigate(PATH.DASHBOARD);
           return; // Skip regular token check since we already set the OIDC token
         } catch (error) {
           console.error('Failed to set OIDC token:', error);
-          // Continue with regular token check if OIDC fails
+          // Remove invalid token from localStorage
+          localStorage.removeItem('token');
+          // Clear the fragment and continue with regular token check
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
 
