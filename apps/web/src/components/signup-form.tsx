@@ -113,7 +113,7 @@ export function SignupForm({
               </div>
 
               <div className="flex flex-col gap-4">
-                <Button variant="outline" className="w-full" onClick={handleOidcLogin}>
+                <Button variant="outline" className="w-full" onClick={handleOidcLogin} aria-label="Sign up with OpenID Connect">
                   <FaOpenid />
                   Sign up with OIDC
                 </Button>

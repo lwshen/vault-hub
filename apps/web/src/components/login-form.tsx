@@ -94,7 +94,7 @@ export function LoginForm({
               </div>
 
               <div className="flex flex-col gap-4">
-                <Button variant="outline" className="w-full" onClick={handleOidcLogin}>
+                <Button variant="outline" className="w-full" onClick={handleOidcLogin} aria-label="Login with OpenID Connect">
                   <FaOpenid />
                   Login with OIDC
                 </Button>

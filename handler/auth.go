@@ -111,8 +111,8 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 func generateRandomPassword() string {
 	bytes := make([]byte, 32)
 	if _, err := rand.Read(bytes); err != nil {
-		// Fallback to a hex encoded random string
-		return hex.EncodeToString([]byte("oidc-user-password-fallback"))
+		// If secure randomness is unavailable, return empty string to signal failure
+		return ""
 	}
 	return hex.EncodeToString(bytes)
 }
