@@ -1,0 +1,9 @@
+ConfigResponse:
+  type: object
+  required:
+    - oidcEnabled
+  properties:
+    oidcEnabled:
+      type: boolean
+      description: Whether OIDC authentication is enabled
+      example: false

@@ -1,0 +1,15 @@
+# Public configuration endpoint
+config:
+  get:
+    summary: Get public configuration
+    description: Returns public configuration settings that don't require authentication (no database operations)
+    operationId: getConfig
+    tags:
+      - Config
+    responses:
+      "200":
+        description: Configuration retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/config.yaml#/ConfigResponse

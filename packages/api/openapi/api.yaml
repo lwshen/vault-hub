@@ -7,6 +7,9 @@ paths:
   # Health endpoints
   /api/health:
     $ref: ./paths/health.yaml#/health
+  # Config endpoints
+  /api/config:
+    $ref: ./paths/config.yaml#/config
   # Status endpoints
   /api/status:
     $ref: ./paths/status.yaml#/status
@@ -99,3 +102,6 @@ components:
     # Status schemas
     StatusResponse:
       $ref: ./schemas/status.yaml#/StatusResponse
+    # Config schemas
+    ConfigResponse:
+      $ref: ./schemas/config.yaml#/ConfigResponse

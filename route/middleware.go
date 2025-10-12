@@ -38,6 +38,7 @@ func isPublicRoute(path string) bool {
 	publicRoutes := []string{
 		"/api/health",
 		"/api/version",
+		"/api/config",
 		"/api/auth/login",
 		"/api/auth/signup",
 		"/api/auth/login/oidc",
