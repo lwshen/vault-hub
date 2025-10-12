@@ -1,3 +1,9 @@
+## [1.3.11] - 2025-10-12
+
+### 🚀 Features
+
+- Implement OIDC login functionality (#273)
+- Add public configuration endpoint (#274)
 ## [1.3.10] - 2025-09-28
 
 ### 🚀 Features
