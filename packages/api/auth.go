@@ -113,7 +113,7 @@ func buildUserCreateParams(input SignupRequest) (model.CreateUserParams, error) 
 
 	createUserParams := model.CreateUserParams{
 		Email:    string(email),
-		Password: input.Password,
+		Password: &input.Password,
 		Name:     input.Name,
 	}
 

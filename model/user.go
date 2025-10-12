@@ -27,7 +27,7 @@ func (u *User) GetByEmail() error {
 
 type CreateUserParams struct {
 	Email    string
-	Password string
+	Password *string
 	Name     string
 }
 
@@ -36,25 +36,33 @@ func (params *CreateUserParams) Validate() map[string]string {
 	if !isEmailValid(params.Email) {
 		errors["email"] = fmt.Sprintf("email %s is invalid", params.Email)
 	}
-	if ok, msg := isPasswordValid(params.Password); !ok {
-		errors["password"] = msg
+	// Only validate password if it's provided (not nil)
+	// OIDC users don't need passwords
+	if params.Password != nil {
+		if ok, msg := isPasswordValid(*params.Password); !ok {
+			errors["password"] = msg
+		}
 	}
 	return errors
 }
 
 func (params *CreateUserParams) Create() (*User, error) {
-	hashedPassword, err := hashPassword(params.Password)
-	if err != nil {
-		return nil, err
-	}
-
 	user := User{
-		Email:    params.Email,
-		Password: &hashedPassword,
-		Name:     &params.Name,
+		Email: params.Email,
+		Name:  &params.Name,
 	}
 
-	err = DB.Create(&user).Error
+	// Only hash and set password if it's provided
+	// OIDC users will have nil password
+	if params.Password != nil {
+		hashedPassword, err := hashPassword(*params.Password)
+		if err != nil {
+			return nil, err
+		}
+		user.Password = &hashedPassword
+	}
+
+	err := DB.Create(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +103,10 @@ func hashPassword(password string) (string, error) {
 }
 
 func (u *User) ComparePassword(password string) bool {
+	// OIDC users have nil passwords and cannot login with password
+	if u.Password == nil {
+		return false
+	}
 	err := bcrypt.CompareHashAndPassword([]byte(*u.Password), []byte(password))
 	return err == nil
 }
