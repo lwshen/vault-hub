@@ -1,3 +1,13 @@
+## [1.3.13] - 2025-10-12
+
+### 🚀 Features
+
+- Integrate OIDC configuration fetching in login and signup forms (#277)
+## [1.3.12] - 2025-10-12
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump api version to 1.0.1 (#276)
 ## [1.3.11] - 2025-10-12
 
 ### 🚀 Features
