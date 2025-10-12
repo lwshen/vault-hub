@@ -129,7 +129,11 @@ The project uses OpenAPI 3.0 specification (`packages/api/openapi/api.yaml`) wit
 - Go server stubs (`packages/api/generated.go`)
 - TypeScript client library (published as npm package)
 
-**Important**: Always run `go generate packages/api/tool.go` after modifying files in `packages/api/openapi/*` to regenerate the Go types and interfaces. The API spec uses camelCase naming convention for all properties (e.g., `uniqueId`, `createdAt`, `isActive`).
+**Important**: After modifying files in `packages/api/openapi/*`:
+1. **Bump the API version** in `packages/api/openapi/api.yaml` (update the `version` field in the `info` section)
+2. Run `go generate packages/api/tool.go` to regenerate the Go types and interfaces
+
+The API spec uses camelCase naming convention for all properties (e.g., `uniqueId`, `createdAt`, `isActive`).
 
 **NEVER EDIT**: Do not modify `packages/api/generated.go` directly as it is auto-generated code. All API changes must be made in the OpenAPI specification files in `packages/api/openapi/*`.
 
