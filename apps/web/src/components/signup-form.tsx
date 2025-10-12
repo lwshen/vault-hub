@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,7 @@ import { FaOpenid } from 'react-icons/fa';
 import { useLocation } from 'wouter';
 import { PATH } from '@/const/path';
 import useAuth from '@/hooks/use-auth';
-import { configApi } from '@/apis/api';
+import { useOidcConfig } from '@/hooks/use-oidc-config';
 
 export function SignupForm({
   className,
@@ -31,26 +31,7 @@ export function SignupForm({
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [oidcEnabled, setOidcEnabled] = useState<boolean>(false);
-  const [oidcLoading, setOidcLoading] = useState(true);
-
-  // Fetch OIDC configuration from backend
-  useEffect(() => {
-    const fetchOidcConfig = async () => {
-      try {
-        const config = await configApi.getConfig();
-        setOidcEnabled(config.oidcEnabled);
-      } catch (err) {
-        console.error('Failed to fetch OIDC config:', err);
-        // Default to false if fetch fails
-        setOidcEnabled(false);
-      } finally {
-        setOidcLoading(false);
-      }
-    };
-
-    fetchOidcConfig();
-  }, []);
+  const { oidcEnabled, oidcLoading } = useOidcConfig();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
