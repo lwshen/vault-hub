@@ -1,3 +1,8 @@
+## [1.3.14] - 2025-10-12
+
+### 🚀 Features
+
+- Enforce password requirement for email/password signup (#279)
 ## [1.3.13] - 2025-10-12
 
 ### 🚀 Features
