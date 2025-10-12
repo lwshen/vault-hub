@@ -111,9 +111,14 @@ func buildUserCreateParams(input SignupRequest) (model.CreateUserParams, error) 
 		return model.CreateUserParams{}, err
 	}
 
+	// For email/password signup, password is required
+	if input.Password == "" {
+		return model.CreateUserParams{}, fmt.Errorf("password is required")
+	}
+
 	createUserParams := model.CreateUserParams{
 		Email:    string(email),
-		Password: input.Password,
+		Password: &input.Password,
 		Name:     input.Name,
 	}
 

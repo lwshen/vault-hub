@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"log/slog"
 	"net/url"
 
@@ -76,7 +74,7 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 
 		createParams := model.CreateUserParams{
 			Email:    email,
-			Password: generateRandomPassword(), // OIDC users don't need passwords
+			Password: nil, // OIDC users don't need passwords
 			Name:     name,
 		}
 
@@ -106,16 +104,6 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 	// URL fragments are never sent to the server, preventing token leakage in logs, Referer headers, and browser history
 	redirectUrl := "/login#token=" + url.QueryEscape(jwtToken) + "&source=oidc"
 	return c.Redirect(redirectUrl)
-}
-
-// generateRandomPassword creates a secure random password for OIDC users
-func generateRandomPassword() string {
-	bytes := make([]byte, 32)
-	if _, err := rand.Read(bytes); err != nil {
-		// If secure randomness is unavailable, return empty string to signal failure
-		return ""
-	}
-	return hex.EncodeToString(bytes)
 }
 
 // getClientInfo extracts IP address and User-Agent from the request
