@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +30,27 @@ export function SignupForm({
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [oidcEnabled, setOidcEnabled] = useState<boolean>(false);
+  const [oidcLoading, setOidcLoading] = useState(true);
+
+  // Fetch OIDC status from backend
+  useEffect(() => {
+    const fetchOidcStatus = async () => {
+      try {
+        const response = await fetch('/api/status');
+        const data = await response.json();
+        setOidcEnabled(data.oidcEnabled || false);
+      } catch (err) {
+        console.error('Failed to fetch OIDC status:', err);
+        // Default to false if fetch fails
+        setOidcEnabled(false);
+      } finally {
+        setOidcLoading(false);
+      }
+    };
+
+    fetchOidcStatus();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -106,18 +127,22 @@ export function SignupForm({
                   {loading ? 'Creating account...' : 'Create account'}
                 </Button>
               </div>
-              <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                <span className="bg-card text-muted-foreground relative z-10 px-2">
-                  Or continue with
-                </span>
-              </div>
+              {!oidcLoading && oidcEnabled && (
+                <>
+                  <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                    <span className="bg-card text-muted-foreground relative z-10 px-2">
+                      Or continue with
+                    </span>
+                  </div>
 
-              <div className="flex flex-col gap-4">
-                <Button variant="outline" className="w-full" onClick={handleOidcLogin} aria-label="Sign up with OpenID Connect">
-                  <FaOpenid />
-                  Sign up with OIDC
-                </Button>
-              </div>
+                  <div className="flex flex-col gap-4">
+                    <Button variant="outline" className="w-full" onClick={handleOidcLogin} aria-label="Sign up with OpenID Connect">
+                      <FaOpenid />
+                      Sign up with OIDC
+                    </Button>
+                  </div>
+                </>
+              )}
               <div className="text-center text-sm">
                 Already have an account?{' '}
                 <Button variant="link" onClick={() => navigate(PATH.LOGIN)}>

@@ -200,6 +200,9 @@ type StatusResponse struct {
 	// DatabaseStatus Database connection status
 	DatabaseStatus StatusResponseDatabaseStatus `json:"databaseStatus"`
 
+	// OidcEnabled Whether OIDC authentication is enabled
+	OidcEnabled *bool `json:"oidcEnabled,omitempty"`
+
 	// SystemStatus System operational status
 	SystemStatus StatusResponseSystemStatus `json:"systemStatus"`
 

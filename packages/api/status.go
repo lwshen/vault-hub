@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/lwshen/vault-hub/internal/config"
 	"github.com/lwshen/vault-hub/internal/version"
 	"github.com/lwshen/vault-hub/model"
 )
@@ -21,6 +22,7 @@ func (s Server) GetStatus(ctx *fiber.Ctx) error {
 		Commit:         version.Commit,
 		SystemStatus:   systemStatus,
 		DatabaseStatus: databaseStatus,
+		OidcEnabled:    &config.OidcEnabled,
 	}
 
 	return ctx.
