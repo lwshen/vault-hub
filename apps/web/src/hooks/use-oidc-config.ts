@@ -10,20 +10,30 @@ export function useOidcConfig() {
   const [oidcLoading, setOidcLoading] = useState(true);
 
   useEffect(() => {
-    const fetchOidcConfig = async () => {
-      try {
-        const config = await configApi.getConfig();
-        setOidcEnabled(config.oidcEnabled);
-      } catch (err) {
-        console.error('Failed to fetch OIDC config:', err);
-        // Default to false if fetch fails
-        setOidcEnabled(false);
-      } finally {
-        setOidcLoading(false);
-      }
-    };
+    let isMounted = true;
 
-    fetchOidcConfig();
+    configApi.getConfig()
+      .then((config) => {
+        if (isMounted) {
+          setOidcEnabled(config.oidcEnabled);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch OIDC config:', err);
+        if (isMounted) {
+          // Default to false if fetch fails
+          setOidcEnabled(false);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setOidcLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return { oidcEnabled, oidcLoading };
