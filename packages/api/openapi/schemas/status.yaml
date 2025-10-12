@@ -30,7 +30,3 @@ StatusResponse:
         - degraded
         - unavailable
       example: healthy
-    oidcEnabled:
-      type: boolean
-      description: Whether OIDC authentication is enabled
-      example: false

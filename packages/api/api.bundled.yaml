@@ -14,6 +14,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheckResponse'
+  /api/config:
+    get:
+      summary: Get public configuration
+      description: Returns public configuration settings that don't require authentication (no database operations)
+      operationId: getConfig
+      tags:
+        - Config
+      responses:
+        '200':
+          description: Configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
   /api/status:
     get:
       summary: Get system status
@@ -790,6 +804,11 @@ components:
             - degraded
             - unavailable
           example: healthy
+    ConfigResponse:
+      type: object
+      required:
+        - oidcEnabled
+      properties:
         oidcEnabled:
           type: boolean
           description: Whether OIDC authentication is enabled

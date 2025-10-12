@@ -121,6 +121,12 @@ type AuditMetricsResponse struct {
 	VaultEventsLast30Days int `json:"vaultEventsLast30Days"`
 }
 
+// ConfigResponse defines model for ConfigResponse.
+type ConfigResponse struct {
+	// OidcEnabled Whether OIDC authentication is enabled
+	OidcEnabled bool `json:"oidcEnabled"`
+}
+
 // CreateAPIKeyRequest defines model for CreateAPIKeyRequest.
 type CreateAPIKeyRequest struct {
 	// ExpiresAt Optional expiration date
@@ -199,9 +205,6 @@ type StatusResponse struct {
 
 	// DatabaseStatus Database connection status
 	DatabaseStatus StatusResponseDatabaseStatus `json:"databaseStatus"`
-
-	// OidcEnabled Whether OIDC authentication is enabled
-	OidcEnabled *bool `json:"oidcEnabled,omitempty"`
 
 	// SystemStatus System operational status
 	SystemStatus StatusResponseSystemStatus `json:"systemStatus"`
@@ -392,6 +395,9 @@ type ServerInterface interface {
 
 	// (GET /api/cli/vaults)
 	GetVaultsByAPIKey(c *fiber.Ctx) error
+	// Get public configuration
+	// (GET /api/config)
+	GetConfig(c *fiber.Ctx) error
 
 	// (GET /api/health)
 	Health(c *fiber.Ctx) error
@@ -646,6 +652,12 @@ func (siw *ServerInterfaceWrapper) GetVaultsByAPIKey(c *fiber.Ctx) error {
 	return siw.Handler.GetVaultsByAPIKey(c)
 }
 
+// GetConfig operation middleware
+func (siw *ServerInterfaceWrapper) GetConfig(c *fiber.Ctx) error {
+
+	return siw.Handler.GetConfig(c)
+}
+
 // Health operation middleware
 func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
 
@@ -768,6 +780,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/api/cli/vault/:uniqueId", wrapper.GetVaultByAPIKey)
 
 	router.Get(options.BaseURL+"/api/cli/vaults", wrapper.GetVaultsByAPIKey)
+
+	router.Get(options.BaseURL+"/api/config", wrapper.GetConfig)
 
 	router.Get(options.BaseURL+"/api/health", wrapper.Health)
 
@@ -987,6 +1001,22 @@ func (response GetVaultsByAPIKey200JSONResponse) VisitGetVaultsByAPIKeyResponse(
 	return ctx.JSON(&response)
 }
 
+type GetConfigRequestObject struct {
+}
+
+type GetConfigResponseObject interface {
+	VisitGetConfigResponse(ctx *fiber.Ctx) error
+}
+
+type GetConfig200JSONResponse ConfigResponse
+
+func (response GetConfig200JSONResponse) VisitGetConfigResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 type HealthRequestObject struct {
 }
 
@@ -1157,6 +1187,9 @@ type StrictServerInterface interface {
 
 	// (GET /api/cli/vaults)
 	GetVaultsByAPIKey(ctx context.Context, request GetVaultsByAPIKeyRequestObject) (GetVaultsByAPIKeyResponseObject, error)
+	// Get public configuration
+	// (GET /api/config)
+	GetConfig(ctx context.Context, request GetConfigRequestObject) (GetConfigResponseObject, error)
 
 	// (GET /api/health)
 	Health(ctx context.Context, request HealthRequestObject) (HealthResponseObject, error)
@@ -1524,6 +1557,31 @@ func (sh *strictHandler) GetVaultsByAPIKey(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(GetVaultsByAPIKeyResponseObject); ok {
 		if err := validResponse.VisitGetVaultsByAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetConfig operation middleware
+func (sh *strictHandler) GetConfig(ctx *fiber.Ctx) error {
+	var request GetConfigRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetConfig(ctx.UserContext(), request.(GetConfigRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetConfig")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetConfigResponseObject); ok {
+		if err := validResponse.VisitGetConfigResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
