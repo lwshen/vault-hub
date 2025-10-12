@@ -1,35 +1,36 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `apps/server` – Go Fiber backend; routes in `handler/`, middleware in `route/`, config helpers in `internal/`.
-- `apps/cli` – Cobra CLI reusing logic from `internal/cli` and `internal/encryption`.
-- `apps/web` – Vite + React UI with screens in `src/pages`, reusable pieces in `components/`, and state in `stores/`.
-- `apps/cron` & `scripts/` – Automation entrypoints for scheduled syncs and release chores.
-- `packages/api` – OpenAPI specs and generated clients; update via `go generate packages/api/tool.go`.
-- Shared models live in `model/` and container assets in `docker/`.
+- `apps/server` hosts the Go Fiber API; routes in `apps/server/handler`, middleware in `apps/server/route`, and shared config helpers in `apps/server/internal`.
+- `apps/cli` provides the Cobra CLI backed by `internal/cli` logic and `internal/encryption` utilities.
+- `apps/web` contains the Vite + React UI (`src/pages`, `src/components`, `src/stores`); run UI assets through `pnpm`.
+- `apps/cron` and `scripts/` supply scheduled jobs and release chores; keep them idempotent.
+- Shared OpenAPI specs live in `packages/api`; regenerate clients with `go generate packages/api/tool.go`.
+- Reusable models reside in `model/`; container assets live under `docker/`.
 
 ## Build, Test, and Development Commands
-- `go run ./apps/server/main.go` starts the API at `http://localhost:3000`.
-- `go build -o tmp/main ./apps/server/main.go` or `go build -o vault-hub-cli ./apps/cli/main.go` produces binaries; add README `-ldflags` for release metadata.
-- `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` runs backend tests.
-- `cd apps/web && pnpm install && pnpm run dev` launches the frontend; run `pnpm run build`, `pnpm run lint`, and `pnpm run typecheck` before merge.
-- `golangci-lint run ./...` and `pnpm run lint --fix` mirror CI checks.
+- `go run ./apps/server/main.go` launches the API at http://localhost:3000 for local dev.
+- `go build -o tmp/main ./apps/server/main.go` and `go build -o vault-hub-cli ./apps/cli/main.go` compile server and CLI binaries; add release `-ldflags` when tagging.
+- `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` runs backend unit tests.
+- `golangci-lint run ./...` enforces Go lint rules; fix before commits.
+- `cd apps/web && pnpm install && pnpm run dev` starts the web app; run `pnpm run build`, `pnpm run lint`, and `pnpm run typecheck` prior to merging.
 
 ## Coding Style & Naming Conventions
-- Format Go with `gofmt`; keep exported symbols PascalCase and prefer unexported helpers for wiring.
-- CLI command files use hyphenated names (e.g., `list.go`) with snake_case flags.
-- React code uses PascalCase components, camelCase hooks/utilities, and Tailwind utility classes inline; keep global CSS minimal.
+- Format Go code with `gofmt`; exported types use PascalCase, internal helpers remain unexported.
+- CLI command files adopt hyphenated filenames (`list.go`) and snake_case flags.
+- React components use PascalCase; hooks/utilities use camelCase; apply Tailwind classes inline and keep global CSS minimal.
+- Commit generated artifacts only when necessary; regenerate `packages/api` outputs after spec edits.
 
 ## Testing Guidelines
-- Place Go tests beside implementations as `*_test.go`, covering config, encryption, and database flows.
-- Add Vitest + Testing Library and a `pnpm run test` script when introducing UI coverage.
-- Generate ephemeral secrets with `openssl rand` and avoid committing or reusing the sample `data.db`.
+- Place Go tests in `*_test.go` next to their implementations; cover config, encryption, and database flows.
+- Ensure secrets used in tests are ephemeral (`openssl rand`); never commit real credentials or `data.db`.
+- Add Vitest + Testing Library with a `pnpm run test` script when introducing UI coverage.
 
 ## Commit & Pull Request Guidelines
-- Follow Conventional Commits (`feat:`, `fix:`, `chore(scope):`).
-- Rebase on `main`, make sure `.github/workflows/ci.yml` passes, and regenerate `packages/api` outputs when specs change.
-- PRs should summarise scope, note schema or env updates, link issues, and include CLI output or screenshots for UX changes.
+- Follow Conventional Commits (`feat:`, `fix:`, `chore(scope):`); scope optional but recommended for clarity.
+- Rebase onto `main` and verify `.github/workflows/ci.yml` remains green before opening a PR.
+- PRs should summarize scope, note schema or env changes, link tracking issues, and include CLI output or screenshots for UI updates.
 
 ## Security & Configuration Tips
-- Store `JWT_SECRET`, `ENCRYPTION_KEY`, and database credentials outside the repo.
-- Document new OIDC or database variables in PRs and purge sensitive rows from shared `data.db` snapshots.
+- Keep `JWT_SECRET`, `ENCRYPTION_KEY`, and database credentials in environment variables or secret storage.
+- Document new OIDC/database variables in PRs, and scrub sensitive rows from shared `data.db` snapshots.

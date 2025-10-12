@@ -13,7 +13,8 @@ import { PATH } from '@/const/path';
 import { FaOpenid } from 'react-icons/fa';
 import { useLocation } from 'wouter';
 import useAuth from '@/hooks/use-auth';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { configApi } from '@/apis/api';
 
 export function LoginForm({
   className,
@@ -27,6 +28,26 @@ export function LoginForm({
   });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [oidcEnabled, setOidcEnabled] = useState<boolean>(false);
+  const [oidcLoading, setOidcLoading] = useState(true);
+
+  // Fetch OIDC configuration from backend
+  useEffect(() => {
+    const fetchOidcConfig = async () => {
+      try {
+        const config = await configApi.getConfig();
+        setOidcEnabled(config.oidcEnabled);
+      } catch (err) {
+        console.error('Failed to fetch OIDC config:', err);
+        // Default to false if fetch fails
+        setOidcEnabled(false);
+      } finally {
+        setOidcLoading(false);
+      }
+    };
+
+    fetchOidcConfig();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -87,18 +108,22 @@ export function LoginForm({
                   {loading ? 'Logging in...' : 'Login'}
                 </Button>
               </div>
-              <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                <span className="bg-card text-muted-foreground relative z-10 px-2">
-                  Or continue with
-                </span>
-              </div>
+              {!oidcLoading && oidcEnabled && (
+                <>
+                  <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                    <span className="bg-card text-muted-foreground relative z-10 px-2">
+                      Or continue with
+                    </span>
+                  </div>
 
-              <div className="flex flex-col gap-4">
-                <Button variant="outline" className="w-full" onClick={handleOidcLogin} aria-label="Login with OpenID Connect">
-                  <FaOpenid />
-                  Login with OIDC
-                </Button>
-              </div>
+                  <div className="flex flex-col gap-4">
+                    <Button variant="outline" className="w-full" onClick={handleOidcLogin} aria-label="Login with OpenID Connect">
+                      <FaOpenid />
+                      Login with OIDC
+                    </Button>
+                  </div>
+                </>
+              )}
               <div className="text-center text-sm">
                 Don&apos;t have an account?{' '}
                 <Button variant="link" onClick={navigateToSignup}>
