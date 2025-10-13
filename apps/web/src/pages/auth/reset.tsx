@@ -1,22 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function Reset() {
-  const [token, setToken] = useState('');
+  const token = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('token') || '';
+  }, []);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const t = params.get('token') || '';
-    setToken(t);
-  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

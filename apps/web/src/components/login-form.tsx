@@ -67,7 +67,7 @@ export function LoginForm({
         body: JSON.stringify({ email: form.email }),
       });
       setError('If your email exists, a reset link has been sent.');
-    } catch (e) {
+    } catch {
       setError('Failed to request reset');
     } finally {
       setSending('none');
@@ -84,7 +84,7 @@ export function LoginForm({
         body: JSON.stringify({ email: form.email }),
       });
       setError('If your email exists, a magic link has been sent.');
-    } catch (e) {
+    } catch {
       setError('Failed to request magic link');
     } finally {
       setSending('none');
