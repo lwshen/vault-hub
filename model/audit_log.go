@@ -18,8 +18,13 @@ const (
 	ActionCreateVault  ActionType = "create_vault"
 	ActionCreateAPIKey ActionType = "create_api_key"
 	//nolint:gosec // G101 here is the enum name
-	ActionUpdateAPIKey ActionType = "update_api_key"
-	ActionDeleteAPIKey ActionType = "delete_api_key"
+	ActionUpdateAPIKey         ActionType = "update_api_key"
+	ActionDeleteAPIKey         ActionType = "delete_api_key"
+	ActionRequestPasswordReset ActionType = "request_password_reset"
+	ActionPasswordReset        ActionType = "password_reset"
+	ActionRequestMagicLink     ActionType = "request_magic_link"
+	ActionMagicLinkLogin       ActionType = "magic_link_login"
+	ActionSendSignupEmail      ActionType = "send_signup_email"
 )
 
 type SourceType string

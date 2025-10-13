@@ -26,6 +26,16 @@ var (
 	OidcClientId     string
 	OidcClientSecret string
 	OidcIssuer       string
+	// SMTP / Email
+	SmtpEnabled     bool
+	SmtpHost        string
+	SmtpPort        string
+	SmtpUsername    string
+	SmtpPassword    string
+	SmtpFromAddress string
+	SmtpFromName    string
+	SmtpTLS         bool
+	SmtpSkipVerify  bool
 )
 
 func init() {
@@ -39,6 +49,17 @@ func init() {
 	OidcClientSecret = getEnv("OIDC_CLIENT_SECRET", "")
 	OidcIssuer = getEnv("OIDC_ISSUER", "")
 	OidcEnabled = OidcClientId != "" || OidcClientSecret != "" || OidcIssuer != ""
+
+	// SMTP
+	SmtpEnabled = getEnv("SMTP_ENABLED", "false") == "true"
+	SmtpHost = getEnv("SMTP_HOST", "")
+	SmtpPort = getEnv("SMTP_PORT", "587")
+	SmtpUsername = getEnv("SMTP_USERNAME", "")
+	SmtpPassword = getEnv("SMTP_PASSWORD", "")
+	SmtpFromAddress = getEnv("SMTP_FROM_ADDRESS", "")
+	SmtpFromName = getEnv("SMTP_FROM_NAME", "Vault Hub")
+	SmtpTLS = getEnv("SMTP_TLS", "true") == "true"
+	SmtpSkipVerify = getEnv("SMTP_SKIP_VERIFY", "false") == "true"
 
 	printConfig()
 
@@ -56,6 +77,17 @@ func printConfig() {
 		slog.Info("Config", "OidcClientId", OidcClientId)
 		slog.Info("Config", "OidcClientSecret", mask(OidcClientSecret))
 		slog.Info("Config", "OidcIssuer", OidcIssuer)
+	}
+	slog.Info("Config", "SmtpEnabled", SmtpEnabled)
+	if SmtpEnabled {
+		slog.Info("Config", "SmtpHost", SmtpHost)
+		slog.Info("Config", "SmtpPort", SmtpPort)
+		slog.Info("Config", "SmtpUsername", SmtpUsername)
+		slog.Info("Config", "SmtpPassword", mask(SmtpPassword))
+		slog.Info("Config", "SmtpFromAddress", SmtpFromAddress)
+		slog.Info("Config", "SmtpFromName", SmtpFromName)
+		slog.Info("Config", "SmtpTLS", SmtpTLS)
+		slog.Info("Config", "SmtpSkipVerify", SmtpSkipVerify)
 	}
 }
 
@@ -80,6 +112,29 @@ func checkConfig() {
 		}
 		if OidcIssuer == "" {
 			slog.Error("OidcIssuer is not set")
+			hasError = true
+		}
+	}
+	if SmtpEnabled {
+		if SmtpHost == "" {
+			slog.Error("SMTP host is not set (SMTP_HOST)")
+			hasError = true
+		}
+		if SmtpPort == "" {
+			slog.Error("SMTP port is not set (SMTP_PORT)")
+			hasError = true
+		}
+		if SmtpFromAddress == "" {
+			slog.Error("SMTP from address is not set (SMTP_FROM_ADDRESS)")
+			hasError = true
+		}
+		// For most providers, auth is required
+		if SmtpUsername == "" {
+			slog.Error("SMTP username is not set (SMTP_USERNAME)")
+			hasError = true
+		}
+		if SmtpPassword == "" {
+			slog.Error("SMTP password is not set (SMTP_PASSWORD)")
 			hasError = true
 		}
 	}

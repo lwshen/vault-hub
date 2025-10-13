@@ -55,7 +55,7 @@ func (params *CreateUserParams) Create() (*User, error) {
 	// Only hash and set password if it's provided
 	// OIDC users will have nil password
 	if params.Password != nil {
-		hashedPassword, err := hashPassword(*params.Password)
+		hashedPassword, err := HashPassword(*params.Password)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func isPasswordValid(e string) (bool, string) {
 	return true, ""
 }
 
-func hashPassword(password string) (string, error) {
+func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err

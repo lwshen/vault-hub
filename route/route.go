@@ -24,6 +24,11 @@ func SetupRoutes(app *fiber.App) {
 	auth := api.Group("/auth")
 	auth.Get("/login/oidc", handler.LoginOidc)
 	auth.Get("/callback/oidc", handler.LoginOidcCallback)
+	// Email-driven auth endpoints (handled by generated router once codegen runs); add explicit fallbacks
+	auth.Post("/password/reset/request", server.RequestPasswordReset)
+	auth.Post("/password/reset/confirm", server.ConfirmPasswordReset)
+	auth.Post("/magic-link/request", server.RequestMagicLink)
+	auth.Get("/magic-link/consume", server.ConsumeMagicLink)
 
 	// Web
 	embedFS, err := embed.GetDistFS()
