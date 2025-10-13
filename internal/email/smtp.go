@@ -48,7 +48,10 @@ func (s *SMTPSender) Send(to string, subject string, htmlBody string) error {
 
 	// Try STARTTLS when TLS is requested
 	if config.SmtpTLS {
-		tlsConfig := &tls.Config{ServerName: host, InsecureSkipVerify: config.SmtpSkipVerify}
+		tlsConfig := &tls.Config{
+			ServerName: host,
+			MinVersion: tls.VersionTLS12,
+		}
 		// Dial TCP first
 		conn, err := tls.Dial("tcp", addr, tlsConfig)
 		if err != nil {
@@ -58,7 +61,11 @@ func (s *SMTPSender) Send(to string, subject string, htmlBody string) error {
 		if err != nil {
 			return err
 		}
-		defer c.Quit()
+		defer func() {
+			if err := c.Quit(); err != nil {
+				slog.Debug("smtp client quit error", "error", err)
+			}
+		}()
 		if err := c.Auth(auth); err != nil {
 			return err
 		}

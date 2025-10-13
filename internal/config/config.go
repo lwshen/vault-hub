@@ -35,7 +35,6 @@ var (
 	SmtpFromAddress string
 	SmtpFromName    string
 	SmtpTLS         bool
-	SmtpSkipVerify  bool
 )
 
 func init() {
@@ -59,7 +58,6 @@ func init() {
 	SmtpFromAddress = getEnv("SMTP_FROM_ADDRESS", "")
 	SmtpFromName = getEnv("SMTP_FROM_NAME", "Vault Hub")
 	SmtpTLS = getEnv("SMTP_TLS", "true") == "true"
-	SmtpSkipVerify = getEnv("SMTP_SKIP_VERIFY", "false") == "true"
 
 	printConfig()
 
@@ -87,7 +85,6 @@ func printConfig() {
 		slog.Info("Config", "SmtpFromAddress", SmtpFromAddress)
 		slog.Info("Config", "SmtpFromName", SmtpFromName)
 		slog.Info("Config", "SmtpTLS", SmtpTLS)
-		slog.Info("Config", "SmtpSkipVerify", SmtpSkipVerify)
 	}
 }
 
