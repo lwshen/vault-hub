@@ -25,6 +25,7 @@ jobs:
 
       - name: Perform code review
         env:
+          MODEL: gpt-5
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: |
