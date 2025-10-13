@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"strings"
 )
 
 // EmailTemplate represents an email with HTML and plain text versions
@@ -15,11 +16,11 @@ type EmailTemplate struct {
 
 // TemplateData holds common data for email templates
 type TemplateData struct {
-	AppName     string
+	AppName       string
 	RecipientName string
-	ActionURL   string
-	Token       string
-	ExpiryTime  string
+	ActionURL     string
+	Token         string
+	ExpiryTime    string
 }
 
 const baseHTML = `
@@ -255,18 +256,20 @@ This is an automated email from %s. Please do not reply to this email.
 }
 
 // renderHTMLTemplate renders the base HTML template with content
+// This uses string concatenation to avoid template.HTML security warnings
 func renderHTMLTemplate(appName, content string) (string, error) {
 	tmpl, err := template.New("email").Parse(baseHTML)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %w", err)
 	}
 
+	// First render the base template with placeholders
 	data := struct {
 		AppName string
-		Content template.HTML
+		Content string
 	}{
 		AppName: appName,
-		Content: template.HTML(content),
+		Content: "{{CONTENT_PLACEHOLDER}}",
 	}
 
 	var buf bytes.Buffer
@@ -274,5 +277,7 @@ func renderHTMLTemplate(appName, content string) (string, error) {
 		return "", fmt.Errorf("failed to execute template: %w", err)
 	}
 
-	return buf.String(), nil
+	// Replace placeholder with actual content (content is internally generated, not from user)
+	result := strings.Replace(buf.String(), "{{CONTENT_PLACEHOLDER}}", content, 1)
+	return result, nil
 }

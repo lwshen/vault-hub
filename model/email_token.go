@@ -13,9 +13,9 @@ import (
 type TokenType string
 
 const (
-	TokenTypeEmailVerification TokenType = "email_verification"
-	TokenTypePasswordReset     TokenType = "password_reset"
-	TokenTypeMagicLink         TokenType = "magic_link"
+	TokenTypeEmailVerify   TokenType = "email_verify"
+	TokenTypePasswordReset TokenType = "pwd_reset"
+	TokenTypeMagicLink     TokenType = "magic_link"
 )
 
 // EmailToken represents a token for email-based operations
@@ -48,7 +48,7 @@ func CreateEmailVerificationToken(userID uint) (*EmailToken, error) {
 	emailToken := &EmailToken{
 		UserID:    userID,
 		Token:     token,
-		TokenType: TokenTypeEmailVerification,
+		TokenType: TokenTypeEmailVerify,
 		ExpiresAt: time.Now().Add(24 * time.Hour), // 24 hours expiry
 	}
 

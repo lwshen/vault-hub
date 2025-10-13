@@ -29,13 +29,13 @@ var (
 	OidcClientSecret string
 	OidcIssuer       string
 	// SMTP configuration
-	SMTPEnabled          bool
-	SMTPHost             string
-	SMTPPort             string
-	SMTPUsername         string
-	SMTPPassword         string
-	SMTPFromEmail        string
-	SMTPFromName         string
+	SMTPEnabled               bool
+	SMTPHost                  string
+	SMTPPort                  string
+	SMTPUsername              string
+	SMTPPassword              string
+	SMTPFromEmail             string
+	SMTPFromName              string
 	EmailVerificationRequired bool
 )
 

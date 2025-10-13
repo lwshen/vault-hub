@@ -48,9 +48,10 @@ func (s *SMTPClient) SendEmail(to, subject, htmlBody, plainBody string) error {
 	// Setup authentication
 	auth := smtp.PlainAuth("", s.username, s.password, s.host)
 
-	// Create TLS config
+	// Create TLS config with secure settings
 	tlsConfig := &tls.Config{
 		ServerName: s.host,
+		MinVersion: tls.VersionTLS12,
 	}
 
 	// Connect to server with TLS

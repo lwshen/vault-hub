@@ -195,7 +195,7 @@ func (Server) MagicLinkCallback(c *fiber.Ctx, params MagicLinkCallbackParams) er
 // VerifyEmail handles email verification
 func (Server) VerifyEmail(c *fiber.Ctx, params VerifyEmailParams) error {
 	// Find and validate token
-	token, err := model.FindValidToken(params.Token, model.TokenTypeEmailVerification)
+	token, err := model.FindValidToken(params.Token, model.TokenTypeEmailVerify)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, "Invalid or expired verification token")
 	}
@@ -240,7 +240,7 @@ func (Server) ResendVerification(c *fiber.Ctx) error {
 	}
 
 	// Delete any existing email verification tokens for this user
-	if err := model.DeleteUserTokensByType(user.ID, model.TokenTypeEmailVerification); err != nil {
+	if err := model.DeleteUserTokensByType(user.ID, model.TokenTypeEmailVerify); err != nil {
 		slog.Error("Failed to delete existing email verification tokens", "error", err, "userID", user.ID)
 	}
 
