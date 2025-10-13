@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/internal/config"
+	"github.com/lwshen/vault-hub/internal/email"
 	"github.com/lwshen/vault-hub/internal/version"
 	"github.com/lwshen/vault-hub/model"
 	"github.com/lwshen/vault-hub/route"
@@ -22,6 +23,14 @@ func main() {
 	if err != nil {
 		logger.Error("Failed to open database", "error", err)
 		os.Exit(1)
+	}
+
+	// Initialize email service
+	if config.SMTPEnabled {
+		email.InitService()
+		logger.Info("Email service initialized successfully")
+	} else {
+		logger.Warn("Email service disabled - SMTP not configured")
 	}
 
 	app := fiber.New()

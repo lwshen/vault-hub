@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.1
+  version: 1.1.0
   title: Vault Hub Server
 # Merge path definitions from separate files
 paths:
@@ -20,6 +20,19 @@ paths:
     $ref: ./paths/auth.yaml#/signup
   /api/auth/logout:
     $ref: ./paths/auth.yaml#/logout
+  # Email-based auth endpoints
+  /api/auth/request-password-reset:
+    $ref: ./paths/email.yaml#/requestPasswordReset
+  /api/auth/reset-password:
+    $ref: ./paths/email.yaml#/resetPassword
+  /api/auth/request-magic-link:
+    $ref: ./paths/email.yaml#/requestMagicLink
+  /api/auth/verify-email:
+    $ref: ./paths/email.yaml#/verifyEmail
+  /api/auth/resend-verification:
+    $ref: ./paths/email.yaml#/resendVerification
+  /api/auth/magic-link-callback:
+    $ref: ./paths/email.yaml#/magicLinkCallback
   # User endpoints
   /api/user:
     $ref: ./paths/user.yaml#/getCurrentUser
@@ -105,3 +118,22 @@ components:
     # Config schemas
     ConfigResponse:
       $ref: ./schemas/config.yaml#/ConfigResponse
+    # Email schemas
+    RequestPasswordResetRequest:
+      $ref: ./schemas/email.yaml#/RequestPasswordResetRequest
+    RequestPasswordResetResponse:
+      $ref: ./schemas/email.yaml#/RequestPasswordResetResponse
+    ResetPasswordRequest:
+      $ref: ./schemas/email.yaml#/ResetPasswordRequest
+    ResetPasswordResponse:
+      $ref: ./schemas/email.yaml#/ResetPasswordResponse
+    RequestMagicLinkRequest:
+      $ref: ./schemas/email.yaml#/RequestMagicLinkRequest
+    RequestMagicLinkResponse:
+      $ref: ./schemas/email.yaml#/RequestMagicLinkResponse
+    VerifyEmailResponse:
+      $ref: ./schemas/email.yaml#/VerifyEmailResponse
+    ResendVerificationResponse:
+      $ref: ./schemas/email.yaml#/ResendVerificationResponse
+    MagicLinkCallbackResponse:
+      $ref: ./schemas/email.yaml#/MagicLinkCallbackResponse

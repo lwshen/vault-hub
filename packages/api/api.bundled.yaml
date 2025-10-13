@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.1
+  version: 1.1.0
   title: Vault Hub Server
 paths:
   /api/health:
@@ -89,6 +89,124 @@ paths:
       responses:
         '200':
           description: OK
+  /api/auth/request-password-reset:
+    post:
+      description: Request a password reset email
+      tags:
+        - Auth
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestPasswordResetRequest'
+      responses:
+        '200':
+          description: Password reset email sent (always returns success for security)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestPasswordResetResponse'
+  /api/auth/reset-password:
+    post:
+      description: Reset password using token from email
+      tags:
+        - Auth
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetPasswordResponse'
+        '400':
+          description: Invalid or expired token
+  /api/auth/request-magic-link:
+    post:
+      description: Request a magic link login email
+      tags:
+        - Auth
+      operationId: requestMagicLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestMagicLinkRequest'
+      responses:
+        '200':
+          description: Magic link email sent (always returns success for security)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestMagicLinkResponse'
+  /api/auth/verify-email:
+    get:
+      description: Verify email address using token from email
+      tags:
+        - Auth
+      operationId: verifyEmail
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Email verification token
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyEmailResponse'
+        '400':
+          description: Invalid or expired token
+  /api/auth/resend-verification:
+    post:
+      description: Resend email verification email
+      tags:
+        - Auth
+      operationId: resendVerification
+      responses:
+        '200':
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResendVerificationResponse'
+        '401':
+          description: Unauthorized
+  /api/auth/magic-link-callback:
+    get:
+      description: Magic link callback endpoint
+      tags:
+        - Auth
+      operationId: magicLinkCallback
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Magic link token
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MagicLinkCallbackResponse'
+        '400':
+          description: Invalid or expired token
   /api/user:
     get:
       description: Get current user by credential
@@ -813,3 +931,86 @@ components:
           type: boolean
           description: Whether OIDC authentication is enabled
           example: false
+    RequestPasswordResetRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address for password reset
+    RequestPasswordResetResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: If an account with that email exists, a password reset link has been sent
+    ResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - newPassword
+      properties:
+        token:
+          type: string
+          description: Password reset token from email
+        newPassword:
+          type: string
+          minLength: 8
+          description: New password (minimum 8 characters)
+    ResetPasswordResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Password has been reset successfully
+    RequestMagicLinkRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address for magic link login
+    RequestMagicLinkResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: If an account with that email exists, a login link has been sent
+    VerifyEmailResponse:
+      type: object
+      required:
+        - message
+        - token
+      properties:
+        message:
+          type: string
+          example: Email verified successfully
+        token:
+          type: string
+          description: JWT token for authenticated session
+    ResendVerificationResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Verification email has been sent
+    MagicLinkCallbackResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: JWT token for authenticated session

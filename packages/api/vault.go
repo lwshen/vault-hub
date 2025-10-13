@@ -11,23 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// getClientInfo extracts IP address and User-Agent from the request
-func getClientInfo(c *fiber.Ctx) (string, string) {
-	// Get IP address (check for forwarded headers first)
-	ip := c.Get("X-Forwarded-For")
-	if ip == "" {
-		ip = c.Get("X-Real-IP")
-	}
-	if ip == "" {
-		ip = c.IP()
-	}
-
-	// Get User-Agent
-	userAgent := c.Get("User-Agent")
-
-	return ip, userAgent
-}
-
 // getUserFromContext extracts the authenticated user from the context
 func getUserFromContext(c *fiber.Ctx) (*model.User, error) {
 	user, ok := c.Locals("user").(*model.User)

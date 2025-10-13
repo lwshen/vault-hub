@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/lwshen/vault-hub/handler"
+	"github.com/lwshen/vault-hub/internal/config"
+	"github.com/lwshen/vault-hub/internal/email"
 	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
@@ -81,6 +83,12 @@ func (Server) Signup(c *fiber.Ctx) error {
 
 	// Log successful registration
 	logSignupAudit(user.ID, clientIP, userAgent)
+
+	// Send email verification if SMTP is enabled
+	if err := sendEmailVerification(user); err != nil {
+		slog.Error("Failed to send verification email", "error", err, "userID", user.ID)
+		// Don't fail signup if email sending fails
+	}
 
 	// Generate authentication token
 	token, err := user.GenerateToken()
@@ -166,4 +174,49 @@ func (Server) Logout(c *fiber.Ctx) error {
 
 func getEmail(email openapi_types.Email) (string, error) {
 	return string(email), nil
+}
+
+// sendEmailVerification sends an email verification to the user
+func sendEmailVerification(user *model.User) error {
+	if !config.SMTPEnabled {
+		slog.Debug("SMTP not enabled, skipping email verification", "userID", user.ID)
+		return nil
+	}
+
+	// Create email verification token
+	token, err := model.CreateEmailVerificationToken(user.ID)
+	if err != nil {
+		return fmt.Errorf("failed to create verification token: %w", err)
+	}
+
+	// Build verification URL
+	verificationURL := fmt.Sprintf("%s/verify-email?token=%s", config.BaseURL, token.Token)
+
+	// Send verification email
+	recipientName := "User"
+	if user.Name != nil {
+		recipientName = *user.Name
+	}
+
+	if err := email.SendEmailVerificationAsync(user.Email, recipientName, verificationURL); err != nil {
+		return fmt.Errorf("failed to queue verification email: %w", err)
+	}
+
+	slog.Info("Verification email queued", "email", user.Email, "userID", user.ID)
+	return nil
+}
+
+// getClientInfo extracts IP address and User-Agent from the request
+func getClientInfo(c *fiber.Ctx) (string, string) {
+	// Get IP address (check for forwarded headers first)
+	ip := c.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = c.Get("X-Real-IP")
+	}
+	if ip == "" {
+		ip = c.IP()
+	}
+	// Get User-Agent
+	userAgent := c.Get("User-Agent")
+	return ip, userAgent
 }

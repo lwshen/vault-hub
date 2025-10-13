@@ -1,0 +1,125 @@
+# Email-related endpoint definitions
+
+requestPasswordReset:
+  post:
+    description: Request a password reset email
+    tags:
+      - Auth
+    operationId: requestPasswordReset
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/email.yaml#/RequestPasswordResetRequest
+    responses:
+      "200":
+        description: Password reset email sent (always returns success for security)
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/email.yaml#/RequestPasswordResetResponse
+
+resetPassword:
+  post:
+    description: Reset password using token from email
+    tags:
+      - Auth
+    operationId: resetPassword
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/email.yaml#/ResetPasswordRequest
+    responses:
+      "200":
+        description: Password reset successfully
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/email.yaml#/ResetPasswordResponse
+      "400":
+        description: Invalid or expired token
+
+requestMagicLink:
+  post:
+    description: Request a magic link login email
+    tags:
+      - Auth
+    operationId: requestMagicLink
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/email.yaml#/RequestMagicLinkRequest
+    responses:
+      "200":
+        description: Magic link email sent (always returns success for security)
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/email.yaml#/RequestMagicLinkResponse
+
+verifyEmail:
+  get:
+    description: Verify email address using token from email
+    tags:
+      - Auth
+    operationId: verifyEmail
+    parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Email verification token
+    responses:
+      "200":
+        description: Email verified successfully
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/email.yaml#/VerifyEmailResponse
+      "400":
+        description: Invalid or expired token
+
+resendVerification:
+  post:
+    description: Resend email verification email
+    tags:
+      - Auth
+    operationId: resendVerification
+    responses:
+      "200":
+        description: Verification email sent
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/email.yaml#/ResendVerificationResponse
+      "401":
+        description: Unauthorized
+
+magicLinkCallback:
+  get:
+    description: Magic link callback endpoint
+    tags:
+      - Auth
+    operationId: magicLinkCallback
+    parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Magic link token
+    responses:
+      "200":
+        description: Login successful
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/email.yaml#/MagicLinkCallbackResponse
+      "400":
+        description: Invalid or expired token

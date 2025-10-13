@@ -1,0 +1,93 @@
+# Email-related request/response schemas
+
+RequestPasswordResetRequest:
+  type: object
+  required:
+    - email
+  properties:
+    email:
+      type: string
+      format: email
+      description: Email address for password reset
+
+RequestPasswordResetResponse:
+  type: object
+  required:
+    - message
+  properties:
+    message:
+      type: string
+      example: If an account with that email exists, a password reset link has been sent
+
+ResetPasswordRequest:
+  type: object
+  required:
+    - token
+    - newPassword
+  properties:
+    token:
+      type: string
+      description: Password reset token from email
+    newPassword:
+      type: string
+      minLength: 8
+      description: New password (minimum 8 characters)
+
+ResetPasswordResponse:
+  type: object
+  required:
+    - message
+  properties:
+    message:
+      type: string
+      example: Password has been reset successfully
+
+RequestMagicLinkRequest:
+  type: object
+  required:
+    - email
+  properties:
+    email:
+      type: string
+      format: email
+      description: Email address for magic link login
+
+RequestMagicLinkResponse:
+  type: object
+  required:
+    - message
+  properties:
+    message:
+      type: string
+      example: If an account with that email exists, a login link has been sent
+
+VerifyEmailResponse:
+  type: object
+  required:
+    - message
+    - token
+  properties:
+    message:
+      type: string
+      example: Email verified successfully
+    token:
+      type: string
+      description: JWT token for authenticated session
+
+ResendVerificationResponse:
+  type: object
+  required:
+    - message
+  properties:
+    message:
+      type: string
+      example: Verification email has been sent
+
+MagicLinkCallbackResponse:
+  type: object
+  required:
+    - token
+  properties:
+    token:
+      type: string
+      description: JWT token for authenticated session

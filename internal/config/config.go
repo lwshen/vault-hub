@@ -18,6 +18,8 @@ const (
 
 var (
 	AppPort          string
+	AppName          string
+	BaseURL          string
 	DatabaseType     DatabaseTypeEnum
 	DatabaseUrl      string
 	JwtSecret        string
@@ -26,10 +28,21 @@ var (
 	OidcClientId     string
 	OidcClientSecret string
 	OidcIssuer       string
+	// SMTP configuration
+	SMTPEnabled          bool
+	SMTPHost             string
+	SMTPPort             string
+	SMTPUsername         string
+	SMTPPassword         string
+	SMTPFromEmail        string
+	SMTPFromName         string
+	EmailVerificationRequired bool
 )
 
 func init() {
 	AppPort = getEnv("APP_PORT", "3000")
+	AppName = getEnv("APP_NAME", "VaultHub")
+	BaseURL = getEnv("BASE_URL", "http://localhost:3000")
 	JwtSecret = getEnv("JWT_SECRET", "")
 	EncryptionKey = getEnv("ENCRYPTION_KEY", "")
 	DatabaseType = DatabaseTypeEnum(getEnv("DATABASE_TYPE", "sqlite"))
@@ -40,6 +53,16 @@ func init() {
 	OidcIssuer = getEnv("OIDC_ISSUER", "")
 	OidcEnabled = OidcClientId != "" || OidcClientSecret != "" || OidcIssuer != ""
 
+	// SMTP configuration
+	SMTPHost = getEnv("SMTP_HOST", "")
+	SMTPPort = getEnv("SMTP_PORT", "587")
+	SMTPUsername = getEnv("SMTP_USERNAME", "")
+	SMTPPassword = getEnv("SMTP_PASSWORD", "")
+	SMTPFromEmail = getEnv("SMTP_FROM_EMAIL", "")
+	SMTPFromName = getEnv("SMTP_FROM_NAME", AppName)
+	SMTPEnabled = SMTPHost != "" && SMTPUsername != "" && SMTPPassword != "" && SMTPFromEmail != ""
+	EmailVerificationRequired = getEnv("EMAIL_VERIFICATION_REQUIRED", "false") == "true"
+
 	printConfig()
 
 	checkConfig()
@@ -47,6 +70,8 @@ func init() {
 
 func printConfig() {
 	slog.Info("Config", "AppPort", AppPort)
+	slog.Info("Config", "AppName", AppName)
+	slog.Info("Config", "BaseURL", BaseURL)
 	slog.Info("Config", "JwtSecret", mask(JwtSecret))
 	slog.Info("Config", "EncryptionKey", mask(EncryptionKey))
 	slog.Info("Config", "DatabaseType", DatabaseType)
@@ -57,6 +82,16 @@ func printConfig() {
 		slog.Info("Config", "OidcClientSecret", mask(OidcClientSecret))
 		slog.Info("Config", "OidcIssuer", OidcIssuer)
 	}
+	slog.Info("Config", "SMTPEnabled", SMTPEnabled)
+	if SMTPEnabled {
+		slog.Info("Config", "SMTPHost", SMTPHost)
+		slog.Info("Config", "SMTPPort", SMTPPort)
+		slog.Info("Config", "SMTPUsername", SMTPUsername)
+		slog.Info("Config", "SMTPPassword", mask(SMTPPassword))
+		slog.Info("Config", "SMTPFromEmail", SMTPFromEmail)
+		slog.Info("Config", "SMTPFromName", SMTPFromName)
+	}
+	slog.Info("Config", "EmailVerificationRequired", EmailVerificationRequired)
 }
 
 func checkConfig() {

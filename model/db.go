@@ -91,5 +91,5 @@ func checkConnection() error {
 }
 
 func migrate() error {
-	return DB.AutoMigrate(&User{}, &Vault{}, &AuditLog{}, &APIKey{})
+	return DB.AutoMigrate(&User{}, &Vault{}, &AuditLog{}, &APIKey{}, &EmailToken{})
 }

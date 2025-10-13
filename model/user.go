@@ -11,10 +11,11 @@ import (
 
 type User struct {
 	gorm.Model
-	Email    string  `gorm:"size:255;uniqueIndex"`
-	Password *string `gorm:"type:text"`
-	Name     *string `gorm:"size:255"`
-	Avatar   *string `gorm:"type:text"`
+	Email         string  `gorm:"size:255;uniqueIndex"`
+	Password      *string `gorm:"type:text"`
+	Name          *string `gorm:"size:255"`
+	Avatar        *string `gorm:"type:text"`
+	EmailVerified bool    `gorm:"default:false;not null"`
 }
 
 func (u *User) GetByEmail() error {
@@ -39,7 +40,7 @@ func (params *CreateUserParams) Validate() map[string]string {
 	// Only validate password if it's provided (not nil)
 	// OIDC users don't need passwords
 	if params.Password != nil {
-		if ok, msg := isPasswordValid(*params.Password); !ok {
+		if ok, msg := IsPasswordValid(*params.Password); !ok {
 			errors["password"] = msg
 		}
 	}
@@ -75,7 +76,8 @@ func isEmailValid(e string) bool {
 	return emailRegex.MatchString(e)
 }
 
-func isPasswordValid(e string) (bool, string) {
+// IsPasswordValid checks if a password meets security requirements
+func IsPasswordValid(e string) (bool, string) {
 	if len(e) < 8 {
 		return false, "password must be at least 8 characters long"
 	}
@@ -113,4 +115,26 @@ func (u *User) ComparePassword(password string) bool {
 
 func (u *User) GenerateToken() (string, error) {
 	return auth.GenerateToken(u.ID)
+}
+
+// MarkEmailAsVerified marks the user's email as verified
+func (u *User) MarkEmailAsVerified() error {
+	u.EmailVerified = true
+	if err := DB.Save(u).Error; err != nil {
+		return fmt.Errorf("failed to mark email as verified: %w", err)
+	}
+	return nil
+}
+
+// UpdatePassword updates the user's password with a new hashed password
+func (u *User) UpdatePassword(newPassword string) error {
+	hashedPassword, err := hashPassword(newPassword)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+	u.Password = &hashedPassword
+	if err := DB.Save(u).Error; err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+	return nil
 }

@@ -186,6 +186,53 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
+// MagicLinkCallbackResponse defines model for MagicLinkCallbackResponse.
+type MagicLinkCallbackResponse struct {
+	// Token JWT token for authenticated session
+	Token string `json:"token"`
+}
+
+// RequestMagicLinkRequest defines model for RequestMagicLinkRequest.
+type RequestMagicLinkRequest struct {
+	// Email Email address for magic link login
+	Email openapi_types.Email `json:"email"`
+}
+
+// RequestMagicLinkResponse defines model for RequestMagicLinkResponse.
+type RequestMagicLinkResponse struct {
+	Message string `json:"message"`
+}
+
+// RequestPasswordResetRequest defines model for RequestPasswordResetRequest.
+type RequestPasswordResetRequest struct {
+	// Email Email address for password reset
+	Email openapi_types.Email `json:"email"`
+}
+
+// RequestPasswordResetResponse defines model for RequestPasswordResetResponse.
+type RequestPasswordResetResponse struct {
+	Message string `json:"message"`
+}
+
+// ResendVerificationResponse defines model for ResendVerificationResponse.
+type ResendVerificationResponse struct {
+	Message string `json:"message"`
+}
+
+// ResetPasswordRequest defines model for ResetPasswordRequest.
+type ResetPasswordRequest struct {
+	// NewPassword New password (minimum 8 characters)
+	NewPassword string `json:"newPassword"`
+
+	// Token Password reset token from email
+	Token string `json:"token"`
+}
+
+// ResetPasswordResponse defines model for ResetPasswordResponse.
+type ResetPasswordResponse struct {
+	Message string `json:"message"`
+}
+
 // SignupRequest defines model for SignupRequest.
 type SignupRequest struct {
 	Email    openapi_types.Email `json:"email"`
@@ -312,6 +359,14 @@ type VaultLite struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
+// VerifyEmailResponse defines model for VerifyEmailResponse.
+type VerifyEmailResponse struct {
+	Message string `json:"message"`
+
+	// Token JWT token for authenticated session
+	Token string `json:"token"`
+}
+
 // GetAPIKeysParams defines parameters for GetAPIKeys.
 type GetAPIKeysParams struct {
 	// PageSize Number of API keys per page (default 20, max 1000)
@@ -339,6 +394,18 @@ type GetAuditLogsParams struct {
 	PageIndex int `form:"pageIndex" json:"pageIndex"`
 }
 
+// MagicLinkCallbackParams defines parameters for MagicLinkCallback.
+type MagicLinkCallbackParams struct {
+	// Token Magic link token
+	Token string `form:"token" json:"token"`
+}
+
+// VerifyEmailParams defines parameters for VerifyEmail.
+type VerifyEmailParams struct {
+	// Token Email verification token
+	Token string `form:"token" json:"token"`
+}
+
 // CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
 type CreateAPIKeyJSONRequestBody = CreateAPIKeyRequest
 
@@ -347,6 +414,15 @@ type UpdateAPIKeyJSONRequestBody = UpdateAPIKeyRequest
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
+
+// RequestMagicLinkJSONRequestBody defines body for RequestMagicLink for application/json ContentType.
+type RequestMagicLinkJSONRequestBody = RequestMagicLinkRequest
+
+// RequestPasswordResetJSONRequestBody defines body for RequestPasswordReset for application/json ContentType.
+type RequestPasswordResetJSONRequestBody = RequestPasswordResetRequest
+
+// ResetPasswordJSONRequestBody defines body for ResetPassword for application/json ContentType.
+type ResetPasswordJSONRequestBody = ResetPasswordRequest
 
 // SignupJSONRequestBody defines body for Signup for application/json ContentType.
 type SignupJSONRequestBody = SignupRequest
@@ -384,8 +460,26 @@ type ServerInterface interface {
 	// (GET /api/auth/logout)
 	Logout(c *fiber.Ctx) error
 
+	// (GET /api/auth/magic-link-callback)
+	MagicLinkCallback(c *fiber.Ctx, params MagicLinkCallbackParams) error
+
+	// (POST /api/auth/request-magic-link)
+	RequestMagicLink(c *fiber.Ctx) error
+
+	// (POST /api/auth/request-password-reset)
+	RequestPasswordReset(c *fiber.Ctx) error
+
+	// (POST /api/auth/resend-verification)
+	ResendVerification(c *fiber.Ctx) error
+
+	// (POST /api/auth/reset-password)
+	ResetPassword(c *fiber.Ctx) error
+
 	// (POST /api/auth/signup)
 	Signup(c *fiber.Ctx) error
+
+	// (GET /api/auth/verify-email)
+	VerifyEmail(c *fiber.Ctx, params VerifyEmailParams) error
 
 	// (GET /api/cli/vault/name/{name})
 	GetVaultByNameAPIKey(c *fiber.Ctx, name string) error
@@ -602,10 +696,98 @@ func (siw *ServerInterfaceWrapper) Logout(c *fiber.Ctx) error {
 	return siw.Handler.Logout(c)
 }
 
+// MagicLinkCallback operation middleware
+func (siw *ServerInterfaceWrapper) MagicLinkCallback(c *fiber.Ctx) error {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params MagicLinkCallbackParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "token" -------------
+
+	if paramValue := c.Query("token"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument token is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", query, &params.Token)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter token: %w", err).Error())
+	}
+
+	return siw.Handler.MagicLinkCallback(c, params)
+}
+
+// RequestMagicLink operation middleware
+func (siw *ServerInterfaceWrapper) RequestMagicLink(c *fiber.Ctx) error {
+
+	return siw.Handler.RequestMagicLink(c)
+}
+
+// RequestPasswordReset operation middleware
+func (siw *ServerInterfaceWrapper) RequestPasswordReset(c *fiber.Ctx) error {
+
+	return siw.Handler.RequestPasswordReset(c)
+}
+
+// ResendVerification operation middleware
+func (siw *ServerInterfaceWrapper) ResendVerification(c *fiber.Ctx) error {
+
+	return siw.Handler.ResendVerification(c)
+}
+
+// ResetPassword operation middleware
+func (siw *ServerInterfaceWrapper) ResetPassword(c *fiber.Ctx) error {
+
+	return siw.Handler.ResetPassword(c)
+}
+
 // Signup operation middleware
 func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
 
 	return siw.Handler.Signup(c)
+}
+
+// VerifyEmail operation middleware
+func (siw *ServerInterfaceWrapper) VerifyEmail(c *fiber.Ctx) error {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params VerifyEmailParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "token" -------------
+
+	if paramValue := c.Query("token"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument token is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", query, &params.Token)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter token: %w", err).Error())
+	}
+
+	return siw.Handler.VerifyEmail(c, params)
 }
 
 // GetVaultByNameAPIKey operation middleware
@@ -773,7 +955,19 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Get(options.BaseURL+"/api/auth/logout", wrapper.Logout)
 
+	router.Get(options.BaseURL+"/api/auth/magic-link-callback", wrapper.MagicLinkCallback)
+
+	router.Post(options.BaseURL+"/api/auth/request-magic-link", wrapper.RequestMagicLink)
+
+	router.Post(options.BaseURL+"/api/auth/request-password-reset", wrapper.RequestPasswordReset)
+
+	router.Post(options.BaseURL+"/api/auth/resend-verification", wrapper.ResendVerification)
+
+	router.Post(options.BaseURL+"/api/auth/reset-password", wrapper.ResetPassword)
+
 	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
+
+	router.Get(options.BaseURL+"/api/auth/verify-email", wrapper.VerifyEmail)
 
 	router.Get(options.BaseURL+"/api/cli/vault/name/:name", wrapper.GetVaultByNameAPIKey)
 
@@ -934,6 +1128,114 @@ func (response Logout200Response) VisitLogoutResponse(ctx *fiber.Ctx) error {
 	return nil
 }
 
+type MagicLinkCallbackRequestObject struct {
+	Params MagicLinkCallbackParams
+}
+
+type MagicLinkCallbackResponseObject interface {
+	VisitMagicLinkCallbackResponse(ctx *fiber.Ctx) error
+}
+
+type MagicLinkCallback200JSONResponse MagicLinkCallbackResponse
+
+func (response MagicLinkCallback200JSONResponse) VisitMagicLinkCallbackResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type MagicLinkCallback400Response struct {
+}
+
+func (response MagicLinkCallback400Response) VisitMagicLinkCallbackResponse(ctx *fiber.Ctx) error {
+	ctx.Status(400)
+	return nil
+}
+
+type RequestMagicLinkRequestObject struct {
+	Body *RequestMagicLinkJSONRequestBody
+}
+
+type RequestMagicLinkResponseObject interface {
+	VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error
+}
+
+type RequestMagicLink200JSONResponse RequestMagicLinkResponse
+
+func (response RequestMagicLink200JSONResponse) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type RequestPasswordResetRequestObject struct {
+	Body *RequestPasswordResetJSONRequestBody
+}
+
+type RequestPasswordResetResponseObject interface {
+	VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error
+}
+
+type RequestPasswordReset200JSONResponse RequestPasswordResetResponse
+
+func (response RequestPasswordReset200JSONResponse) VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type ResendVerificationRequestObject struct {
+}
+
+type ResendVerificationResponseObject interface {
+	VisitResendVerificationResponse(ctx *fiber.Ctx) error
+}
+
+type ResendVerification200JSONResponse ResendVerificationResponse
+
+func (response ResendVerification200JSONResponse) VisitResendVerificationResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type ResendVerification401Response struct {
+}
+
+func (response ResendVerification401Response) VisitResendVerificationResponse(ctx *fiber.Ctx) error {
+	ctx.Status(401)
+	return nil
+}
+
+type ResetPasswordRequestObject struct {
+	Body *ResetPasswordJSONRequestBody
+}
+
+type ResetPasswordResponseObject interface {
+	VisitResetPasswordResponse(ctx *fiber.Ctx) error
+}
+
+type ResetPassword200JSONResponse ResetPasswordResponse
+
+func (response ResetPassword200JSONResponse) VisitResetPasswordResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type ResetPassword400Response struct {
+}
+
+func (response ResetPassword400Response) VisitResetPasswordResponse(ctx *fiber.Ctx) error {
+	ctx.Status(400)
+	return nil
+}
+
 type SignupRequestObject struct {
 	Body *SignupJSONRequestBody
 }
@@ -949,6 +1251,31 @@ func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error 
 	ctx.Status(200)
 
 	return ctx.JSON(&response)
+}
+
+type VerifyEmailRequestObject struct {
+	Params VerifyEmailParams
+}
+
+type VerifyEmailResponseObject interface {
+	VisitVerifyEmailResponse(ctx *fiber.Ctx) error
+}
+
+type VerifyEmail200JSONResponse VerifyEmailResponse
+
+func (response VerifyEmail200JSONResponse) VisitVerifyEmailResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type VerifyEmail400Response struct {
+}
+
+func (response VerifyEmail400Response) VisitVerifyEmailResponse(ctx *fiber.Ctx) error {
+	ctx.Status(400)
+	return nil
 }
 
 type GetVaultByNameAPIKeyRequestObject struct {
@@ -1176,8 +1503,26 @@ type StrictServerInterface interface {
 	// (GET /api/auth/logout)
 	Logout(ctx context.Context, request LogoutRequestObject) (LogoutResponseObject, error)
 
+	// (GET /api/auth/magic-link-callback)
+	MagicLinkCallback(ctx context.Context, request MagicLinkCallbackRequestObject) (MagicLinkCallbackResponseObject, error)
+
+	// (POST /api/auth/request-magic-link)
+	RequestMagicLink(ctx context.Context, request RequestMagicLinkRequestObject) (RequestMagicLinkResponseObject, error)
+
+	// (POST /api/auth/request-password-reset)
+	RequestPasswordReset(ctx context.Context, request RequestPasswordResetRequestObject) (RequestPasswordResetResponseObject, error)
+
+	// (POST /api/auth/resend-verification)
+	ResendVerification(ctx context.Context, request ResendVerificationRequestObject) (ResendVerificationResponseObject, error)
+
+	// (POST /api/auth/reset-password)
+	ResetPassword(ctx context.Context, request ResetPasswordRequestObject) (ResetPasswordResponseObject, error)
+
 	// (POST /api/auth/signup)
 	Signup(ctx context.Context, request SignupRequestObject) (SignupResponseObject, error)
+
+	// (GET /api/auth/verify-email)
+	VerifyEmail(ctx context.Context, request VerifyEmailRequestObject) (VerifyEmailResponseObject, error)
 
 	// (GET /api/cli/vault/name/{name})
 	GetVaultByNameAPIKey(ctx context.Context, request GetVaultByNameAPIKeyRequestObject) (GetVaultByNameAPIKeyResponseObject, error)
@@ -1455,6 +1800,151 @@ func (sh *strictHandler) Logout(ctx *fiber.Ctx) error {
 	return nil
 }
 
+// MagicLinkCallback operation middleware
+func (sh *strictHandler) MagicLinkCallback(ctx *fiber.Ctx, params MagicLinkCallbackParams) error {
+	var request MagicLinkCallbackRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.MagicLinkCallback(ctx.UserContext(), request.(MagicLinkCallbackRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MagicLinkCallback")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(MagicLinkCallbackResponseObject); ok {
+		if err := validResponse.VisitMagicLinkCallbackResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RequestMagicLink operation middleware
+func (sh *strictHandler) RequestMagicLink(ctx *fiber.Ctx) error {
+	var request RequestMagicLinkRequestObject
+
+	var body RequestMagicLinkJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.RequestMagicLink(ctx.UserContext(), request.(RequestMagicLinkRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RequestMagicLink")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(RequestMagicLinkResponseObject); ok {
+		if err := validResponse.VisitRequestMagicLinkResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RequestPasswordReset operation middleware
+func (sh *strictHandler) RequestPasswordReset(ctx *fiber.Ctx) error {
+	var request RequestPasswordResetRequestObject
+
+	var body RequestPasswordResetJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.RequestPasswordReset(ctx.UserContext(), request.(RequestPasswordResetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RequestPasswordReset")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(RequestPasswordResetResponseObject); ok {
+		if err := validResponse.VisitRequestPasswordResetResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ResendVerification operation middleware
+func (sh *strictHandler) ResendVerification(ctx *fiber.Ctx) error {
+	var request ResendVerificationRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.ResendVerification(ctx.UserContext(), request.(ResendVerificationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResendVerification")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(ResendVerificationResponseObject); ok {
+		if err := validResponse.VisitResendVerificationResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ResetPassword operation middleware
+func (sh *strictHandler) ResetPassword(ctx *fiber.Ctx) error {
+	var request ResetPasswordRequestObject
+
+	var body ResetPasswordJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.ResetPassword(ctx.UserContext(), request.(ResetPasswordRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResetPassword")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(ResetPasswordResponseObject); ok {
+		if err := validResponse.VisitResetPasswordResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
 // Signup operation middleware
 func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
 	var request SignupRequestObject
@@ -1478,6 +1968,33 @@ func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(SignupResponseObject); ok {
 		if err := validResponse.VisitSignupResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// VerifyEmail operation middleware
+func (sh *strictHandler) VerifyEmail(ctx *fiber.Ctx, params VerifyEmailParams) error {
+	var request VerifyEmailRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.VerifyEmail(ctx.UserContext(), request.(VerifyEmailRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "VerifyEmail")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(VerifyEmailResponseObject); ok {
+		if err := validResponse.VisitVerifyEmailResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
