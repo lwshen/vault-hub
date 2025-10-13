@@ -1,3 +1,8 @@
+## [1.3.15] - 2025-10-13
+
+### 🚀 Features
+
+- Add automated code review workflow using Cursor CLI (#281)
 ## [1.3.14] - 2025-10-12
 
 ### 🚀 Features
