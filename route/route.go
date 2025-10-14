@@ -24,11 +24,6 @@ func SetupRoutes(app *fiber.App) {
 	auth := api.Group("/auth")
 	auth.Get("/login/oidc", handler.LoginOidc)
 	auth.Get("/callback/oidc", handler.LoginOidcCallback)
-	// Email-driven auth endpoints (handled by generated router once codegen runs); add explicit fallbacks
-	auth.Post("/password/reset/request", server.RequestPasswordReset)
-	auth.Post("/password/reset/confirm", server.ConfirmPasswordReset)
-	auth.Post("/magic-link/request", server.RequestMagicLink)
-
 	// Magic link consume endpoint with short URL path
 	app.Get("/auth/ml", func(c *fiber.Ctx) error {
 		token := c.Query("token")

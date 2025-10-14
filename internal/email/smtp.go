@@ -65,9 +65,9 @@ func (s *SMTPSender) Send(to string, subject string, htmlBody string) error {
 
 func buildEmailMessage(to string, subject string, htmlBody string) []byte {
 	headers := map[string]string{
-		"From":         formatFrom(config.SmtpFromName, config.SmtpFromAddress),
-		"To":           to,
-		"Subject":      subject,
+		"From":         sanitizeHeaderValue(formatFrom(config.SmtpFromName, config.SmtpFromAddress)),
+		"To":           sanitizeHeaderValue(to),
+		"Subject":      sanitizeHeaderValue(subject),
 		"MIME-Version": "1.0",
 		"Content-Type": "text/html; charset=\"UTF-8\"",
 	}
@@ -118,6 +118,10 @@ func sendImplicitTLS(addr, host string, auth smtp.Auth, to string, msg []byte) e
 		return err
 	}
 	return nil
+}
+
+func sanitizeHeaderValue(value string) string {
+	return strings.NewReplacer("\r", "", "\n", "").Replace(value)
 }
 
 func sendStartTLS(addr, host, port string, auth smtp.Auth, to string, msg []byte) error {
