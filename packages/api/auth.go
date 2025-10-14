@@ -15,6 +15,23 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+const (
+	PasswordResetTTL = 30 * time.Minute
+	MagicLinkTTL     = 15 * time.Minute
+)
+
+// formatTTLForEmail formats a duration for email display (e.g., "30m", "2h")
+func formatTTLForEmail(d time.Duration) string {
+	switch {
+	case d < time.Minute:
+		return fmt.Sprintf("%ds", int(d.Seconds()))
+	case d < time.Hour:
+		return fmt.Sprintf("%.0fm", d.Minutes())
+	default:
+		return fmt.Sprintf("%.1fh", d.Hours())
+	}
+}
+
 func (Server) Login(c *fiber.Ctx) error {
 	var input LoginRequest
 	if err := c.BodyParser(&input); err != nil {
@@ -199,7 +216,7 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 	// Attempt to find user; if not found, still return success
 	user := model.User{Email: emailStr}
 	if err := user.GetByEmail(); err == nil {
-		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeResetPassword, 30*time.Minute)
+		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeResetPassword, PasswordResetTTL)
 		if err == nil {
 			baseURL := c.BaseURL()
 			actionURL := fmt.Sprintf("%s/reset?token=%s", baseURL, token)
@@ -210,7 +227,7 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 				if u.Name != nil {
 					name = *u.Name
 				}
-				if err := svc.SendPasswordReset(u.Email, name, url, "30m"); err != nil {
+				if err := svc.SendPasswordReset(u.Email, name, url, formatTTLForEmail(PasswordResetTTL)); err != nil {
 					slog.Error("Failed to send password reset email", "error", err, "email", u.Email)
 				}
 			}(user, actionURL)
@@ -265,7 +282,7 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 	}
 	user := model.User{Email: emailStr}
 	if err := user.GetByEmail(); err == nil {
-		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, 15*time.Minute)
+		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, MagicLinkTTL)
 		if err == nil {
 			baseURL := c.BaseURL()
 			actionURL := fmt.Sprintf("%s/auth/ml?token=%s", baseURL, token)
@@ -276,7 +293,7 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 				if u.Name != nil {
 					name = *u.Name
 				}
-				if err := svc.SendMagicLink(u.Email, name, url, "15m"); err != nil {
+				if err := svc.SendMagicLink(u.Email, name, url, formatTTLForEmail(MagicLinkTTL)); err != nil {
 					slog.Error("Failed to send magic link email", "error", err, "email", u.Email)
 				}
 			}(user, actionURL)
