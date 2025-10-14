@@ -4,7 +4,6 @@ import Features from '@/pages/features';
 import Documentation from '@/pages/documentation';
 import Login from '@/pages/auth/login';
 import Signup from '@/pages/auth/signup';
-import Reset from '@/pages/auth/reset';
 import Dashboard from '@/pages/dashboard/dashboard';
 import Vaults from '@/pages/dashboard/vaults';
 import VaultDetail from '@/pages/dashboard/vault-detail';
@@ -34,9 +33,6 @@ export const AppRoutes = () => (
     </Route>
     <Route path={PATH.SIGNUP}>
       <Signup />
-    </Route>
-    <Route path={PATH.RESET}>
-      <Reset />
     </Route>
     <Route path={PATH.DASHBOARD}>
       <ProtectedRoute>

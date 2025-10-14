@@ -22,7 +22,6 @@ export function LoginForm({
 }: React.ComponentProps<'div'>) {
   const [, navigate] = useLocation();
   const { login, loginWithOidc } = useAuth();
-  const [sending, setSending] = useState<'none' | 'reset' | 'magic'>('none');
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -55,40 +54,6 @@ export function LoginForm({
 
   const handleOidcLogin = () => {
     loginWithOidc();
-  };
-
-  const requestReset = async () => {
-    setError(null);
-    setSending('reset');
-    try {
-      await fetch('/api/auth/password/reset/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email }),
-      });
-      setError('If your email exists, a reset link has been sent.');
-    } catch {
-      setError('Failed to request reset');
-    } finally {
-      setSending('none');
-    }
-  };
-
-  const requestMagic = async () => {
-    setError(null);
-    setSending('magic');
-    try {
-      await fetch('/api/auth/magic-link/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email }),
-      });
-      setError('If your email exists, a magic link has been sent.');
-    } catch {
-      setError('Failed to request magic link');
-    } finally {
-      setSending('none');
-    }
   };
 
   return (
@@ -140,14 +105,6 @@ export function LoginForm({
                   </div>
                 </>
               )}
-              <div className="flex items-center justify-between text-sm">
-                <Button variant="link" type="button" onClick={requestReset} disabled={!form.email || sending !== 'none'}>
-                  {sending === 'reset' ? 'Sending…' : 'Forgot password?'}
-                </Button>
-                <Button variant="link" type="button" onClick={requestMagic} disabled={!form.email || sending !== 'none'}>
-                  {sending === 'magic' ? 'Sending…' : 'Send magic link'}
-                </Button>
-              </div>
               <div className="text-center text-sm">
                 Don&apos;t have an account?{' '}
                 <Button variant="link" onClick={navigateToSignup}>
