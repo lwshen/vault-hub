@@ -61,19 +61,32 @@ func VerifyAndConsumeEmailToken(plaintextToken string, purpose TokenPurpose) (*E
 	sum := sha256.Sum256([]byte(plaintextToken))
 	hash := base64.RawURLEncoding.EncodeToString(sum[:])
 
-	var t EmailToken
-	if err := DB.Where("token_hash = ? AND purpose = ?", hash, purpose).First(&t).Error; err != nil {
-		return nil, err
-	}
-	if t.ConsumedAt != nil {
-		return nil, errors.New("token already used")
-	}
-	if time.Now().After(t.ExpiresAt) {
-		return nil, errors.New("token expired")
-	}
 	now := time.Now()
-	t.ConsumedAt = &now
-	if err := DB.Save(&t).Error; err != nil {
+	update := DB.Model(&EmailToken{}).
+		Where("token_hash = ? AND purpose = ? AND consumed_at IS NULL AND expires_at >= ?", hash, purpose, now).
+		Updates(map[string]interface{}{
+			"consumed_at": now,
+			"updated_at":  now,
+		})
+	if update.Error != nil {
+		return nil, update.Error
+	}
+
+	var t EmailToken
+	if update.RowsAffected == 0 {
+		if err := DB.Where("token_hash = ? AND purpose = ?", hash, purpose).First(&t).Error; err != nil {
+			return nil, err
+		}
+		if t.ConsumedAt != nil {
+			return nil, errors.New("token already used")
+		}
+		if now.After(t.ExpiresAt) {
+			return nil, errors.New("token expired")
+		}
+		return nil, errors.New("unable to consume token")
+	}
+
+	if err := DB.Where("token_hash = ? AND purpose = ?", hash, purpose).First(&t).Error; err != nil {
 		return nil, err
 	}
 	return &t, nil
