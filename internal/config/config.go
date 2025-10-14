@@ -94,60 +94,51 @@ func printConfig() {
 }
 
 func checkConfig() {
+	type validation struct {
+		ok  bool
+		msg string
+	}
+
+	lowerMode := strings.ToLower(SmtpMode)
+
+	validations := []validation{
+		{JwtSecret != "", "JwtSecret is not set"},
+		{EncryptionKey != "", "EncryptionKey is not set"},
+
+		// OIDC checks are required only when OIDC is enabled
+		{!OidcEnabled || OidcClientId != "", "OidcClientId is not set"},
+		{!OidcEnabled || OidcClientSecret != "", "OidcClientSecret is not set"},
+		{!OidcEnabled || OidcIssuer != "", "OidcIssuer is not set"},
+
+		// SMTP checks are required only when SMTP is enabled
+		{!SmtpEnabled || SmtpHost != "", "SMTP host is not set (SMTP_HOST)"},
+		{!SmtpEnabled || SmtpPort != "", "SMTP port is not set (SMTP_PORT)"},
+		{!SmtpEnabled || isValidSmtpMode(lowerMode), "SMTP mode is invalid (SMTP_MODE). Use auto|starttls|implicit|plain"},
+		{!SmtpEnabled || SmtpFromAddress != "", "SMTP from address is not set (SMTP_FROM_ADDRESS)"},
+		{!SmtpEnabled || SmtpUsername != "", "SMTP username is not set (SMTP_USERNAME)"},
+		{!SmtpEnabled || SmtpPassword != "", "SMTP password is not set (SMTP_PASSWORD)"},
+	}
+
 	hasError := false
-	if JwtSecret == "" {
-		slog.Error("JwtSecret is not set")
-		hasError = true
-	}
-	if EncryptionKey == "" {
-		slog.Error("EncryptionKey is not set")
-		hasError = true
-	}
-	if OidcEnabled {
-		if OidcClientId == "" {
-			slog.Error("OidcClientId is not set")
-			hasError = true
-		}
-		if OidcClientSecret == "" {
-			slog.Error("OidcClientSecret is not set")
-			hasError = true
-		}
-		if OidcIssuer == "" {
-			slog.Error("OidcIssuer is not set")
+	for _, v := range validations {
+		if !v.ok {
+			slog.Error(v.msg)
 			hasError = true
 		}
 	}
-	if SmtpEnabled {
-		if SmtpHost == "" {
-			slog.Error("SMTP host is not set (SMTP_HOST)")
-			hasError = true
-		}
-		if SmtpPort == "" {
-			slog.Error("SMTP port is not set (SMTP_PORT)")
-			hasError = true
-		}
-		mode := strings.ToLower(SmtpMode)
-		if mode != "auto" && mode != "starttls" && mode != "implicit" && mode != "plain" {
-			slog.Error("SMTP mode is invalid (SMTP_MODE). Use auto|starttls|implicit|plain", "SmtpMode", SmtpMode)
-			hasError = true
-		}
-		if SmtpFromAddress == "" {
-			slog.Error("SMTP from address is not set (SMTP_FROM_ADDRESS)")
-			hasError = true
-		}
-		// For most providers, auth is required
-		if SmtpUsername == "" {
-			slog.Error("SMTP username is not set (SMTP_USERNAME)")
-			hasError = true
-		}
-		if SmtpPassword == "" {
-			slog.Error("SMTP password is not set (SMTP_PASSWORD)")
-			hasError = true
-		}
-	}
+
 	if hasError {
 		slog.Error("Config is invalid, exiting")
 		os.Exit(1)
+	}
+}
+
+func isValidSmtpMode(mode string) bool {
+	switch mode {
+	case "auto", "starttls", "implicit", "plain":
+		return true
+	default:
+		return false
 	}
 }
 
