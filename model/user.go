@@ -55,7 +55,7 @@ func (params *CreateUserParams) Create() (*User, error) {
 	// Only hash and set password if it's provided
 	// OIDC users will have nil password
 	if params.Password != nil {
-		hashedPassword, err := hashPassword(*params.Password)
+		hashedPassword, err := HashPassword(*params.Password)
 		if err != nil {
 			return nil, err
 		}
@@ -88,13 +88,13 @@ func isPasswordValid(e string) (bool, string) {
 		hasNumber  = regexp.MustCompile(`[0-9]`).MatchString
 		hasSpecial = regexp.MustCompile(`[!@#\$%\^&\*\(\)_\+\-=\[\]{};':"\\|,.<>\/?]`).MatchString
 	)
-	if !hasUpper(e) && !hasLower(e) && !hasNumber(e) && !hasSpecial(e) {
+	if !hasUpper(e) || !hasLower(e) || !hasNumber(e) || !hasSpecial(e) {
 		return false, "password must include at least one uppercase letter, one lowercase letter, one number, and one special character"
 	}
 	return true, ""
 }
 
-func hashPassword(password string) (string, error) {
+func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err

@@ -47,3 +47,67 @@ logout:
     responses:
       "200":
         description: OK
+
+passwordResetRequest:
+  post:
+    description: Request a password reset email
+    tags:
+      - Auth
+    operationId: requestPasswordReset
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/auth.yaml#/PasswordResetRequest
+    responses:
+      "200":
+        description: Email sent (if account exists)
+
+passwordResetConfirm:
+  post:
+    description: Confirm password reset with token
+    tags:
+      - Auth
+    operationId: confirmPasswordReset
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/auth.yaml#/PasswordResetConfirmRequest
+    responses:
+      "200":
+        description: Password updated
+
+magicLinkRequest:
+  post:
+    description: Request a magic link login email
+    tags:
+      - Auth
+    operationId: requestMagicLink
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/auth.yaml#/MagicLinkRequest
+    responses:
+      "200":
+        description: Email sent (if account exists)
+
+magicLinkConsume:
+  get:
+    description: Consume magic link token and redirect with JWT
+    tags:
+      - Auth
+    operationId: consumeMagicLink
+    parameters:
+      - in: query
+        name: token
+        schema:
+          type: string
+        required: true
+    responses:
+      "302":
+        description: Redirect to frontend with token fragment

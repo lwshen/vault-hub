@@ -24,6 +24,11 @@ func SetupRoutes(app *fiber.App) {
 	auth := api.Group("/auth")
 	auth.Get("/login/oidc", handler.LoginOidc)
 	auth.Get("/callback/oidc", handler.LoginOidcCallback)
+	// Magic link consume endpoint with short URL path
+	app.Get("/auth/ml", func(c *fiber.Ctx) error {
+		token := c.Query("token")
+		return server.ConsumeMagicLink(c, openapi.ConsumeMagicLinkParams{Token: token})
+	})
 
 	// Web
 	embedFS, err := embed.GetDistFS()

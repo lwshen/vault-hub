@@ -1,0 +1,14 @@
+{{ define "content" }}
+<h2 style="margin-top:0;">Your magic link</h2>
+<p>Click the button below to sign in to {{.AppName}}.</p>
+<p>
+  <a class="button" href="{{.ActionURL}}">Sign in</a>
+  <br/>
+  Or copy and paste this link: <br/>
+  <a href="{{.ActionURL}}">{{.ActionURL}}</a>
+  <br/>
+  This link expires in {{.TTL}}.
+</p>
+{{ end }}
+
+

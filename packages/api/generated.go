@@ -186,6 +186,22 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
+// MagicLinkRequest defines model for MagicLinkRequest.
+type MagicLinkRequest struct {
+	Email openapi_types.Email `json:"email"`
+}
+
+// PasswordResetConfirmRequest defines model for PasswordResetConfirmRequest.
+type PasswordResetConfirmRequest struct {
+	NewPassword string `json:"newPassword"`
+	Token       string `json:"token"`
+}
+
+// PasswordResetRequest defines model for PasswordResetRequest.
+type PasswordResetRequest struct {
+	Email openapi_types.Email `json:"email"`
+}
+
 // SignupRequest defines model for SignupRequest.
 type SignupRequest struct {
 	Email    openapi_types.Email `json:"email"`
@@ -339,6 +355,11 @@ type GetAuditLogsParams struct {
 	PageIndex int `form:"pageIndex" json:"pageIndex"`
 }
 
+// ConsumeMagicLinkParams defines parameters for ConsumeMagicLink.
+type ConsumeMagicLinkParams struct {
+	Token string `form:"token" json:"token"`
+}
+
 // CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
 type CreateAPIKeyJSONRequestBody = CreateAPIKeyRequest
 
@@ -347,6 +368,15 @@ type UpdateAPIKeyJSONRequestBody = UpdateAPIKeyRequest
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
+
+// RequestMagicLinkJSONRequestBody defines body for RequestMagicLink for application/json ContentType.
+type RequestMagicLinkJSONRequestBody = MagicLinkRequest
+
+// ConfirmPasswordResetJSONRequestBody defines body for ConfirmPasswordReset for application/json ContentType.
+type ConfirmPasswordResetJSONRequestBody = PasswordResetConfirmRequest
+
+// RequestPasswordResetJSONRequestBody defines body for RequestPasswordReset for application/json ContentType.
+type RequestPasswordResetJSONRequestBody = PasswordResetRequest
 
 // SignupJSONRequestBody defines body for Signup for application/json ContentType.
 type SignupJSONRequestBody = SignupRequest
@@ -383,6 +413,15 @@ type ServerInterface interface {
 
 	// (GET /api/auth/logout)
 	Logout(c *fiber.Ctx) error
+
+	// (POST /api/auth/magic-link/request)
+	RequestMagicLink(c *fiber.Ctx) error
+
+	// (POST /api/auth/password/reset/confirm)
+	ConfirmPasswordReset(c *fiber.Ctx) error
+
+	// (POST /api/auth/password/reset/request)
+	RequestPasswordReset(c *fiber.Ctx) error
 
 	// (POST /api/auth/signup)
 	Signup(c *fiber.Ctx) error
@@ -422,6 +461,9 @@ type ServerInterface interface {
 
 	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(c *fiber.Ctx, uniqueId string) error
+
+	// (GET /auth/ml)
+	ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -602,6 +644,24 @@ func (siw *ServerInterfaceWrapper) Logout(c *fiber.Ctx) error {
 	return siw.Handler.Logout(c)
 }
 
+// RequestMagicLink operation middleware
+func (siw *ServerInterfaceWrapper) RequestMagicLink(c *fiber.Ctx) error {
+
+	return siw.Handler.RequestMagicLink(c)
+}
+
+// ConfirmPasswordReset operation middleware
+func (siw *ServerInterfaceWrapper) ConfirmPasswordReset(c *fiber.Ctx) error {
+
+	return siw.Handler.ConfirmPasswordReset(c)
+}
+
+// RequestPasswordReset operation middleware
+func (siw *ServerInterfaceWrapper) RequestPasswordReset(c *fiber.Ctx) error {
+
+	return siw.Handler.RequestPasswordReset(c)
+}
+
 // Signup operation middleware
 func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
 
@@ -736,6 +796,38 @@ func (siw *ServerInterfaceWrapper) UpdateVault(c *fiber.Ctx) error {
 	return siw.Handler.UpdateVault(c, uniqueId)
 }
 
+// ConsumeMagicLink operation middleware
+func (siw *ServerInterfaceWrapper) ConsumeMagicLink(c *fiber.Ctx) error {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ConsumeMagicLinkParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "token" -------------
+
+	if paramValue := c.Query("token"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument token is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", query, &params.Token)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter token: %w", err).Error())
+	}
+
+	return siw.Handler.ConsumeMagicLink(c, params)
+}
+
 // FiberServerOptions provides options for the Fiber server.
 type FiberServerOptions struct {
 	BaseURL     string
@@ -773,6 +865,12 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Get(options.BaseURL+"/api/auth/logout", wrapper.Logout)
 
+	router.Post(options.BaseURL+"/api/auth/magic-link/request", wrapper.RequestMagicLink)
+
+	router.Post(options.BaseURL+"/api/auth/password/reset/confirm", wrapper.ConfirmPasswordReset)
+
+	router.Post(options.BaseURL+"/api/auth/password/reset/request", wrapper.RequestPasswordReset)
+
 	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
 
 	router.Get(options.BaseURL+"/api/cli/vault/name/:name", wrapper.GetVaultByNameAPIKey)
@@ -798,6 +896,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/api/vaults/:uniqueId", wrapper.GetVault)
 
 	router.Put(options.BaseURL+"/api/vaults/:uniqueId", wrapper.UpdateVault)
+
+	router.Get(options.BaseURL+"/auth/ml", wrapper.ConsumeMagicLink)
 
 }
 
@@ -930,6 +1030,54 @@ type Logout200Response struct {
 }
 
 func (response Logout200Response) VisitLogoutResponse(ctx *fiber.Ctx) error {
+	ctx.Status(200)
+	return nil
+}
+
+type RequestMagicLinkRequestObject struct {
+	Body *RequestMagicLinkJSONRequestBody
+}
+
+type RequestMagicLinkResponseObject interface {
+	VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error
+}
+
+type RequestMagicLink200Response struct {
+}
+
+func (response RequestMagicLink200Response) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
+	ctx.Status(200)
+	return nil
+}
+
+type ConfirmPasswordResetRequestObject struct {
+	Body *ConfirmPasswordResetJSONRequestBody
+}
+
+type ConfirmPasswordResetResponseObject interface {
+	VisitConfirmPasswordResetResponse(ctx *fiber.Ctx) error
+}
+
+type ConfirmPasswordReset200Response struct {
+}
+
+func (response ConfirmPasswordReset200Response) VisitConfirmPasswordResetResponse(ctx *fiber.Ctx) error {
+	ctx.Status(200)
+	return nil
+}
+
+type RequestPasswordResetRequestObject struct {
+	Body *RequestPasswordResetJSONRequestBody
+}
+
+type RequestPasswordResetResponseObject interface {
+	VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error
+}
+
+type RequestPasswordReset200Response struct {
+}
+
+func (response RequestPasswordReset200Response) VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error {
 	ctx.Status(200)
 	return nil
 }
@@ -1149,6 +1297,22 @@ func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.C
 	return ctx.JSON(&response)
 }
 
+type ConsumeMagicLinkRequestObject struct {
+	Params ConsumeMagicLinkParams
+}
+
+type ConsumeMagicLinkResponseObject interface {
+	VisitConsumeMagicLinkResponse(ctx *fiber.Ctx) error
+}
+
+type ConsumeMagicLink302Response struct {
+}
+
+func (response ConsumeMagicLink302Response) VisitConsumeMagicLinkResponse(ctx *fiber.Ctx) error {
+	ctx.Status(302)
+	return nil
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
@@ -1175,6 +1339,15 @@ type StrictServerInterface interface {
 
 	// (GET /api/auth/logout)
 	Logout(ctx context.Context, request LogoutRequestObject) (LogoutResponseObject, error)
+
+	// (POST /api/auth/magic-link/request)
+	RequestMagicLink(ctx context.Context, request RequestMagicLinkRequestObject) (RequestMagicLinkResponseObject, error)
+
+	// (POST /api/auth/password/reset/confirm)
+	ConfirmPasswordReset(ctx context.Context, request ConfirmPasswordResetRequestObject) (ConfirmPasswordResetResponseObject, error)
+
+	// (POST /api/auth/password/reset/request)
+	RequestPasswordReset(ctx context.Context, request RequestPasswordResetRequestObject) (RequestPasswordResetResponseObject, error)
 
 	// (POST /api/auth/signup)
 	Signup(ctx context.Context, request SignupRequestObject) (SignupResponseObject, error)
@@ -1214,6 +1387,9 @@ type StrictServerInterface interface {
 
 	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(ctx context.Context, request UpdateVaultRequestObject) (UpdateVaultResponseObject, error)
+
+	// (GET /auth/ml)
+	ConsumeMagicLink(ctx context.Context, request ConsumeMagicLinkRequestObject) (ConsumeMagicLinkResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *fiber.Ctx, args interface{}) (interface{}, error)
@@ -1447,6 +1623,99 @@ func (sh *strictHandler) Logout(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(LogoutResponseObject); ok {
 		if err := validResponse.VisitLogoutResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RequestMagicLink operation middleware
+func (sh *strictHandler) RequestMagicLink(ctx *fiber.Ctx) error {
+	var request RequestMagicLinkRequestObject
+
+	var body RequestMagicLinkJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.RequestMagicLink(ctx.UserContext(), request.(RequestMagicLinkRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RequestMagicLink")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(RequestMagicLinkResponseObject); ok {
+		if err := validResponse.VisitRequestMagicLinkResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ConfirmPasswordReset operation middleware
+func (sh *strictHandler) ConfirmPasswordReset(ctx *fiber.Ctx) error {
+	var request ConfirmPasswordResetRequestObject
+
+	var body ConfirmPasswordResetJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.ConfirmPasswordReset(ctx.UserContext(), request.(ConfirmPasswordResetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ConfirmPasswordReset")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(ConfirmPasswordResetResponseObject); ok {
+		if err := validResponse.VisitConfirmPasswordResetResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RequestPasswordReset operation middleware
+func (sh *strictHandler) RequestPasswordReset(ctx *fiber.Ctx) error {
+	var request RequestPasswordResetRequestObject
+
+	var body RequestPasswordResetJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.RequestPasswordReset(ctx.UserContext(), request.(RequestPasswordResetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RequestPasswordReset")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(RequestPasswordResetResponseObject); ok {
+		if err := validResponse.VisitRequestPasswordResetResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
@@ -1800,6 +2069,33 @@ func (sh *strictHandler) UpdateVault(ctx *fiber.Ctx, uniqueId string) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(UpdateVaultResponseObject); ok {
 		if err := validResponse.VisitUpdateVaultResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ConsumeMagicLink operation middleware
+func (sh *strictHandler) ConsumeMagicLink(ctx *fiber.Ctx, params ConsumeMagicLinkParams) error {
+	var request ConsumeMagicLinkRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.ConsumeMagicLink(ctx.UserContext(), request.(ConsumeMagicLinkRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ConsumeMagicLink")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(ConsumeMagicLinkResponseObject); ok {
+		if err := validResponse.VisitConsumeMagicLinkResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

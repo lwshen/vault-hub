@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.1
+  version: 1.0.2
   title: Vault Hub Server
 # Merge path definitions from separate files
 paths:
@@ -20,6 +20,14 @@ paths:
     $ref: ./paths/auth.yaml#/signup
   /api/auth/logout:
     $ref: ./paths/auth.yaml#/logout
+  /api/auth/password/reset/request:
+    $ref: ./paths/auth.yaml#/passwordResetRequest
+  /api/auth/password/reset/confirm:
+    $ref: ./paths/auth.yaml#/passwordResetConfirm
+  /api/auth/magic-link/request:
+    $ref: ./paths/auth.yaml#/magicLinkRequest
+  /auth/ml:
+    $ref: ./paths/auth.yaml#/magicLinkConsume
   # User endpoints
   /api/user:
     $ref: ./paths/user.yaml#/getCurrentUser

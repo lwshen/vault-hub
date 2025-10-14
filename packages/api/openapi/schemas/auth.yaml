@@ -37,3 +37,32 @@ SignupResponse:
   properties:
     token:
       type: string
+
+PasswordResetRequest:
+  type: object
+  required:
+    - email
+  properties:
+    email:
+      type: string
+      format: email
+
+PasswordResetConfirmRequest:
+  type: object
+  required:
+    - token
+    - newPassword
+  properties:
+    token:
+      type: string
+    newPassword:
+      type: string
+
+MagicLinkRequest:
+  type: object
+  required:
+    - email
+  properties:
+    email:
+      type: string
+      format: email
