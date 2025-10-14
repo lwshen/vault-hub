@@ -219,7 +219,7 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeResetPassword, PasswordResetTTL)
 		if err == nil {
 			baseURL := c.BaseURL()
-			actionURL := fmt.Sprintf("%s/reset?token=%s", baseURL, token)
+			actionURL := fmt.Sprintf("%s/reset?token=%s", baseURL, url.QueryEscape(token))
 			go func(u model.User, url string) {
 				sender := email.NewSMTPSender()
 				svc := email.NewService(sender, "Vault Hub")
@@ -285,7 +285,7 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, MagicLinkTTL)
 		if err == nil {
 			baseURL := c.BaseURL()
-			actionURL := fmt.Sprintf("%s/auth/ml?token=%s", baseURL, token)
+			actionURL := fmt.Sprintf("%s/auth/ml?token=%s", baseURL, url.QueryEscape(token))
 			go func(u model.User, url string) {
 				sender := email.NewSMTPSender()
 				svc := email.NewService(sender, "Vault Hub")

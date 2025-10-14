@@ -141,7 +141,7 @@ func sendStartTLS(addr, host, port string, auth smtp.Auth, to string, msg []byte
 	} else {
 		return fmt.Errorf("SMTP server does not support STARTTLS: %s:%s", host, port)
 	}
-	if ok, _ := c.Extension("AUTH"); ok || true {
+	if ok, _ := c.Extension("AUTH"); ok {
 		if err := c.Auth(auth); err != nil {
 			return err
 		}
