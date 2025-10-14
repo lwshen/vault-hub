@@ -46,13 +46,27 @@ func (s *SMTPSender) Send(to string, subject string, htmlBody string) error {
 	msgBuilder.WriteString(htmlBody)
 	msg := []byte(msgBuilder.String())
 
-	// Try STARTTLS when TLS is requested
-	if config.SmtpTLS {
+	mode := strings.ToLower(config.SmtpMode)
+	// Backward compatibility: if SMTP_MODE isn't set (auto) then honor SmtpTLS + port hints
+	if mode == "auto" {
+		if config.SmtpTLS {
+			if port == "465" {
+				mode = "implicit"
+			} else {
+				mode = "starttls"
+			}
+		} else {
+			mode = "plain"
+		}
+	}
+
+	switch mode {
+	case "implicit":
+		// SMTPS on 465: connect with TLS immediately
 		tlsConfig := &tls.Config{
 			ServerName: host,
 			MinVersion: tls.VersionTLS12,
 		}
-		// Dial TCP first
 		conn, err := tls.Dial("tcp", addr, tlsConfig)
 		if err != nil {
 			return err
@@ -86,10 +100,61 @@ func (s *SMTPSender) Send(to string, subject string, htmlBody string) error {
 			return err
 		}
 		return nil
-	}
 
-	// Plain SMTP without TLS (not recommended)
-	return smtp.SendMail(addr, auth, config.SmtpFromAddress, []string{to}, msg)
+	case "starttls":
+		// SMTP on 587: connect plain, then upgrade via STARTTLS
+		c, err := smtp.Dial(addr)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := c.Quit(); err != nil {
+				slog.Debug("smtp client quit error", "error", err)
+			}
+		}()
+		// Attempt STARTTLS if supported
+		tlsConfig := &tls.Config{
+			ServerName: host,
+			MinVersion: tls.VersionTLS12,
+		}
+		if ok, _ := c.Extension("STARTTLS"); ok {
+			if err := c.StartTLS(tlsConfig); err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("SMTP server does not support STARTTLS: %s:%s", host, port)
+		}
+		if ok, _ := c.Extension("AUTH"); ok || true {
+			// Many servers require TLS before AUTH PLAIN/LOGIN; now safe to auth
+			if err := c.Auth(auth); err != nil {
+				return err
+			}
+		}
+		if err := c.Mail(config.SmtpFromAddress); err != nil {
+			return err
+		}
+		if err := c.Rcpt(to); err != nil {
+			return err
+		}
+		w, err := c.Data()
+		if err != nil {
+			return err
+		}
+		if _, err := w.Write(msg); err != nil {
+			return err
+		}
+		if err := w.Close(); err != nil {
+			return err
+		}
+		return nil
+
+	case "plain":
+		// Plain SMTP (not recommended)
+		return smtp.SendMail(addr, auth, config.SmtpFromAddress, []string{to}, msg)
+
+	default:
+		return fmt.Errorf("unsupported SMTP mode: %s", mode)
+	}
 }
 
 func formatFrom(name, address string) string {

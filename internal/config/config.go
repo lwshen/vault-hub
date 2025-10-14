@@ -30,6 +30,7 @@ var (
 	SmtpEnabled     bool
 	SmtpHost        string
 	SmtpPort        string
+	SmtpMode        string
 	SmtpUsername    string
 	SmtpPassword    string
 	SmtpFromAddress string
@@ -53,6 +54,9 @@ func init() {
 	SmtpEnabled = getEnv("SMTP_ENABLED", "false") == "true"
 	SmtpHost = getEnv("SMTP_HOST", "")
 	SmtpPort = getEnv("SMTP_PORT", "587")
+	// SMTP_MODE controls TLS behavior: auto|starttls|implicit|plain
+	// auto: choose by port (465=implicit, 587=starttls, else try STARTTLS then plain)
+	SmtpMode = getEnv("SMTP_MODE", "auto")
 	SmtpUsername = getEnv("SMTP_USERNAME", "")
 	SmtpPassword = getEnv("SMTP_PASSWORD", "")
 	SmtpFromAddress = getEnv("SMTP_FROM_ADDRESS", "")
@@ -80,6 +84,7 @@ func printConfig() {
 	if SmtpEnabled {
 		slog.Info("Config", "SmtpHost", SmtpHost)
 		slog.Info("Config", "SmtpPort", SmtpPort)
+		slog.Info("Config", "SmtpMode", SmtpMode)
 		slog.Info("Config", "SmtpUsername", SmtpUsername)
 		slog.Info("Config", "SmtpPassword", mask(SmtpPassword))
 		slog.Info("Config", "SmtpFromAddress", SmtpFromAddress)
@@ -119,6 +124,11 @@ func checkConfig() {
 		}
 		if SmtpPort == "" {
 			slog.Error("SMTP port is not set (SMTP_PORT)")
+			hasError = true
+		}
+		mode := strings.ToLower(SmtpMode)
+		if mode != "auto" && mode != "starttls" && mode != "implicit" && mode != "plain" {
+			slog.Error("SMTP mode is invalid (SMTP_MODE). Use auto|starttls|implicit|plain", "SmtpMode", SmtpMode)
 			hasError = true
 		}
 		if SmtpFromAddress == "" {

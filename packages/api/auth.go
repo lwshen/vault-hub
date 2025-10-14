@@ -80,7 +80,7 @@ func (Server) Signup(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
-	slog.Info("User created", "email", user.Email, "name", user.Name)
+	slog.Info("User created", "email", user.Email, "name", *user.Name)
 
 	// Log successful registration
 	logSignupAudit(user.ID, clientIP, userAgent)
@@ -88,7 +88,7 @@ func (Server) Signup(c *fiber.Ctx) error {
 	// Fire-and-forget signup email (do not block response)
 	go func(u *model.User) {
 		sender := email.NewSMTPSender()
-		svc := email.NewService(sender, "Vault Hub", "support@localhost")
+		svc := email.NewService(sender, "Vault Hub")
 		name := ""
 		if u.Name != nil {
 			name = *u.Name
@@ -219,7 +219,7 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 			actionURL := fmt.Sprintf("%s/reset?token=%s", baseURL, token)
 			go func(u model.User, url string) {
 				sender := email.NewSMTPSender()
-				svc := email.NewService(sender, "Vault Hub", "support@localhost")
+				svc := email.NewService(sender, "Vault Hub")
 				name := ""
 				if u.Name != nil {
 					name = *u.Name
@@ -285,7 +285,7 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 			actionURL := fmt.Sprintf("%s/api/auth/magic-link/consume?token=%s", baseURL, token)
 			go func(u model.User, url string) {
 				sender := email.NewSMTPSender()
-				svc := email.NewService(sender, "Vault Hub", "support@localhost")
+				svc := email.NewService(sender, "Vault Hub")
 				name := ""
 				if u.Name != nil {
 					name = *u.Name

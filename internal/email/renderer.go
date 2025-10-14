@@ -6,12 +6,11 @@ import (
 )
 
 type TemplateData struct {
-	Subject      string
-	AppName      string
-	UserName     string
-	ActionURL    string
-	TTL          string
-	SupportEmail string
+	Subject   string
+	AppName   string
+	UserName  string
+	ActionURL string
+	TTL       string
 }
 
 func renderTemplate(name string, data TemplateData) (string, error) {
