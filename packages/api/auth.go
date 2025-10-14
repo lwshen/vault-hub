@@ -185,20 +185,6 @@ func getEmail(email openapi_types.Email) (string, error) {
 	return string(email), nil
 }
 
-// Temporary request types until OpenAPI generation is updated
-type PasswordResetRequest struct {
-	Email openapi_types.Email `json:"email"`
-}
-
-type PasswordResetConfirmRequest struct {
-	Token       string `json:"token"`
-	NewPassword string `json:"newPassword"`
-}
-
-type MagicLinkRequest struct {
-	Email openapi_types.Email `json:"email"`
-}
-
 // RequestPasswordReset creates a password reset token and sends email
 func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 	var input PasswordResetRequest
@@ -282,7 +268,7 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, 15*time.Minute)
 		if err == nil {
 			baseURL := c.BaseURL()
-			actionURL := fmt.Sprintf("%s/api/auth/magic-link/consume?token=%s", baseURL, token)
+			actionURL := fmt.Sprintf("%s/auth/ml?token=%s", baseURL, token)
 			go func(u model.User, url string) {
 				sender := email.NewSMTPSender()
 				svc := email.NewService(sender, "Vault Hub")
@@ -300,8 +286,8 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 }
 
 // ConsumeMagicLink verifies token, generates JWT and redirects with fragment
-func (Server) ConsumeMagicLink(c *fiber.Ctx) error {
-	token := c.Query("token")
+func (Server) ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) error {
+	token := params.Token
 	if token == "" {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}

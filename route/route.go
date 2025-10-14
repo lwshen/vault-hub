@@ -28,7 +28,12 @@ func SetupRoutes(app *fiber.App) {
 	auth.Post("/password/reset/request", server.RequestPasswordReset)
 	auth.Post("/password/reset/confirm", server.ConfirmPasswordReset)
 	auth.Post("/magic-link/request", server.RequestMagicLink)
-	auth.Get("/magic-link/consume", server.ConsumeMagicLink)
+
+	// Magic link consume endpoint with short URL path
+	app.Get("/auth/ml", func(c *fiber.Ctx) error {
+		token := c.Query("token")
+		return server.ConsumeMagicLink(c, openapi.ConsumeMagicLinkParams{Token: token})
+	})
 
 	// Web
 	embedFS, err := embed.GetDistFS()

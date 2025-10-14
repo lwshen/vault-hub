@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.1
+  version: 1.0.2
   title: Vault Hub Server
 paths:
   /api/health:
@@ -89,6 +89,66 @@ paths:
       responses:
         '200':
           description: OK
+  /api/auth/password/reset/request:
+    post:
+      description: Request a password reset email
+      tags:
+        - Auth
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: Email sent (if account exists)
+  /api/auth/password/reset/confirm:
+    post:
+      description: Confirm password reset with token
+      tags:
+        - Auth
+      operationId: confirmPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+      responses:
+        '200':
+          description: Password updated
+  /api/auth/magic-link/request:
+    post:
+      description: Request a magic link login email
+      tags:
+        - Auth
+      operationId: requestMagicLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MagicLinkRequest'
+      responses:
+        '200':
+          description: Email sent (if account exists)
+  /auth/ml:
+    get:
+      description: Consume magic link token and redirect with JWT
+      tags:
+        - Auth
+      operationId: consumeMagicLink
+      parameters:
+        - in: query
+          name: token
+          schema:
+            type: string
+          required: true
+      responses:
+        '302':
+          description: Redirect to frontend with token fragment
   /api/user:
     get:
       description: Get current user by credential
@@ -813,3 +873,29 @@ components:
           type: boolean
           description: Whether OIDC authentication is enabled
           example: false
+    PasswordResetRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+    PasswordResetConfirmRequest:
+      type: object
+      required:
+        - token
+        - newPassword
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+    MagicLinkRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
