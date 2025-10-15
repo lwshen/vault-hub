@@ -104,7 +104,7 @@ func (Server) Signup(c *fiber.Ctx) error {
 
 	// Fire-and-forget signup email (do not block response)
 	go func(u *model.User) {
-		sender := email.NewSMTPSender()
+		sender := email.NewSender()
 		svc := email.NewService(sender, "Vault Hub")
 		name := ""
 		if u.Name != nil {
@@ -221,7 +221,7 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 			baseURL := c.BaseURL()
 			actionURL := fmt.Sprintf("%s/reset?token=%s", baseURL, url.QueryEscape(token))
 			go func(u model.User, url string) {
-				sender := email.NewSMTPSender()
+				sender := email.NewSender()
 				svc := email.NewService(sender, "Vault Hub")
 				name := ""
 				if u.Name != nil {
@@ -287,7 +287,7 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 			baseURL := c.BaseURL()
 			actionURL := fmt.Sprintf("%s/api/auth/magic-link/token?token=%s", baseURL, url.QueryEscape(token))
 			go func(u model.User, url string) {
-				sender := email.NewSMTPSender()
+				sender := email.NewSender()
 				svc := email.NewService(sender, "Vault Hub")
 				name := ""
 				if u.Name != nil {
