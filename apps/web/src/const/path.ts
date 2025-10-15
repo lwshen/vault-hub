@@ -1,6 +1,9 @@
 export const PATH = {
   LOGIN: '/login',
   SIGNUP: '/signup',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset',
+  MAGIC_LINK_LOGIN: '/auth/ml',
   HOME: '/',
   DASHBOARD: '/dashboard',
   VAULTS: '/dashboard/vaults',

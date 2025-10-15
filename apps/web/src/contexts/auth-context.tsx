@@ -9,6 +9,8 @@ export interface AuthContextType {
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  requestMagicLink: (email: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

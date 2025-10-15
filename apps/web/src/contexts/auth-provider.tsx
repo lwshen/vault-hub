@@ -4,6 +4,7 @@ import { AuthContext } from './auth-context';
 import { useState, useEffect, useMemo, type ReactNode, useCallback } from 'react';
 import { PATH } from '@/const/path';
 import { navigate } from 'wouter/use-browser-location';
+import { toast } from 'sonner';
 
 export const AuthProvider = ({ children }: { children: ReactNode; }) => {
   const [user, setUser] = useState<GetUserResponse | null>(null);
@@ -27,25 +28,32 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       // URL fragments are never sent to the server, providing better security
       const fragment = window.location.hash.substring(1); // Remove '#' prefix
       const fragmentParams = new URLSearchParams(fragment);
-      const oidcToken = fragmentParams.get('token');
+      const fragmentToken = fragmentParams.get('token');
       const source = fragmentParams.get('source');
 
-      if (oidcToken && source === 'oidc') {
-        // Clean up URL and set token from OIDC
+      const isMagicLinkSource = source === 'magic' || source === 'magiclink';
+      if (fragmentToken && (source === 'oidc' || isMagicLinkSource)) {
         try {
-          await setToken(oidcToken);
-          // Remove fragment from URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-          // Navigate to dashboard after successful OIDC login
+          await setToken(fragmentToken);
+          // Remove fragment from URL while preserving any query params
+          const cleanUrl = `${window.location.pathname}${window.location.search}`;
+          window.history.replaceState({}, document.title, cleanUrl);
+          if (isMagicLinkSource) {
+            toast.success('You are now signed in with your magic link.');
+          }
           setIsLoading(false);
           navigate(PATH.DASHBOARD);
-          return; // Skip regular token check since we already set the OIDC token
+          return; // Skip regular token check since we already set the token
         } catch (error) {
-          console.error('Failed to set OIDC token:', error);
+          console.error('Failed to set token from URL fragment:', error);
           // Remove invalid token from localStorage
           localStorage.removeItem('token');
+          if (isMagicLinkSource) {
+            toast.error('Unable to sign in with this magic link. Please request a new one.');
+          }
           // Clear the fragment and continue with regular token check
-          window.history.replaceState({}, document.title, window.location.pathname);
+          const cleanUrl = `${window.location.pathname}${window.location.search}`;
+          window.history.replaceState({}, document.title, cleanUrl);
         }
       }
 
@@ -110,6 +118,36 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     navigate(PATH.HOME);
   }, []);
 
+  const requestPasswordReset = useCallback(async (email: string) => {
+    try {
+      await authApi.requestPasswordReset({ email });
+      toast.success(
+        "If an account exists with this email, you'll receive password reset instructions shortly.",
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to send reset instructions. Please try again.';
+      toast.error(message);
+      throw error;
+    }
+  }, []);
+
+  const requestMagicLink = useCallback(async (email: string) => {
+    try {
+      await authApi.requestMagicLink({ email });
+      toast.success("We've sent you a login link. Please check your email.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to send magic link. Please try again.';
+      toast.error(message);
+      throw error;
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       isAuthenticated,
@@ -119,8 +157,20 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       signup,
       logout,
       isLoading,
+      requestPasswordReset,
+      requestMagicLink,
     }),
-    [isAuthenticated, user, login, loginWithOidc, signup, logout, isLoading],
+    [
+      isAuthenticated,
+      user,
+      login,
+      loginWithOidc,
+      signup,
+      logout,
+      isLoading,
+      requestPasswordReset,
+      requestMagicLink,
+    ],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;
