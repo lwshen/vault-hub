@@ -6,6 +6,10 @@ import (
 	"github.com/lwshen/vault-hub/internal/config"
 )
 
+type Sender interface {
+	Send(to string, subject string, htmlBody string) error
+}
+
 type noopSender struct{}
 
 func (noopSender) Send(string, string, string) error { return nil }

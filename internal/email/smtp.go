@@ -11,10 +11,6 @@ import (
 	"github.com/lwshen/vault-hub/internal/config"
 )
 
-type Sender interface {
-	Send(to string, subject string, htmlBody string) error
-}
-
 type SMTPSender struct{}
 
 func NewSMTPSender() *SMTPSender { return &SMTPSender{} }
