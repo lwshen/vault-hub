@@ -48,6 +48,11 @@ var (
 	ResendFromName    string
 )
 
+type validation struct {
+	ok  bool
+	msg string
+}
+
 func init() {
 	AppPort = getEnv("APP_PORT", "3000")
 	JwtSecret = getEnv("JWT_SECRET", "")
@@ -139,35 +144,72 @@ func printConfig() {
 }
 
 func checkConfig() {
-	type validation struct {
-		ok  bool
-		msg string
-	}
+	validations := make([]validation, 0, 16)
+	validations = append(validations, baseValidations()...)
+	validations = append(validations, oidcValidations()...)
+	validations = append(validations, emailValidations()...)
+	validations = append(validations, smtpValidations()...)
+	validations = append(validations, resendValidations()...)
 
+	if logValidationErrors(validations) {
+		slog.Error("Config is invalid, exiting")
+		os.Exit(1)
+	}
+}
+
+func baseValidations() []validation {
+	return []validation{
+		{ok: JwtSecret != "", msg: "JwtSecret is not set"},
+		{ok: EncryptionKey != "", msg: "EncryptionKey is not set"},
+	}
+}
+
+func oidcValidations() []validation {
+	if !OidcEnabled {
+		return nil
+	}
+	return []validation{
+		{ok: OidcClientId != "", msg: "OidcClientId is not set"},
+		{ok: OidcClientSecret != "", msg: "OidcClientSecret is not set"},
+		{ok: OidcIssuer != "", msg: "OidcIssuer is not set"},
+	}
+}
+
+func emailValidations() []validation {
+	if !EmailEnabled {
+		return nil
+	}
+	return []validation{
+		{ok: isValidEmailType(EmailType), msg: "Email type is invalid (EMAIL_TYPE). Use SMTP|RESEND"},
+	}
+}
+
+func smtpValidations() []validation {
+	if !SmtpEnabled {
+		return nil
+	}
 	lowerMode := strings.ToLower(SmtpMode)
-
-	validations := []validation{
-		{JwtSecret != "", "JwtSecret is not set"},
-		{EncryptionKey != "", "EncryptionKey is not set"},
-
-		{!EmailEnabled || isValidEmailType(EmailType), "Email type is invalid (EMAIL_TYPE). Use SMTP|RESEND"},
-
-		// OIDC checks are required only when OIDC is enabled
-		{!OidcEnabled || OidcClientId != "", "OidcClientId is not set"},
-		{!OidcEnabled || OidcClientSecret != "", "OidcClientSecret is not set"},
-		{!OidcEnabled || OidcIssuer != "", "OidcIssuer is not set"},
-
-		// SMTP checks are required only when SMTP is enabled
-		{!SmtpEnabled || SmtpHost != "", "SMTP host is not set (SMTP_HOST)"},
-		{!SmtpEnabled || SmtpPort != "", "SMTP port is not set (SMTP_PORT)"},
-		{!SmtpEnabled || isValidSmtpMode(lowerMode), "SMTP mode is invalid (SMTP_MODE). Use auto|starttls|implicit|plain"},
-		{!SmtpEnabled || SmtpFromAddress != "", "SMTP from address is not set (SMTP_FROM_ADDRESS)"},
-		{!SmtpEnabled || SmtpUsername != "", "SMTP username is not set (SMTP_USERNAME)"},
-		{!SmtpEnabled || SmtpPassword != "", "SMTP password is not set (SMTP_PASSWORD)"},
-		{!ResendEnabled || ResendAPIKey != "", "Resend API key is not set (RESEND_API_KEY)"},
-		{!ResendEnabled || ResendFromAddress != "", "Resend from address is not set (RESEND_FROM_ADDRESS)"},
+	return []validation{
+		{ok: SmtpHost != "", msg: "SMTP host is not set (SMTP_HOST)"},
+		{ok: SmtpPort != "", msg: "SMTP port is not set (SMTP_PORT)"},
+		{ok: isValidSmtpMode(lowerMode), msg: "SMTP mode is invalid (SMTP_MODE). Use auto|starttls|implicit|plain"},
+		{ok: SmtpFromAddress != "", msg: "SMTP from address is not set (SMTP_FROM_ADDRESS)"},
+		{ok: SmtpUsername != "", msg: "SMTP username is not set (SMTP_USERNAME)"},
+		{ok: SmtpPassword != "", msg: "SMTP password is not set (SMTP_PASSWORD)"},
 	}
+}
 
+func resendValidations() []validation {
+	if !ResendEnabled {
+		return nil
+	}
+	return []validation{
+		{ok: ResendAPIKey != "", msg: "Resend API key is not set (RESEND_API_KEY)"},
+		{ok: ResendFromAddress != "", msg: "Resend from address is not set (RESEND_FROM_ADDRESS)"},
+	}
+}
+
+func logValidationErrors(validations []validation) bool {
 	hasError := false
 	for _, v := range validations {
 		if !v.ok {
@@ -175,11 +217,7 @@ func checkConfig() {
 			hasError = true
 		}
 	}
-
-	if hasError {
-		slog.Error("Config is invalid, exiting")
-		os.Exit(1)
-	}
+	return hasError
 }
 
 func isValidEmailType(emailType string) bool {
