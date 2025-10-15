@@ -417,6 +417,9 @@ type ServerInterface interface {
 	// (POST /api/auth/magic-link/request)
 	RequestMagicLink(c *fiber.Ctx) error
 
+	// (GET /api/auth/magic-link/token)
+	ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) error
+
 	// (POST /api/auth/password/reset/confirm)
 	ConfirmPasswordReset(c *fiber.Ctx) error
 
@@ -461,9 +464,6 @@ type ServerInterface interface {
 
 	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(c *fiber.Ctx, uniqueId string) error
-
-	// (GET /auth/ml)
-	ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -650,6 +650,38 @@ func (siw *ServerInterfaceWrapper) RequestMagicLink(c *fiber.Ctx) error {
 	return siw.Handler.RequestMagicLink(c)
 }
 
+// ConsumeMagicLink operation middleware
+func (siw *ServerInterfaceWrapper) ConsumeMagicLink(c *fiber.Ctx) error {
+
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ConsumeMagicLinkParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "token" -------------
+
+	if paramValue := c.Query("token"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument token is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "token", query, &params.Token)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter token: %w", err).Error())
+	}
+
+	return siw.Handler.ConsumeMagicLink(c, params)
+}
+
 // ConfirmPasswordReset operation middleware
 func (siw *ServerInterfaceWrapper) ConfirmPasswordReset(c *fiber.Ctx) error {
 
@@ -796,38 +828,6 @@ func (siw *ServerInterfaceWrapper) UpdateVault(c *fiber.Ctx) error {
 	return siw.Handler.UpdateVault(c, uniqueId)
 }
 
-// ConsumeMagicLink operation middleware
-func (siw *ServerInterfaceWrapper) ConsumeMagicLink(c *fiber.Ctx) error {
-
-	var err error
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params ConsumeMagicLinkParams
-
-	var query url.Values
-	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
-	}
-
-	// ------------- Required query parameter "token" -------------
-
-	if paramValue := c.Query("token"); paramValue != "" {
-
-	} else {
-		err = fmt.Errorf("Query argument token is required, but not found")
-		c.Status(fiber.StatusBadRequest).JSON(err)
-		return err
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "token", query, &params.Token)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter token: %w", err).Error())
-	}
-
-	return siw.Handler.ConsumeMagicLink(c, params)
-}
-
 // FiberServerOptions provides options for the Fiber server.
 type FiberServerOptions struct {
 	BaseURL     string
@@ -867,6 +867,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Post(options.BaseURL+"/api/auth/magic-link/request", wrapper.RequestMagicLink)
 
+	router.Get(options.BaseURL+"/api/auth/magic-link/token", wrapper.ConsumeMagicLink)
+
 	router.Post(options.BaseURL+"/api/auth/password/reset/confirm", wrapper.ConfirmPasswordReset)
 
 	router.Post(options.BaseURL+"/api/auth/password/reset/request", wrapper.RequestPasswordReset)
@@ -896,8 +898,6 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/api/vaults/:uniqueId", wrapper.GetVault)
 
 	router.Put(options.BaseURL+"/api/vaults/:uniqueId", wrapper.UpdateVault)
-
-	router.Get(options.BaseURL+"/auth/ml", wrapper.ConsumeMagicLink)
 
 }
 
@@ -1047,6 +1047,22 @@ type RequestMagicLink200Response struct {
 
 func (response RequestMagicLink200Response) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
 	ctx.Status(200)
+	return nil
+}
+
+type ConsumeMagicLinkRequestObject struct {
+	Params ConsumeMagicLinkParams
+}
+
+type ConsumeMagicLinkResponseObject interface {
+	VisitConsumeMagicLinkResponse(ctx *fiber.Ctx) error
+}
+
+type ConsumeMagicLink302Response struct {
+}
+
+func (response ConsumeMagicLink302Response) VisitConsumeMagicLinkResponse(ctx *fiber.Ctx) error {
+	ctx.Status(302)
 	return nil
 }
 
@@ -1297,22 +1313,6 @@ func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.C
 	return ctx.JSON(&response)
 }
 
-type ConsumeMagicLinkRequestObject struct {
-	Params ConsumeMagicLinkParams
-}
-
-type ConsumeMagicLinkResponseObject interface {
-	VisitConsumeMagicLinkResponse(ctx *fiber.Ctx) error
-}
-
-type ConsumeMagicLink302Response struct {
-}
-
-func (response ConsumeMagicLink302Response) VisitConsumeMagicLinkResponse(ctx *fiber.Ctx) error {
-	ctx.Status(302)
-	return nil
-}
-
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 
@@ -1342,6 +1342,9 @@ type StrictServerInterface interface {
 
 	// (POST /api/auth/magic-link/request)
 	RequestMagicLink(ctx context.Context, request RequestMagicLinkRequestObject) (RequestMagicLinkResponseObject, error)
+
+	// (GET /api/auth/magic-link/token)
+	ConsumeMagicLink(ctx context.Context, request ConsumeMagicLinkRequestObject) (ConsumeMagicLinkResponseObject, error)
 
 	// (POST /api/auth/password/reset/confirm)
 	ConfirmPasswordReset(ctx context.Context, request ConfirmPasswordResetRequestObject) (ConfirmPasswordResetResponseObject, error)
@@ -1387,9 +1390,6 @@ type StrictServerInterface interface {
 
 	// (PUT /api/vaults/{uniqueId})
 	UpdateVault(ctx context.Context, request UpdateVaultRequestObject) (UpdateVaultResponseObject, error)
-
-	// (GET /auth/ml)
-	ConsumeMagicLink(ctx context.Context, request ConsumeMagicLinkRequestObject) (ConsumeMagicLinkResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx *fiber.Ctx, args interface{}) (interface{}, error)
@@ -1654,6 +1654,33 @@ func (sh *strictHandler) RequestMagicLink(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(RequestMagicLinkResponseObject); ok {
 		if err := validResponse.VisitRequestMagicLinkResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ConsumeMagicLink operation middleware
+func (sh *strictHandler) ConsumeMagicLink(ctx *fiber.Ctx, params ConsumeMagicLinkParams) error {
+	var request ConsumeMagicLinkRequestObject
+
+	request.Params = params
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.ConsumeMagicLink(ctx.UserContext(), request.(ConsumeMagicLinkRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ConsumeMagicLink")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(ConsumeMagicLinkResponseObject); ok {
+		if err := validResponse.VisitConsumeMagicLinkResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
@@ -2069,33 +2096,6 @@ func (sh *strictHandler) UpdateVault(ctx *fiber.Ctx, uniqueId string) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(UpdateVaultResponseObject); ok {
 		if err := validResponse.VisitUpdateVaultResponse(ctx); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		}
-	} else if response != nil {
-		return fmt.Errorf("unexpected response type: %T", response)
-	}
-	return nil
-}
-
-// ConsumeMagicLink operation middleware
-func (sh *strictHandler) ConsumeMagicLink(ctx *fiber.Ctx, params ConsumeMagicLinkParams) error {
-	var request ConsumeMagicLinkRequestObject
-
-	request.Params = params
-
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.ConsumeMagicLink(ctx.UserContext(), request.(ConsumeMagicLinkRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "ConsumeMagicLink")
-	}
-
-	response, err := handler(ctx, request)
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	} else if validResponse, ok := response.(ConsumeMagicLinkResponseObject); ok {
-		if err := validResponse.VisitConsumeMagicLinkResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
