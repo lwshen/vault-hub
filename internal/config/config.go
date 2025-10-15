@@ -16,6 +16,11 @@ const (
 	DatabaseTypePostgres DatabaseTypeEnum = "postgres"
 )
 
+const (
+	EmailTypeSMTP   = "SMTP"
+	EmailTypeResend = "RESEND"
+)
+
 var (
 	AppPort          string
 	DatabaseType     DatabaseTypeEnum
@@ -26,16 +31,22 @@ var (
 	OidcClientId     string
 	OidcClientSecret string
 	OidcIssuer       string
+	EmailEnabled     bool
+	EmailType        string
 	// SMTP / Email
-	SmtpEnabled     bool
-	SmtpHost        string
-	SmtpPort        string
-	SmtpMode        string
-	SmtpUsername    string
-	SmtpPassword    string
-	SmtpFromAddress string
-	SmtpFromName    string
-	SmtpTLS         bool
+	SmtpEnabled       bool
+	SmtpHost          string
+	SmtpPort          string
+	SmtpMode          string
+	SmtpUsername      string
+	SmtpPassword      string
+	SmtpFromAddress   string
+	SmtpFromName      string
+	SmtpTLS           bool
+	ResendEnabled     bool
+	ResendAPIKey      string
+	ResendFromAddress string
+	ResendFromName    string
 )
 
 func init() {
@@ -51,7 +62,30 @@ func init() {
 	OidcEnabled = OidcClientId != "" || OidcClientSecret != "" || OidcIssuer != ""
 
 	// SMTP
-	SmtpEnabled = getEnv("SMTP_ENABLED", "false") == "true"
+	rawEmailType := strings.ToUpper(strings.TrimSpace(getEnv("EMAIL_TYPE", "")))
+	switch rawEmailType {
+	case EmailTypeSMTP, EmailTypeResend:
+		EmailType = rawEmailType
+	default:
+		if getEnv("RESEND_ENABLED", "false") == "true" {
+			EmailType = EmailTypeResend
+		} else {
+			EmailType = EmailTypeSMTP
+		}
+	}
+
+	rawEmailEnabled := strings.TrimSpace(getEnv("EMAIL_ENABLED", ""))
+	if rawEmailEnabled != "" {
+		EmailEnabled = strings.EqualFold(rawEmailEnabled, "true")
+	} else {
+		switch EmailType {
+		case EmailTypeResend:
+			EmailEnabled = getEnv("RESEND_ENABLED", "false") == "true"
+		default:
+			EmailEnabled = getEnv("SMTP_ENABLED", "false") == "true"
+		}
+	}
+
 	SmtpHost = getEnv("SMTP_HOST", "")
 	SmtpPort = getEnv("SMTP_PORT", "587")
 	// SMTP_MODE controls TLS behavior: auto|starttls|implicit|plain
@@ -62,6 +96,11 @@ func init() {
 	SmtpFromAddress = getEnv("SMTP_FROM_ADDRESS", "")
 	SmtpFromName = getEnv("SMTP_FROM_NAME", "Vault Hub")
 	SmtpTLS = getEnv("SMTP_TLS", "true") == "true"
+	ResendEnabled = EmailEnabled && EmailType == EmailTypeResend
+	SmtpEnabled = EmailEnabled && EmailType == EmailTypeSMTP
+	ResendAPIKey = getEnv("RESEND_API_KEY", "")
+	ResendFromAddress = getEnv("RESEND_FROM_ADDRESS", SmtpFromAddress)
+	ResendFromName = getEnv("RESEND_FROM_NAME", SmtpFromName)
 
 	printConfig()
 
@@ -80,6 +119,8 @@ func printConfig() {
 		slog.Info("Config", "OidcClientSecret", mask(OidcClientSecret))
 		slog.Info("Config", "OidcIssuer", OidcIssuer)
 	}
+	slog.Info("Config", "EmailEnabled", EmailEnabled)
+	slog.Info("Config", "EmailType", EmailType)
 	slog.Info("Config", "SmtpEnabled", SmtpEnabled)
 	if SmtpEnabled {
 		slog.Info("Config", "SmtpHost", SmtpHost)
@@ -90,6 +131,11 @@ func printConfig() {
 		slog.Info("Config", "SmtpFromAddress", SmtpFromAddress)
 		slog.Info("Config", "SmtpFromName", SmtpFromName)
 		slog.Info("Config", "SmtpTLS", SmtpTLS)
+	}
+	slog.Info("Config", "ResendEnabled", ResendEnabled)
+	if ResendEnabled {
+		slog.Info("Config", "ResendFromAddress", ResendFromAddress)
+		slog.Info("Config", "ResendFromName", ResendFromName)
 	}
 }
 
@@ -105,6 +151,8 @@ func checkConfig() {
 		{JwtSecret != "", "JwtSecret is not set"},
 		{EncryptionKey != "", "EncryptionKey is not set"},
 
+		{!EmailEnabled || isValidEmailType(EmailType), "Email type is invalid (EMAIL_TYPE). Use SMTP|RESEND"},
+
 		// OIDC checks are required only when OIDC is enabled
 		{!OidcEnabled || OidcClientId != "", "OidcClientId is not set"},
 		{!OidcEnabled || OidcClientSecret != "", "OidcClientSecret is not set"},
@@ -117,6 +165,8 @@ func checkConfig() {
 		{!SmtpEnabled || SmtpFromAddress != "", "SMTP from address is not set (SMTP_FROM_ADDRESS)"},
 		{!SmtpEnabled || SmtpUsername != "", "SMTP username is not set (SMTP_USERNAME)"},
 		{!SmtpEnabled || SmtpPassword != "", "SMTP password is not set (SMTP_PASSWORD)"},
+		{!ResendEnabled || ResendAPIKey != "", "Resend API key is not set (RESEND_API_KEY)"},
+		{!ResendEnabled || ResendFromAddress != "", "Resend from address is not set (RESEND_FROM_ADDRESS)"},
 	}
 
 	hasError := false
@@ -130,6 +180,15 @@ func checkConfig() {
 	if hasError {
 		slog.Error("Config is invalid, exiting")
 		os.Exit(1)
+	}
+}
+
+func isValidEmailType(emailType string) bool {
+	switch strings.ToUpper(emailType) {
+	case EmailTypeSMTP, EmailTypeResend:
+		return true
+	default:
+		return false
 	}
 }
 
