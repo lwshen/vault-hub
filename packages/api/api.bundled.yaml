@@ -134,7 +134,7 @@ paths:
       responses:
         '200':
           description: Email sent (if account exists)
-  /auth/ml:
+  /api/auth/magic-link/token:
     get:
       description: Consume magic link token and redirect with JWT
       tags:

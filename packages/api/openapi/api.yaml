@@ -26,7 +26,7 @@ paths:
     $ref: ./paths/auth.yaml#/passwordResetConfirm
   /api/auth/magic-link/request:
     $ref: ./paths/auth.yaml#/magicLinkRequest
-  /auth/ml:
+  /api/auth/magic-link/token:
     $ref: ./paths/auth.yaml#/magicLinkConsume
   # User endpoints
   /api/user:
