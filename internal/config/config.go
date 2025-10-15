@@ -22,18 +22,17 @@ const (
 )
 
 var (
-	AppPort          string
-	DatabaseType     DatabaseTypeEnum
-	DatabaseUrl      string
-	JwtSecret        string
-	EncryptionKey    string
-	OidcEnabled      bool
-	OidcClientId     string
-	OidcClientSecret string
-	OidcIssuer       string
-	EmailEnabled     bool
-	EmailType        string
-	// SMTP / Email
+	AppPort           string
+	DatabaseType      DatabaseTypeEnum
+	DatabaseUrl       string
+	JwtSecret         string
+	EncryptionKey     string
+	OidcEnabled       bool
+	OidcClientId      string
+	OidcClientSecret  string
+	OidcIssuer        string
+	EmailEnabled      bool
+	EmailType         string
 	SmtpEnabled       bool
 	SmtpHost          string
 	SmtpPort          string
