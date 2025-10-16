@@ -2,18 +2,41 @@ package email
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Service struct {
 	sender  Sender
 	appName string
+	limiter RateLimiter
 }
 
+const (
+	rateLimitKindSignup        = "signup_confirmation"
+	rateLimitKindPasswordReset = "password_reset"
+	rateLimitKindMagicLink     = "magic_link"
+)
+
 func NewService(sender Sender, appName string) *Service {
-	return &Service{sender: sender, appName: appName}
+	return &Service{sender: sender, appName: appName, limiter: DefaultRateLimiter()}
+}
+
+func (s *Service) allow(kind, to string) bool {
+	if s.limiter == nil {
+		return true
+	}
+	key := buildRateLimitKey(kind, to)
+	return s.limiter.Allow(key)
+}
+
+func buildRateLimitKey(kind, to string) string {
+	return kind + ":" + strings.ToLower(strings.TrimSpace(to))
 }
 
 func (s *Service) SendSignupConfirmation(to, userName string) error {
+	if !s.allow(rateLimitKindSignup, to) {
+		return ErrRateLimited
+	}
 	data := TemplateData{
 		Subject:  fmt.Sprintf("Welcome to %s", s.appName),
 		AppName:  s.appName,
@@ -27,6 +50,9 @@ func (s *Service) SendSignupConfirmation(to, userName string) error {
 }
 
 func (s *Service) SendPasswordReset(to, userName, actionURL, ttl string) error {
+	if !s.allow(rateLimitKindPasswordReset, to) {
+		return ErrRateLimited
+	}
 	data := TemplateData{
 		Subject:   fmt.Sprintf("Reset your %s password", s.appName),
 		AppName:   s.appName,
@@ -42,6 +68,9 @@ func (s *Service) SendPasswordReset(to, userName, actionURL, ttl string) error {
 }
 
 func (s *Service) SendMagicLink(to, userName, actionURL, ttl string) error {
+	if !s.allow(rateLimitKindMagicLink, to) {
+		return ErrRateLimited
+	}
 	data := TemplateData{
 		Subject:   fmt.Sprintf("Your %s magic link", s.appName),
 		AppName:   s.appName,

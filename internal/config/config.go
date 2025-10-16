@@ -3,7 +3,9 @@ package config
 import (
 	"log/slog"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -22,30 +24,33 @@ const (
 )
 
 var (
-	AppPort           string
-	DatabaseType      DatabaseTypeEnum
-	DatabaseUrl       string
-	JwtSecret         string
-	EncryptionKey     string
-	OidcEnabled       bool
-	OidcClientId      string
-	OidcClientSecret  string
-	OidcIssuer        string
-	EmailEnabled      bool
-	EmailType         string
-	SmtpEnabled       bool
-	SmtpHost          string
-	SmtpPort          string
-	SmtpMode          string
-	SmtpUsername      string
-	SmtpPassword      string
-	SmtpFromAddress   string
-	SmtpFromName      string
-	SmtpTLS           bool
-	ResendEnabled     bool
-	ResendAPIKey      string
-	ResendFromAddress string
-	ResendFromName    string
+	AppPort               string
+	DatabaseType          DatabaseTypeEnum
+	DatabaseUrl           string
+	JwtSecret             string
+	EncryptionKey         string
+	OidcEnabled           bool
+	OidcClientId          string
+	OidcClientSecret      string
+	OidcIssuer            string
+	EmailEnabled          bool
+	EmailType             string
+	SmtpEnabled           bool
+	SmtpHost              string
+	SmtpPort              string
+	SmtpMode              string
+	SmtpUsername          string
+	SmtpPassword          string
+	SmtpFromAddress       string
+	SmtpFromName          string
+	SmtpTLS               bool
+	ResendEnabled         bool
+	ResendAPIKey          string
+	ResendFromAddress     string
+	ResendFromName        string
+	EmailRateLimitEnabled bool
+	EmailRateLimitWindow  time.Duration
+	EmailRateLimitBurst   int
 )
 
 type validation struct {
@@ -106,6 +111,40 @@ func init() {
 	ResendFromAddress = getEnv("RESEND_FROM_ADDRESS", SmtpFromAddress)
 	ResendFromName = getEnv("RESEND_FROM_NAME", SmtpFromName)
 
+	EmailRateLimitEnabled = false
+	EmailRateLimitWindow = time.Minute
+	EmailRateLimitBurst = 3
+	if EmailEnabled {
+		rawRateLimitEnabled := strings.TrimSpace(getEnv("EMAIL_RATE_LIMIT_ENABLED", "true"))
+		if rawRateLimitEnabled == "" {
+			EmailRateLimitEnabled = true
+		} else {
+			EmailRateLimitEnabled = strings.EqualFold(rawRateLimitEnabled, "true")
+		}
+
+		windowStr := strings.TrimSpace(getEnv("EMAIL_RATE_LIMIT_WINDOW", "1m"))
+		if parsed, err := time.ParseDuration(windowStr); err != nil {
+			slog.Warn("Invalid EMAIL_RATE_LIMIT_WINDOW, falling back to default", "value", windowStr, "error", err)
+		} else if parsed <= 0 {
+			slog.Warn("EMAIL_RATE_LIMIT_WINDOW must be greater than zero, falling back to default", "value", windowStr)
+		} else {
+			EmailRateLimitWindow = parsed
+		}
+
+		burstStr := strings.TrimSpace(getEnv("EMAIL_RATE_LIMIT_BURST", "3"))
+		if value, err := strconv.Atoi(burstStr); err != nil {
+			slog.Warn("Invalid EMAIL_RATE_LIMIT_BURST, falling back to default", "value", burstStr, "error", err)
+		} else if value < 0 {
+			slog.Warn("EMAIL_RATE_LIMIT_BURST cannot be negative, falling back to default", "value", burstStr)
+		} else {
+			EmailRateLimitBurst = value
+		}
+
+		if !EmailRateLimitEnabled {
+			EmailRateLimitBurst = 0
+		}
+	}
+
 	printConfig()
 
 	checkConfig()
@@ -140,6 +179,13 @@ func printConfig() {
 	if ResendEnabled {
 		slog.Info("Config", "ResendFromAddress", ResendFromAddress)
 		slog.Info("Config", "ResendFromName", ResendFromName)
+	}
+	if EmailEnabled {
+		slog.Info("Config", "EmailRateLimitEnabled", EmailRateLimitEnabled)
+		if EmailRateLimitEnabled {
+			slog.Info("Config", "EmailRateLimitWindow", EmailRateLimitWindow)
+			slog.Info("Config", "EmailRateLimitBurst", EmailRateLimitBurst)
+		}
 	}
 }
 
@@ -179,9 +225,16 @@ func emailValidations() []validation {
 	if !EmailEnabled {
 		return nil
 	}
-	return []validation{
+	validations := []validation{
 		{ok: isValidEmailType(EmailType), msg: "Email type is invalid (EMAIL_TYPE). Use SMTP|RESEND"},
 	}
+	if EmailRateLimitEnabled {
+		validations = append(validations,
+			validation{ok: EmailRateLimitWindow > 0, msg: "EMAIL_RATE_LIMIT_WINDOW must be greater than zero"},
+			validation{ok: EmailRateLimitBurst > 0, msg: "EMAIL_RATE_LIMIT_BURST must be greater than zero"},
+		)
+	}
+	return validations
 }
 
 func smtpValidations() []validation {

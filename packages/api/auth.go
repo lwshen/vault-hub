@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -111,7 +112,11 @@ func (Server) Signup(c *fiber.Ctx) error {
 			name = *u.Name
 		}
 		if err := svc.SendSignupConfirmation(u.Email, name); err != nil {
-			slog.Error("Failed to send signup confirmation", "error", err, "email", u.Email)
+			if errors.Is(err, email.ErrRateLimited) {
+				slog.Warn("Signup confirmation email rate limited", "email", u.Email)
+			} else {
+				slog.Error("Failed to send signup confirmation", "error", err, "email", u.Email)
+			}
 		}
 		_ = model.LogUserAction(model.ActionSendSignupEmail, u.ID, model.SourceWeb, clientIP, userAgent)
 	}(user)
@@ -228,7 +233,11 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 					name = *u.Name
 				}
 				if err := svc.SendPasswordReset(u.Email, name, url, formatTTLForEmail(PasswordResetTTL)); err != nil {
-					slog.Error("Failed to send password reset email", "error", err, "email", u.Email)
+					if errors.Is(err, email.ErrRateLimited) {
+						slog.Warn("Password reset email rate limited", "email", u.Email)
+					} else {
+						slog.Error("Failed to send password reset email", "error", err, "email", u.Email)
+					}
 				}
 			}(user, actionURL)
 		}
@@ -294,7 +303,11 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 					name = *u.Name
 				}
 				if err := svc.SendMagicLink(u.Email, name, url, formatTTLForEmail(MagicLinkTTL)); err != nil {
-					slog.Error("Failed to send magic link email", "error", err, "email", u.Email)
+					if errors.Is(err, email.ErrRateLimited) {
+						slog.Warn("Magic link email rate limited", "email", u.Email)
+					} else {
+						slog.Error("Failed to send magic link email", "error", err, "email", u.Email)
+					}
 				}
 			}(user, actionURL)
 		}
