@@ -18,6 +18,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+const STEP = {
+  EMAIL: 'email',
+  OPTIONS: 'options',
+  PASSWORD: 'password',
+} as const;
+
+type Step = (typeof STEP)[keyof typeof STEP];
+type MagicLinkStatus = 'success' | 'error';
+
+interface MagicLinkFeedback {
+  message: string;
+  status: MagicLinkStatus;
+}
+
 export function LoginForm({
   className,
   ...props
@@ -28,22 +42,52 @@ export function LoginForm({
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<'email' | 'options' | 'password'>('email');
-  const [magicLinkMessage, setMagicLinkMessage] = useState<string | null>(null);
-  const [magicLinkStatus, setMagicLinkStatus] = useState<'success' | 'error' | null>(null);
+  const [step, setStep] = useState<Step>(STEP.EMAIL);
+  const [magicLinkFeedback, setMagicLinkFeedback] = useState<MagicLinkFeedback | null>(null);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const { oidcEnabled, oidcLoading } = useOidcConfig();
+  const magicLinkMessage = magicLinkFeedback?.message;
+  const magicLinkStatus = magicLinkFeedback?.status;
+
+  const resetMagicLinkFeedback = () => setMagicLinkFeedback(null);
+
+  const showMagicLinkFeedback = (status: MagicLinkStatus, message: string) => {
+    setMagicLinkFeedback({
+      status,
+      message,
+    });
+  };
+
+  const renderMagicLinkFeedback = () => {
+    if (!magicLinkMessage) {
+      return null;
+    }
+
+    const status = magicLinkStatus ?? 'error';
+
+    return (
+      <p
+        className={cn(
+          'text-xs',
+          status === 'success' ? 'text-emerald-600' : 'text-red-500',
+        )}
+      >
+        {magicLinkMessage}
+      </p>
+    );
+  };
 
   const handleEmailSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
-    if (!email) {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
       setError('Please enter your email to continue.');
       return;
     }
-    setStep('options');
-    setMagicLinkMessage(null);
-    setMagicLinkStatus(null);
+    setEmail(normalizedEmail);
+    setStep(STEP.OPTIONS);
+    resetMagicLinkFeedback();
   };
 
   const handlePasswordSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -61,7 +105,7 @@ export function LoginForm({
   };
 
   const navigateToSignup = () => {
-    navigate('/signup');
+    navigate(PATH.SIGNUP);
   };
 
   const handleOidcLogin = () => {
@@ -73,19 +117,19 @@ export function LoginForm({
   };
 
   const handleMagicLink = async () => {
-    if (!email) {
-      setMagicLinkStatus('error');
-      setMagicLinkMessage('Enter your email address to receive a magic link.');
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      showMagicLinkFeedback('error', 'Enter your email address to receive a magic link.');
       return;
     }
     setError(null);
-    setMagicLinkMessage(null);
-    setMagicLinkStatus(null);
+    resetMagicLinkFeedback();
     setMagicLinkLoading(true);
     try {
-      await requestMagicLink(email);
-      setMagicLinkStatus('success');
-      setMagicLinkMessage(
+      await requestMagicLink(normalizedEmail);
+      setEmail(normalizedEmail);
+      showMagicLinkFeedback(
+        'success',
         "If an account exists with this email, we've sent a magic link. It expires in 15 minutes.",
       );
     } catch (err) {
@@ -93,19 +137,17 @@ export function LoginForm({
         err instanceof Error
           ? err.message
           : 'Unable to send a magic link right now. Please try again.';
-      setMagicLinkStatus('error');
-      setMagicLinkMessage(message);
+      showMagicLinkFeedback('error', message);
     } finally {
       setMagicLinkLoading(false);
     }
   };
 
   const handleChangeEmail = () => {
-    setStep('email');
+    setStep(STEP.EMAIL);
     setPassword('');
     setError(null);
-    setMagicLinkMessage(null);
-    setMagicLinkStatus(null);
+    resetMagicLinkFeedback();
   };
 
   return (
@@ -113,13 +155,10 @@ export function LoginForm({
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>
-            Start by entering the email associated with your account.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
-            {step === 'email' && (
+            {step === STEP.EMAIL && (
               <form className="grid gap-6" onSubmit={handleEmailSubmit}>
                 <div className="grid gap-3">
                   <Label htmlFor="email">Email</Label>
@@ -139,7 +178,7 @@ export function LoginForm({
               </form>
             )}
 
-            {step === 'options' && (
+            {step === STEP.OPTIONS && (
               <div className="grid gap-4">
                 <div className="grid gap-3">
                   <Label htmlFor="email-options">Email</Label>
@@ -165,21 +204,12 @@ export function LoginForm({
                     <Mail className="h-4 w-4" aria-hidden="true" />
                     {magicLinkLoading ? 'Sending magic link...' : 'Send magic link'}
                   </Button>
-                  <Button type="button" className="w-full" onClick={() => setStep('password')}>
+                  <Button type="button" className="w-full" onClick={() => setStep(STEP.PASSWORD)}>
                     <Lock className="h-4 w-4" aria-hidden="true" />
                     Enter password
                   </Button>
                 </div>
-                {magicLinkMessage && (
-                  <p
-                    className={cn(
-                      'text-xs',
-                      magicLinkStatus === 'success' ? 'text-emerald-600' : 'text-red-500',
-                    )}
-                  >
-                    {magicLinkMessage}
-                  </p>
-                )}
+                {renderMagicLinkFeedback()}
                 <Button
                   type="button"
                   variant="link"
@@ -191,7 +221,7 @@ export function LoginForm({
               </div>
             )}
 
-            {step === 'password' && (
+            {step === STEP.PASSWORD && (
               <form className="grid gap-6" onSubmit={handlePasswordSubmit}>
                 <div className="grid gap-3">
                   <Label htmlFor="email-readonly">Email</Label>
@@ -235,16 +265,7 @@ export function LoginForm({
                     {magicLinkLoading ? 'Sending magic link...' : 'Send magic link instead'}
                   </Button>
                 </div>
-                {magicLinkMessage && (
-                  <p
-                    className={cn(
-                      'text-xs',
-                      magicLinkStatus === 'success' ? 'text-emerald-600' : 'text-red-500',
-                    )}
-                  >
-                    {magicLinkMessage}
-                  </p>
-                )}
+                {renderMagicLinkFeedback()}
                 {error && <div className="text-red-500 text-sm">{error}</div>}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Logging in...' : 'Login'}
