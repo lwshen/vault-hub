@@ -34,3 +34,8 @@
 ## Security & Configuration Tips
 - Keep `JWT_SECRET`, `ENCRYPTION_KEY`, and database credentials in environment variables or secret storage.
 - Document new OIDC/database variables in PRs, and scrub sensitive rows from shared `data.db` snapshots.
+
+## Post-change Checklist
+- When modifying `packages/api/openapi/api.yaml`, always bump the patch segment of the `info.version` field before regenerating artifacts.
+- Run `golangci-lint run ./...` after backend changes to confirm the Go codebase stays clean.
+- Run `pnpm typecheck` and `pnpm lint` from `apps/web` after frontend changes to catch TypeScript and lint issues early.
