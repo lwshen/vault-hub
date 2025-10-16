@@ -1050,6 +1050,14 @@ func (response RequestMagicLink200Response) VisitRequestMagicLinkResponse(ctx *f
 	return nil
 }
 
+type RequestMagicLink404Response struct {
+}
+
+func (response RequestMagicLink404Response) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
+	ctx.Status(404)
+	return nil
+}
+
 type ConsumeMagicLinkRequestObject struct {
 	Params ConsumeMagicLinkParams
 }

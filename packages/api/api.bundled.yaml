@@ -134,6 +134,8 @@ paths:
       responses:
         '200':
           description: Email sent (if account exists)
+        '404':
+          description: Email not found
   /api/auth/magic-link/token:
     get:
       description: Consume magic link token and redirect with JWT

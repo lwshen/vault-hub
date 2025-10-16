@@ -95,6 +95,8 @@ magicLinkRequest:
     responses:
       "200":
         description: Email sent (if account exists)
+      "404":
+        description: Email not found
 
 magicLinkConsume:
   get:
