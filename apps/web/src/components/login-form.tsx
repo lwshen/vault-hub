@@ -130,7 +130,7 @@ export function LoginForm({
       setEmail(normalizedEmail);
       showMagicLinkFeedback(
         'success',
-        "If an account exists with this email, we've sent a magic link. It expires in 15 minutes.",
+        "We've sent a magic link to your email. It expires in 15 minutes.",
       );
     } catch (err) {
       const message =
