@@ -202,11 +202,7 @@ export default function MagicLink() {
                   <span>{errorMessage}</span>
                 </div>
                 <div className="grid gap-2">
-                  {canRetry && (
-                    <Button onClick={handleRetry} disabled={status === 'processing'}>
-                      Try verification again
-                    </Button>
-                  )}
+                  {canRetry && <Button onClick={handleRetry}>Try verification again</Button>}
                   <Button asChild variant="outline">
                     <Link href={PATH.LOGIN}>Request a new magic link</Link>
                   </Button>

@@ -281,9 +281,11 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 	user := model.User{Email: emailStr}
-	if err := user.GetByEmail(); err == nil {
-		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, MagicLinkTTL)
-		if err == nil {
+	if err := user.GetByEmail(); err != nil {
+		slog.Info("Magic link request user not found", "email", emailStr, "error", err)
+	} else {
+		token, _, tokenErr := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, MagicLinkTTL)
+		if tokenErr == nil {
 			baseURL := c.BaseURL()
 			actionURL := fmt.Sprintf("%s/api/auth/magic-link/token?token=%s", baseURL, url.QueryEscape(token))
 			go func(u model.User, url string) {
