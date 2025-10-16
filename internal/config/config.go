@@ -145,8 +145,8 @@ func configureEmailRateLimit() {
 	burstStr := strings.TrimSpace(getEnv("EMAIL_RATE_LIMIT_BURST", "3"))
 	if value, err := strconv.Atoi(burstStr); err != nil {
 		slog.Warn("Invalid EMAIL_RATE_LIMIT_BURST, falling back to default", "value", burstStr, "error", err)
-	} else if value < 0 {
-		slog.Warn("EMAIL_RATE_LIMIT_BURST cannot be negative, falling back to default", "value", burstStr)
+	} else if value <= 0 {
+		slog.Warn("EMAIL_RATE_LIMIT_BURST must be greater than zero, falling back to default", "value", burstStr)
 	} else {
 		EmailRateLimitBurst = value
 	}
