@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react';
-import { Link, useLocation } from 'wouter';
+import { authApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,9 +10,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PATH } from '@/const/path';
-import { authApi } from '@/apis/api';
-import { toast } from 'sonner';
 import { CheckCircle2, XCircle } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { Link, useLocation } from 'wouter';
 
 const requirements = [
   {

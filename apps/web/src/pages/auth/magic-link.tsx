@@ -1,7 +1,8 @@
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
-import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 
+import { authApi } from '@/apis/api';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,7 +12,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PATH } from '@/const/path';
-import { authApi } from '@/apis/api';
 import { ResponseError } from '@lwshen/vault-hub-ts-fetch-client';
 
 type Status = 'idle' | 'processing' | 'success' | 'error';

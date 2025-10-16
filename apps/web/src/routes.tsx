@@ -1,20 +1,20 @@
-import { Route, Switch } from 'wouter';
 import HeroSection from '@/components/hero/hero-section';
-import Features from '@/pages/features';
-import Documentation from '@/pages/documentation';
-import Login from '@/pages/auth/login';
-import Signup from '@/pages/auth/signup';
-import ForgotPassword from '@/pages/auth/forgot-password';
-import ResetPassword from '@/pages/auth/reset-password';
-import MagicLink from '@/pages/auth/magic-link';
-import Dashboard from '@/pages/dashboard/dashboard';
-import Vaults from '@/pages/dashboard/vaults';
-import VaultDetail from '@/pages/dashboard/vault-detail';
-import AuditLog from '@/pages/dashboard/audit-log';
-import ApiKeys from '@/pages/dashboard/api-keys';
-import Mock from '@/pages/mock';
 import { ProtectedRoute } from '@/components/protected-route';
 import { PATH } from '@/const/path';
+import ForgotPassword from '@/pages/auth/forgot-password';
+import Login from '@/pages/auth/login';
+import MagicLink from '@/pages/auth/magic-link';
+import ResetPassword from '@/pages/auth/reset-password';
+import Signup from '@/pages/auth/signup';
+import ApiKeys from '@/pages/dashboard/api-keys';
+import AuditLog from '@/pages/dashboard/audit-log';
+import Dashboard from '@/pages/dashboard/dashboard';
+import VaultDetail from '@/pages/dashboard/vault-detail';
+import Vaults from '@/pages/dashboard/vaults';
+import Documentation from '@/pages/documentation';
+import Features from '@/pages/features';
+import Mock from '@/pages/mock';
+import { Route, Switch } from 'wouter';
 
 export const AppRoutes = () => (
   <Switch>

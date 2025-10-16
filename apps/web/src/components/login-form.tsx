@@ -1,22 +1,21 @@
-import { useState } from 'react';
-import { useLocation } from 'wouter';
-import { FaOpenid } from 'react-icons/fa';
 import { Lock, Mail } from 'lucide-react';
+import { useState } from 'react';
+import { FaOpenid } from 'react-icons/fa';
+import { useLocation } from 'wouter';
 
-import { PATH } from '@/const/path';
-import useAuth from '@/hooks/use-auth';
-import { useOidcConfig } from '@/hooks/use-oidc-config';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PATH } from '@/const/path';
+import useAuth from '@/hooks/use-auth';
+import { useOidcConfig } from '@/hooks/use-oidc-config';
+import { cn } from '@/lib/utils';
 
 const STEP = {
   EMAIL: 'email',

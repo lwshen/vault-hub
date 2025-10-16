@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PATH } from '@/const/path';
 import useAuth from '@/hooks/use-auth';
+import { useState } from 'react';
+import { Link } from 'wouter';
 
 export default function ForgotPassword() {
   const { requestPasswordReset } = useAuth();
