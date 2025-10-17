@@ -1,3 +1,17 @@
+## [1.3.18] - 2025-10-17
+
+### 🚀 Features
+
+- Add rate limit on email token requests (#296)
+## [1.3.17] - 2025-10-15
+
+### 🚀 Features
+
+- Add resend provider with unified email config (#291)
+
+### 🐛 Bug Fixes
+
+- Move magic-link consume route under api namespace (#290)
 ## [1.3.16] - 2025-10-14
 
 ### 🚀 Features
