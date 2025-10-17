@@ -38,3 +38,41 @@ func TestEmailTokenLifecycle(t *testing.T) {
 		t.Fatalf("expected expired error")
 	}
 }
+
+func TestEmailTokenRateLimited(t *testing.T) {
+	userID := uint(99)
+	window := 200 * time.Millisecond
+
+	limited, _, err := EmailTokenRateLimited(userID, TokenPurposeResetPassword, window)
+	if err != nil {
+		t.Fatalf("rate limit check before: %v", err)
+	}
+	if limited {
+		t.Fatalf("expected no rate limit before token creation")
+	}
+
+	if _, _, err := CreateEmailToken(userID, TokenPurposeResetPassword, time.Minute); err != nil {
+		t.Fatalf("create token: %v", err)
+	}
+
+	limited, retryAfter, err := EmailTokenRateLimited(userID, TokenPurposeResetPassword, window)
+	if err != nil {
+		t.Fatalf("rate limit check after: %v", err)
+	}
+	if !limited {
+		t.Fatalf("expected rate limit immediately after token creation")
+	}
+	if retryAfter <= 0 || retryAfter > window {
+		t.Fatalf("unexpected retryAfter: %v", retryAfter)
+	}
+
+	time.Sleep(window + time.Millisecond*25)
+
+	limited, _, err = EmailTokenRateLimited(userID, TokenPurposeResetPassword, window)
+	if err != nil {
+		t.Fatalf("rate limit check post-wait: %v", err)
+	}
+	if limited {
+		t.Fatalf("expected rate limit to expire after wait")
+	}
+}

@@ -162,6 +162,15 @@ type CreateVaultRequest struct {
 	Value string `json:"value"`
 }
 
+// EmailTokenResponse defines model for EmailTokenResponse.
+type EmailTokenResponse struct {
+	// Message Human readable status message for the request
+	Message string `json:"message"`
+
+	// Success Indicates whether the email token request was accepted
+	Success bool `json:"success"`
+}
+
 // GetUserResponse defines model for GetUserResponse.
 type GetUserResponse struct {
 	Avatar *string             `json:"avatar,omitempty"`
@@ -1042,12 +1051,39 @@ type RequestMagicLinkResponseObject interface {
 	VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error
 }
 
-type RequestMagicLink200Response struct {
+type RequestMagicLink200JSONResponse EmailTokenResponse
+
+func (response RequestMagicLink200JSONResponse) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
 }
 
-func (response RequestMagicLink200Response) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
-	ctx.Status(200)
-	return nil
+type RequestMagicLink429ResponseHeaders struct {
+	RetryAfter string
+}
+
+type RequestMagicLink429JSONResponse struct {
+	Body    EmailTokenResponse
+	Headers RequestMagicLink429ResponseHeaders
+}
+
+func (response RequestMagicLink429JSONResponse) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(429)
+
+	return ctx.JSON(&response.Body)
+}
+
+type RequestMagicLink500JSONResponse EmailTokenResponse
+
+func (response RequestMagicLink500JSONResponse) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(500)
+
+	return ctx.JSON(&response)
 }
 
 type ConsumeMagicLinkRequestObject struct {
@@ -1090,12 +1126,39 @@ type RequestPasswordResetResponseObject interface {
 	VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error
 }
 
-type RequestPasswordReset200Response struct {
+type RequestPasswordReset200JSONResponse EmailTokenResponse
+
+func (response RequestPasswordReset200JSONResponse) VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
 }
 
-func (response RequestPasswordReset200Response) VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error {
-	ctx.Status(200)
-	return nil
+type RequestPasswordReset429ResponseHeaders struct {
+	RetryAfter string
+}
+
+type RequestPasswordReset429JSONResponse struct {
+	Body    EmailTokenResponse
+	Headers RequestPasswordReset429ResponseHeaders
+}
+
+func (response RequestPasswordReset429JSONResponse) VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(429)
+
+	return ctx.JSON(&response.Body)
+}
+
+type RequestPasswordReset500JSONResponse EmailTokenResponse
+
+func (response RequestPasswordReset500JSONResponse) VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(500)
+
+	return ctx.JSON(&response)
 }
 
 type SignupRequestObject struct {
