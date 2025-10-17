@@ -1,3 +1,8 @@
+## [1.3.19] - 2025-10-17
+
+### 🚀 Features
+
+- Add 404 response for magic link request when email not found (#295)
 ## [1.3.18] - 2025-10-17
 
 ### 🚀 Features
