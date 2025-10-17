@@ -312,7 +312,10 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 	if err := user.GetByEmail(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			slog.Warn("Magic link request user not found", "email", emailStr)
-			return handler.SendError(c, fiber.StatusNotFound, "No account exists with that email address.")
+			return c.Status(fiber.StatusOK).JSON(fiber.Map{
+				"success": false,
+				"code":    emailTokenCodeFailed,
+			})
 		}
 		slog.Error("Failed to look up user for magic link", "email", emailStr, "error", err)
 		return handler.SendError(c, fiber.StatusInternalServerError, "Unable to send a magic link right now.")

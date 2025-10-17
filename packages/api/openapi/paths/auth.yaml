@@ -120,8 +120,6 @@ magicLinkRequest:
           application/json:
             schema:
               $ref: ../schemas/auth.yaml#/EmailTokenResponse
-      "404":
-        description: Email not found
       "429":
         description: Too many requests for this user
         headers:
