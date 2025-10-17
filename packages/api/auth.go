@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	PasswordResetTTL = 30 * time.Minute
-	MagicLinkTTL     = 15 * time.Minute
+	PasswordResetTTL  = 30 * time.Minute
+	MagicLinkTTL      = 15 * time.Minute
+	EmailSendCooldown = time.Minute
 )
 
 // formatTTLForEmail formats a duration for email display (e.g., "30m", "2h")
@@ -216,22 +217,33 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 	// Attempt to find user; if not found, still return success
 	user := model.User{Email: emailStr}
 	if err := user.GetByEmail(); err == nil {
-		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeResetPassword, PasswordResetTTL)
-		if err == nil {
-			baseURL := c.BaseURL()
-			actionURL := fmt.Sprintf("%s/reset?token=%s", baseURL, url.QueryEscape(token))
-			go func(u model.User, url string) {
-				sender := email.NewSender()
-				svc := email.NewService(sender, "Vault Hub")
-				name := ""
-				if u.Name != nil {
-					name = *u.Name
-				}
-				if err := svc.SendPasswordReset(u.Email, name, url, formatTTLForEmail(PasswordResetTTL)); err != nil {
-					slog.Error("Failed to send password reset email", "error", err, "email", u.Email)
-				}
-			}(user, actionURL)
+		limited, retryAfter, rateErr := model.EmailTokenRateLimited(user.ID, model.TokenPurposeResetPassword, EmailSendCooldown)
+		if rateErr != nil {
+			slog.Error("Failed to check password reset rate limit", "error", rateErr, "userID", user.ID)
+		} else if limited {
+			slog.Warn("Password reset email rate limited", "userID", user.ID, "retryAfter", retryAfter)
+			return c.SendStatus(fiber.StatusOK)
 		}
+
+		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeResetPassword, PasswordResetTTL)
+		if err != nil {
+			slog.Error("Failed to create password reset token", "error", err, "userID", user.ID)
+			return c.SendStatus(fiber.StatusOK)
+		}
+
+		baseURL := c.BaseURL()
+		actionURL := fmt.Sprintf("%s/reset?token=%s", baseURL, url.QueryEscape(token))
+		go func(u model.User, url string) {
+			sender := email.NewSender()
+			svc := email.NewService(sender, "Vault Hub")
+			name := ""
+			if u.Name != nil {
+				name = *u.Name
+			}
+			if err := svc.SendPasswordReset(u.Email, name, url, formatTTLForEmail(PasswordResetTTL)); err != nil {
+				slog.Error("Failed to send password reset email", "error", err, "email", u.Email)
+			}
+		}(user, actionURL)
 	}
 	return c.SendStatus(fiber.StatusOK)
 }
@@ -282,22 +294,33 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 	}
 	user := model.User{Email: emailStr}
 	if err := user.GetByEmail(); err == nil {
-		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, MagicLinkTTL)
-		if err == nil {
-			baseURL := c.BaseURL()
-			actionURL := fmt.Sprintf("%s/api/auth/magic-link/token?token=%s", baseURL, url.QueryEscape(token))
-			go func(u model.User, url string) {
-				sender := email.NewSender()
-				svc := email.NewService(sender, "Vault Hub")
-				name := ""
-				if u.Name != nil {
-					name = *u.Name
-				}
-				if err := svc.SendMagicLink(u.Email, name, url, formatTTLForEmail(MagicLinkTTL)); err != nil {
-					slog.Error("Failed to send magic link email", "error", err, "email", u.Email)
-				}
-			}(user, actionURL)
+		limited, retryAfter, rateErr := model.EmailTokenRateLimited(user.ID, model.TokenPurposeMagicLink, EmailSendCooldown)
+		if rateErr != nil {
+			slog.Error("Failed to check magic link rate limit", "error", rateErr, "userID", user.ID)
+		} else if limited {
+			slog.Warn("Magic link email rate limited", "userID", user.ID, "retryAfter", retryAfter)
+			return c.SendStatus(fiber.StatusOK)
 		}
+
+		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, MagicLinkTTL)
+		if err != nil {
+			slog.Error("Failed to create magic link token", "error", err, "userID", user.ID)
+			return c.SendStatus(fiber.StatusOK)
+		}
+
+		baseURL := c.BaseURL()
+		actionURL := fmt.Sprintf("%s/api/auth/magic-link/token?token=%s", baseURL, url.QueryEscape(token))
+		go func(u model.User, url string) {
+			sender := email.NewSender()
+			svc := email.NewService(sender, "Vault Hub")
+			name := ""
+			if u.Name != nil {
+				name = *u.Name
+			}
+			if err := svc.SendMagicLink(u.Email, name, url, formatTTLForEmail(MagicLinkTTL)); err != nil {
+				slog.Error("Failed to send magic link email", "error", err, "email", u.Email)
+			}
+		}(user, actionURL)
 	}
 	return c.SendStatus(fiber.StatusOK)
 }

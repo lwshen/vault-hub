@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type TokenPurpose string
@@ -90,4 +92,31 @@ func VerifyAndConsumeEmailToken(plaintextToken string, purpose TokenPurpose) (*E
 		return nil, err
 	}
 	return &t, nil
+}
+
+// EmailTokenRateLimited reports whether a user has recently requested a token for the given purpose.
+// If the most recent token was created within the provided window, the call returns true along with
+// the remaining cooldown. A zero or negative window disables rate limiting.
+func EmailTokenRateLimited(userID uint, purpose TokenPurpose, window time.Duration) (bool, time.Duration, error) {
+	if window <= 0 {
+		return false, 0, nil
+	}
+
+	var token EmailToken
+	err := DB.
+		Where("user_id = ? AND purpose = ?", userID, purpose).
+		Order("created_at DESC").
+		First(&token).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, 0, nil
+	}
+	if err != nil {
+		return false, 0, err
+	}
+
+	elapsed := time.Since(token.CreatedAt)
+	if elapsed < window {
+		return true, window - elapsed, nil
+	}
+	return false, 0, nil
 }
