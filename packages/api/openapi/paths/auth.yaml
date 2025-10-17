@@ -63,6 +63,27 @@ passwordResetRequest:
     responses:
       "200":
         description: Email sent (if account exists)
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/auth.yaml#/EmailTokenResponse
+      "429":
+        description: Too many requests for this user
+        headers:
+          Retry-After:
+            schema:
+              type: string
+              description: Seconds until another request can be made
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/auth.yaml#/EmailTokenResponse
+      "500":
+        description: Unable to send email
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/auth.yaml#/EmailTokenResponse
 
 passwordResetConfirm:
   post:
@@ -95,6 +116,27 @@ magicLinkRequest:
     responses:
       "200":
         description: Email sent (if account exists)
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/auth.yaml#/EmailTokenResponse
+      "429":
+        description: Too many requests for this user
+        headers:
+          Retry-After:
+            schema:
+              type: string
+              description: Seconds until another request can be made
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/auth.yaml#/EmailTokenResponse
+      "500":
+        description: Unable to send email
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/auth.yaml#/EmailTokenResponse
 
 magicLinkConsume:
   get:

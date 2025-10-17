@@ -19,6 +19,10 @@ const (
 	PasswordResetTTL  = 30 * time.Minute
 	MagicLinkTTL      = 15 * time.Minute
 	EmailSendCooldown = time.Minute
+
+	emailTokenCodeSent        = "email_token_sent"
+	emailTokenCodeRateLimited = "email_token_rate_limited"
+	emailTokenCodeFailed      = "email_token_failed"
 )
 
 // formatTTLForEmail formats a duration for email display (e.g., "30m", "2h")
@@ -222,13 +226,20 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 			slog.Error("Failed to check password reset rate limit", "error", rateErr, "userID", user.ID)
 		} else if limited {
 			slog.Warn("Password reset email rate limited", "userID", user.ID, "retryAfter", retryAfter)
-			return c.SendStatus(fiber.StatusOK)
+			c.Set(fiber.HeaderRetryAfter, fmt.Sprintf("%.0f", retryAfter.Seconds()))
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"success": false,
+				"code":    emailTokenCodeRateLimited,
+			})
 		}
 
 		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeResetPassword, PasswordResetTTL)
 		if err != nil {
 			slog.Error("Failed to create password reset token", "error", err, "userID", user.ID)
-			return c.SendStatus(fiber.StatusOK)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"success": false,
+				"code":    emailTokenCodeFailed,
+			})
 		}
 
 		baseURL := c.BaseURL()
@@ -245,7 +256,10 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 			}
 		}(user, actionURL)
 	}
-	return c.SendStatus(fiber.StatusOK)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success": true,
+		"code":    emailTokenCodeSent,
+	})
 }
 
 // ConfirmPasswordReset verifies token and updates password
@@ -299,13 +313,20 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 			slog.Error("Failed to check magic link rate limit", "error", rateErr, "userID", user.ID)
 		} else if limited {
 			slog.Warn("Magic link email rate limited", "userID", user.ID, "retryAfter", retryAfter)
-			return c.SendStatus(fiber.StatusOK)
+			c.Set(fiber.HeaderRetryAfter, fmt.Sprintf("%.0f", retryAfter.Seconds()))
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"success": false,
+				"code":    emailTokenCodeRateLimited,
+			})
 		}
 
 		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, MagicLinkTTL)
 		if err != nil {
 			slog.Error("Failed to create magic link token", "error", err, "userID", user.ID)
-			return c.SendStatus(fiber.StatusOK)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"success": false,
+				"code":    emailTokenCodeFailed,
+			})
 		}
 
 		baseURL := c.BaseURL()
@@ -322,7 +343,10 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 			}
 		}(user, actionURL)
 	}
-	return c.SendStatus(fiber.StatusOK)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success": true,
+		"code":    emailTokenCodeSent,
+	})
 }
 
 // ConsumeMagicLink verifies token, generates JWT and redirects with fragment
