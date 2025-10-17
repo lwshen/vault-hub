@@ -77,6 +77,14 @@ components:
       $ref: ./schemas/auth.yaml#/SignupRequest
     SignupResponse:
       $ref: ./schemas/auth.yaml#/SignupResponse
+    PasswordResetRequest:
+      $ref: ./schemas/auth.yaml#/PasswordResetRequest
+    PasswordResetConfirmRequest:
+      $ref: ./schemas/auth.yaml#/PasswordResetConfirmRequest
+    MagicLinkRequest:
+      $ref: ./schemas/auth.yaml#/MagicLinkRequest
+    EmailTokenResponse:
+      $ref: ./schemas/auth.yaml#/EmailTokenResponse
     # User schemas
     GetUserResponse:
       $ref: ./schemas/user.yaml#/GetUserResponse

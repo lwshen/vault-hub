@@ -8,12 +8,12 @@ paths:
       description: Check the health status of backend
       operationId: health
       responses:
-        '200':
+        "200":
           description: Service is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthCheckResponse'
+                $ref: "#/components/schemas/HealthCheckResponse"
   /api/config:
     get:
       summary: Get public configuration
@@ -22,12 +22,12 @@ paths:
       tags:
         - Config
       responses:
-        '200':
+        "200":
           description: Configuration retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConfigResponse'
+                $ref: "#/components/schemas/ConfigResponse"
   /api/status:
     get:
       summary: Get system status
@@ -36,12 +36,12 @@ paths:
       tags:
         - Status
       responses:
-        '200':
+        "200":
           description: System status retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatusResponse'
+                $ref: "#/components/schemas/StatusResponse"
   /api/auth/login:
     post:
       description: Login with email and password
@@ -53,14 +53,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        '200':
+        "200":
           description: Login successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
+                $ref: "#/components/schemas/LoginResponse"
   /api/auth/signup:
     post:
       description: Sign up a new user
@@ -72,14 +72,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SignupRequest'
+              $ref: "#/components/schemas/SignupRequest"
       responses:
-        '200':
+        "200":
           description: Sign up successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SignupResponse'
+                $ref: "#/components/schemas/SignupResponse"
   /api/auth/logout:
     get:
       description: Logout
@@ -87,7 +87,7 @@ paths:
         - Auth
       operationId: logout
       responses:
-        '200':
+        "200":
           description: OK
   /api/auth/password/reset/request:
     post:
@@ -100,10 +100,31 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PasswordResetRequest'
+              $ref: "#/components/schemas/PasswordResetRequest"
       responses:
-        '200':
+        "200":
           description: Email sent (if account exists)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+        "429":
+          description: Too many requests for this user
+          headers:
+            Retry-After:
+              schema:
+                type: string
+                description: Seconds until another request can be made
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+        "500":
+          description: Unable to send email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
   /api/auth/password/reset/confirm:
     post:
       description: Confirm password reset with token
@@ -115,9 +136,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+              $ref: "#/components/schemas/PasswordResetConfirmRequest"
       responses:
-        '200':
+        "200":
           description: Password updated
   /api/auth/magic-link/request:
     post:
@@ -130,12 +151,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MagicLinkRequest'
+              $ref: "#/components/schemas/MagicLinkRequest"
       responses:
-        '200':
+        "200":
           description: Email sent (if account exists)
-        '404':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+        "404":
           description: Email not found
+        "429":
+          description: Too many requests for this user
+          headers:
+            Retry-After:
+              schema:
+                type: string
+                description: Seconds until another request can be made
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+        "500":
+          description: Unable to send email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
   /api/auth/magic-link/token:
     get:
       description: Consume magic link token and redirect with JWT
@@ -149,7 +191,7 @@ paths:
             type: string
           required: true
       responses:
-        '302':
+        "302":
           description: Redirect to frontend with token fragment
   /api/user:
     get:
@@ -158,12 +200,12 @@ paths:
         - User
       operationId: getCurrentUser
       responses:
-        '200':
+        "200":
           description: User Info
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetUserResponse'
+                $ref: "#/components/schemas/GetUserResponse"
   /api/vaults:
     get:
       description: Get all vaults for the current user
@@ -171,14 +213,14 @@ paths:
         - Vault
       operationId: getVaults
       responses:
-        '200':
+        "200":
           description: List of vaults
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VaultLite'
+                  $ref: "#/components/schemas/VaultLite"
     post:
       description: Create a new vault
       tags:
@@ -189,14 +231,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateVaultRequest'
+              $ref: "#/components/schemas/CreateVaultRequest"
       responses:
-        '201':
+        "201":
           description: Vault created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Vault'
+                $ref: "#/components/schemas/Vault"
   /api/vaults/{uniqueId}:
     get:
       description: Get a specific vault by Unique ID
@@ -211,12 +253,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Vault details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Vault'
+                $ref: "#/components/schemas/Vault"
     put:
       description: Update a vault
       tags:
@@ -234,14 +276,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateVaultRequest'
+              $ref: "#/components/schemas/UpdateVaultRequest"
       responses:
-        '200':
+        "200":
           description: Vault updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Vault'
+                $ref: "#/components/schemas/Vault"
     delete:
       description: Delete a vault
       tags:
@@ -255,7 +297,7 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        "204":
           description: Vault deleted successfully
   /api/audit-logs:
     get:
@@ -302,12 +344,12 @@ paths:
             minimum: 1
             default: 1
       responses:
-        '200':
+        "200":
           description: List of audit logs
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuditLogsResponse'
+                $ref: "#/components/schemas/AuditLogsResponse"
   /api/audit-logs/metrics:
     get:
       description: Get audit log metrics including total events and categorized counts
@@ -315,12 +357,12 @@ paths:
         - Audit
       operationId: getAuditMetrics
       responses:
-        '200':
+        "200":
           description: Audit log metrics
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuditMetricsResponse'
+                $ref: "#/components/schemas/AuditMetricsResponse"
   /api/api-keys:
     get:
       description: Get API keys for the current user with pagination
@@ -346,12 +388,12 @@ paths:
             minimum: 1
             default: 1
       responses:
-        '200':
+        "200":
           description: List of API keys
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIKeysResponse'
+                $ref: "#/components/schemas/APIKeysResponse"
     post:
       description: Create a new API key
       tags:
@@ -362,14 +404,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAPIKeyRequest'
+              $ref: "#/components/schemas/CreateAPIKeyRequest"
       responses:
-        '201':
+        "201":
           description: API key created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateAPIKeyResponse'
+                $ref: "#/components/schemas/CreateAPIKeyResponse"
   /api/api-keys/{id}:
     patch:
       description: Update an API key (enable/disable or modify properties)
@@ -389,14 +431,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateAPIKeyRequest'
+              $ref: "#/components/schemas/UpdateAPIKeyRequest"
       responses:
-        '200':
+        "200":
           description: API key updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VaultAPIKey'
+                $ref: "#/components/schemas/VaultAPIKey"
     delete:
       description: Delete an API key
       tags:
@@ -411,7 +453,7 @@ paths:
             type: integer
             format: int64
       responses:
-        '204':
+        "204":
           description: API key deleted successfully
   /api/cli/vaults:
     get:
@@ -422,14 +464,14 @@ paths:
       security:
         - ApiKeyAuth: []
       responses:
-        '200':
+        "200":
           description: List of vaults accessible by API key
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VaultLite'
+                  $ref: "#/components/schemas/VaultLite"
   /api/cli/vault/{uniqueId}:
     get:
       description: Get a specific vault by Unique ID using API key
@@ -446,12 +488,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Vault details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Vault'
+                $ref: "#/components/schemas/Vault"
   /api/cli/vault/name/{name}:
     get:
       description: Get a specific vault by name using API key
@@ -468,12 +510,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Vault details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Vault'
+                $ref: "#/components/schemas/Vault"
 components:
   securitySchemes:
     apiKeyAuth:
@@ -496,7 +538,7 @@ components:
         timestamp:
           type: string
           format: date-time
-          example: '2023-10-11T12:34:56Z'
+          example: "2023-10-11T12:34:56Z"
     LoginRequest:
       type: object
       required:
@@ -536,6 +578,48 @@ components:
       properties:
         token:
           type: string
+    PasswordResetRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+    PasswordResetConfirmRequest:
+      type: object
+      required:
+        - token
+        - newPassword
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+    MagicLinkRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+    EmailTokenResponse:
+      type: object
+      required:
+        - success
+        - code
+      properties:
+        success:
+          type: boolean
+          description: Indicates whether the email token request was accepted
+        code:
+          type: string
+          description: Machine-readable status code describing the outcome
+          enum:
+            - email_token_sent
+            - email_token_rate_limited
+            - email_token_failed
     GetUserResponse:
       type: object
       required:
@@ -655,7 +739,7 @@ components:
         auditLogs:
           type: array
           items:
-            $ref: '#/components/schemas/AuditLog'
+            $ref: "#/components/schemas/AuditLog"
         totalCount:
           type: integer
           description: Total number of logs matching the filter criteria
@@ -678,9 +762,9 @@ components:
           format: date-time
           description: When the action occurred
         vault:
-          $ref: '#/components/schemas/VaultLite'
+          $ref: "#/components/schemas/VaultLite"
         apiKey:
-          $ref: '#/components/schemas/VaultAPIKey'
+          $ref: "#/components/schemas/VaultAPIKey"
         action:
           type: string
           enum:
@@ -738,7 +822,7 @@ components:
         apiKeys:
           type: array
           items:
-            $ref: '#/components/schemas/VaultAPIKey'
+            $ref: "#/components/schemas/VaultAPIKey"
         totalCount:
           type: integer
           description: Total number of API keys
@@ -766,7 +850,7 @@ components:
         vaults:
           type: array
           items:
-            $ref: '#/components/schemas/VaultLite'
+            $ref: "#/components/schemas/VaultLite"
           description: Array of vaults this key can access (null/empty = all user's vaults)
         expiresAt:
           type: string
@@ -813,7 +897,7 @@ components:
         - key
       properties:
         apiKey:
-          $ref: '#/components/schemas/VaultAPIKey'
+          $ref: "#/components/schemas/VaultAPIKey"
         key:
           type: string
           description: The generated API key (only shown once)
@@ -875,29 +959,3 @@ components:
           type: boolean
           description: Whether OIDC authentication is enabled
           example: false
-    PasswordResetRequest:
-      type: object
-      required:
-        - email
-      properties:
-        email:
-          type: string
-          format: email
-    PasswordResetConfirmRequest:
-      type: object
-      required:
-        - token
-        - newPassword
-      properties:
-        token:
-          type: string
-        newPassword:
-          type: string
-    MagicLinkRequest:
-      type: object
-      required:
-        - email
-      properties:
-        email:
-          type: string
-          format: email

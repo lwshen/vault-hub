@@ -1,3 +1,8 @@
+## [1.3.18] - 2025-10-17
+
+### 🚀 Features
+
+- Add rate limit on email token requests (#296)
 ## [1.3.17] - 2025-10-15
 
 ### 🚀 Features

@@ -66,3 +66,20 @@ MagicLinkRequest:
     email:
       type: string
       format: email
+
+EmailTokenResponse:
+  type: object
+  required:
+    - success
+    - code
+  properties:
+    success:
+      type: boolean
+      description: Indicates whether the email token request was accepted
+    code:
+      type: string
+      description: Machine-readable status code describing the outcome
+      enum:
+        - email_token_sent
+        - email_token_rate_limited
+        - email_token_failed
