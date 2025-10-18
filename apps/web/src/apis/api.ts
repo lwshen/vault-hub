@@ -43,7 +43,29 @@ const config = new Configuration({
             if (errorBody) {
               try {
                 const errorJson = JSON.parse(errorBody);
-                errorMessage = errorJson.error?.message || errorJson.message || errorJson.error || errorMessage;
+                const explicitMessage =
+                  errorJson?.error?.message || errorJson?.message || errorJson?.error;
+                const retryAfterHeader = response.headers.get('Retry-After');
+
+                if (explicitMessage) {
+                  errorMessage = explicitMessage;
+                } else if (errorJson?.code) {
+                  switch (errorJson.code) {
+                    case 'email_token_rate_limited': {
+                      let waitLabel = 'a moment';
+                      if (retryAfterHeader) {
+                        const retryAfterSeconds = Number.parseInt(retryAfterHeader, 10);
+                        if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
+                          waitLabel = `${retryAfterSeconds} seconds`;
+                        }
+                      }
+                      errorMessage = `Too many password reset requests. Try again in ${waitLabel}.`;
+                      break;
+                    }
+                    default:
+                      errorMessage = typeof errorJson.code === 'string' ? errorJson.code : errorMessage;
+                  }
+                }
               } catch {
                 errorMessage = errorBody || errorMessage;
               }
