@@ -49,7 +49,9 @@ export default function MagicLink() {
         const apiResponse = await authApi.consumeMagicLinkRaw(
           { token },
           {
-            redirect: 'manual',
+            headers: {
+              Accept: 'application/json',
+            },
           },
         );
 
@@ -59,7 +61,21 @@ export default function MagicLink() {
 
         const { raw } = apiResponse;
         setResponseStatus(raw.status);
-        const destination = raw.url || `${window.location.origin}${PATH.LOGIN}`;
+
+        let destination = raw.url || `${window.location.origin}${PATH.LOGIN}`;
+        try {
+          const data = (await raw.clone().json()) as { redirectUrl?: string; token?: string; };
+          if (typeof data?.redirectUrl === 'string' && data.redirectUrl.length > 0) {
+            destination = data.redirectUrl.startsWith('http')
+              ? data.redirectUrl
+              : new URL(data.redirectUrl, window.location.origin).toString();
+          } else if (typeof data?.token === 'string' && data.token.length > 0) {
+            destination = `${window.location.origin}/login#token=${encodeURIComponent(data.token)}&source=magic`;
+          }
+        } catch {
+          // If JSON parsing fails, fall back to raw.url or default destination.
+        }
+
         setRedirectUrl(destination);
         setStatus('success');
       } catch (error) {
