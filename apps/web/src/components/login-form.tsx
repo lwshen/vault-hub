@@ -174,6 +174,14 @@ export function LoginForm({
                 <Button type="submit" className="w-full">
                   Next
                 </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto px-0 text-sm text-muted-foreground"
+                  onClick={navigateToForgotPassword}
+                >
+                  Forgot password?
+                </Button>
               </form>
             )}
 
@@ -216,6 +224,14 @@ export function LoginForm({
                   onClick={handleChangeEmail}
                 >
                   Use a different email
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto px-0 text-sm text-muted-foreground"
+                  onClick={navigateToForgotPassword}
+                >
+                  Forgot password?
                 </Button>
               </div>
             )}

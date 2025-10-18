@@ -1,15 +1,11 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PATH } from '@/const/path';
 import useAuth from '@/hooks/use-auth';
+import { MailCheck } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'wouter';
 
@@ -38,8 +34,9 @@ export default function ForgotPassword() {
     }
   };
 
-  const handleResend = () => {
+  const handleStartOver = () => {
     setStatus('idle');
+    setError(null);
   };
 
   return (
@@ -48,37 +45,29 @@ export default function ForgotPassword() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Reset your password</CardTitle>
-            <CardDescription>
-              Enter the email associated with your account and we&apos;ll email
-              you reset instructions.
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {status === 'success' ? (
-              <div className="grid gap-5 text-sm text-muted-foreground">
-                <p>
-                  If an account exists with <span className="font-medium">{email}</span>, you&apos;ll receive an email with
-                  instructions to reset your password. The link expires in 30
-                  minutes.
-                </p>
-                <p>
-                  Can&apos;t find the email? Check your spam folder or{' '}
-                  <button
-                    type="button"
-                    onClick={handleResend}
-                    className="text-primary underline-offset-2 hover:underline"
-                  >
-                    send another email
-                  </button>
-                  .
-                </p>
-                <p>
-                  Ready to try signing in again? Return to{' '}
-                  <Link href={PATH.LOGIN} className="text-primary underline-offset-2 hover:underline">
-                    the login page
-                  </Link>
-                  .
-                </p>
+              <div className="grid gap-6">
+                <Alert variant="info">
+                  <MailCheck aria-hidden="true" />
+                  <AlertTitle>Check your inbox</AlertTitle>
+                  <AlertDescription>
+                    Reset instructions are on the way to <span className="font-medium text-card-foreground">{email}</span> if it
+                    matches an account. The link stays active for 30 minutes—take a glance at spam just in case.
+                  </AlertDescription>
+                </Alert>
+                <Button asChild className="w-full">
+                  <Link href={PATH.LOGIN}>Back to login</Link>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full text-sm text-muted-foreground"
+                  onClick={handleStartOver}
+                >
+                  Use a different email
+                </Button>
               </div>
             ) : (
               <form className="grid gap-6" onSubmit={handleSubmit}>
