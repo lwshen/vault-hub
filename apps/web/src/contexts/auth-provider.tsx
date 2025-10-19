@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       const redirectPath = options.redirectTo ?? PATH.DASHBOARD;
       navigate(redirectPath);
     },
-    [navigate, setToken],
+    [setToken],
   );
 
   const loginWithOidc = useCallback(async () => {

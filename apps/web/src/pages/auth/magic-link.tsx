@@ -17,6 +17,12 @@ import { ResponseError } from '@lwshen/vault-hub-ts-fetch-client';
 
 type Status = 'idle' | 'processing' | 'success' | 'error';
 
+type MagicLinkResponseBody = {
+  redirectUrl?: string;
+  token?: string;
+  code?: string;
+};
+
 export default function MagicLink() {
   const { authenticateWithToken } = useAuth();
   const token = useMemo(() => {
@@ -83,9 +89,9 @@ export default function MagicLink() {
         const { raw } = apiResponse;
         setResponseStatus(raw.status);
 
-        let data: { redirectUrl?: string; token?: string; code?: string } | null = null;
+        let data: MagicLinkResponseBody | null = null;
         try {
-          data = (await raw.clone().json()) as { redirectUrl?: string; token?: string; code?: string };
+          data = (await raw.clone().json()) as MagicLinkResponseBody;
         } catch {
           // No JSON body available; fall through to error handling.
         }
@@ -161,7 +167,7 @@ export default function MagicLink() {
     return () => {
       isCancelled = true;
     };
-  }, [token, attempt]);
+  }, [authenticateWithToken, token, attempt]);
 
   useEffect(() => {
     if (status === 'success' && redirectUrl) {
