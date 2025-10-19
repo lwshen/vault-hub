@@ -406,18 +406,18 @@ func (Server) ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) erro
 		}
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	redirectUrl := "/login#token=" + url.QueryEscape(jwtToken) + "&source=magic"
+	redirectFragment := "/login#token=" + url.QueryEscape(jwtToken) + "&source=magic"
 
 	if acceptsJSON {
 		return c.JSON(fiber.Map{
 			"token":       jwtToken,
-			"redirectUrl": redirectUrl,
+			"redirectUrl": fmt.Sprintf("%s/dashboard", c.BaseURL()),
 			"code":        emailTokenCodeSent,
 			"success":     true,
 		})
 	}
 
-	return c.Redirect(redirectUrl)
+	return c.Redirect(redirectFragment)
 }
 
 func deref(p *string) string {

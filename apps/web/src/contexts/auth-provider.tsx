@@ -4,7 +4,7 @@ import type { GetUserResponse } from '@lwshen/vault-hub-ts-fetch-client';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { navigate } from 'wouter/use-browser-location';
-import { AuthContext } from './auth-context';
+import { AuthContext, type AuthenticateOptions } from './auth-context';
 
 export const AuthProvider = ({ children }: { children: ReactNode; }) => {
   const [user, setUser] = useState<GetUserResponse | null>(null);
@@ -17,6 +17,20 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     setUser(user);
   }, []);
 
+  const authenticateWithToken = useCallback(
+    async (token: string, options: AuthenticateOptions = {}) => {
+      await setToken(token);
+      const showToast = options.showToast ?? true;
+      if (options.source === 'magic' && showToast) {
+        toast.success('You are now signed in with your magic link.');
+      }
+      setIsLoading(false);
+      const redirectPath = options.redirectTo ?? PATH.DASHBOARD;
+      navigate(redirectPath);
+    },
+    [navigate, setToken],
+  );
+
   const loginWithOidc = useCallback(async () => {
     // Redirect to OIDC login endpoint
     window.location.href = '/api/auth/login/oidc';
@@ -24,34 +38,31 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      // Check for OIDC token in URL fragment (hash) first
-      // URL fragments are never sent to the server, providing better security
-      const fragment = window.location.hash.substring(1); // Remove '#' prefix
+      // Check for OIDC or magic link token in URL fragment (hash) first.
+      const fragment = window.location.hash.substring(1);
       const fragmentParams = new URLSearchParams(fragment);
       const fragmentToken = fragmentParams.get('token');
       const source = fragmentParams.get('source');
 
       const isMagicLinkSource = source === 'magic' || source === 'magiclink';
-      if (fragmentToken && (source === 'oidc' || isMagicLinkSource)) {
+      const isOidcSource = source === 'oidc';
+
+      if (fragmentToken && (isOidcSource || isMagicLinkSource)) {
         try {
-          await setToken(fragmentToken);
-          // Remove fragment from URL while preserving any query params
+          await authenticateWithToken(fragmentToken, {
+            source: isMagicLinkSource ? 'magic' : 'oidc',
+            redirectTo: PATH.DASHBOARD,
+            showToast: isMagicLinkSource,
+          });
           const cleanUrl = `${window.location.pathname}${window.location.search}`;
           window.history.replaceState({}, document.title, cleanUrl);
-          if (isMagicLinkSource) {
-            toast.success('You are now signed in with your magic link.');
-          }
-          setIsLoading(false);
-          navigate(PATH.DASHBOARD);
-          return; // Skip regular token check since we already set the token
+          return; // Skip regular token check since we already set the token.
         } catch (error) {
           console.error('Failed to set token from URL fragment:', error);
-          // Remove invalid token from localStorage
           localStorage.removeItem('token');
           if (isMagicLinkSource) {
             toast.error('Unable to sign in with this magic link. Please request a new one.');
           }
-          // Clear the fragment and continue with regular token check
           const cleanUrl = `${window.location.pathname}${window.location.search}`;
           window.history.replaceState({}, document.title, cleanUrl);
         }
@@ -71,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     };
 
     initializeAuth();
-  }, [setToken]);
+  }, [authenticateWithToken]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -80,11 +91,13 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
         password,
       });
       if (resp.token) {
-        await setToken(resp.token);
-        navigate(PATH.DASHBOARD);
+        await authenticateWithToken(resp.token, {
+          redirectTo: PATH.DASHBOARD,
+          showToast: false,
+        });
       }
     },
-    [setToken],
+    [authenticateWithToken],
   );
 
   const signup = useCallback(
@@ -95,11 +108,13 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
         name,
       });
       if (resp.token) {
-        await setToken(resp.token);
-        navigate(PATH.DASHBOARD);
+        await authenticateWithToken(resp.token, {
+          redirectTo: PATH.DASHBOARD,
+          showToast: false,
+        });
       }
     },
-    [setToken],
+    [authenticateWithToken],
   );
 
   const logout = useCallback(async () => {
@@ -159,6 +174,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       isLoading,
       requestPasswordReset,
       requestMagicLink,
+      authenticateWithToken,
     }),
     [
       isAuthenticated,
@@ -170,6 +186,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       isLoading,
       requestPasswordReset,
       requestMagicLink,
+      authenticateWithToken,
     ],
   );
 

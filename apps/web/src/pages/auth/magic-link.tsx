@@ -12,11 +12,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PATH } from '@/const/path';
+import useAuth from '@/hooks/use-auth';
 import { ResponseError } from '@lwshen/vault-hub-ts-fetch-client';
 
 type Status = 'idle' | 'processing' | 'success' | 'error';
 
 export default function MagicLink() {
+  const { authenticateWithToken } = useAuth();
   const token = useMemo(() => {
     if (typeof window === 'undefined') {
       return '';
@@ -32,6 +34,25 @@ export default function MagicLink() {
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
+
+  const resolveRedirectPath = (raw?: string | null) => {
+    if (!raw) {
+      return PATH.DASHBOARD;
+    }
+
+    if (typeof window === 'undefined') {
+      return PATH.DASHBOARD;
+    }
+
+    try {
+      const targetUrl = raw.startsWith('http')
+        ? new URL(raw)
+        : new URL(raw, window.location.origin);
+      return `${targetUrl.pathname}${targetUrl.search}`;
+    } catch {
+      return raw.startsWith('/') ? raw : `/${raw}`;
+    }
+  };
 
   useEffect(() => {
     if (!token) {
@@ -62,22 +83,25 @@ export default function MagicLink() {
         const { raw } = apiResponse;
         setResponseStatus(raw.status);
 
-        let destination = raw.url || `${window.location.origin}${PATH.LOGIN}`;
+        let data: { redirectUrl?: string; token?: string; code?: string } | null = null;
         try {
-          const data = (await raw.clone().json()) as { redirectUrl?: string; token?: string; };
-          if (typeof data?.redirectUrl === 'string' && data.redirectUrl.length > 0) {
-            destination = data.redirectUrl.startsWith('http')
-              ? data.redirectUrl
-              : new URL(data.redirectUrl, window.location.origin).toString();
-          } else if (typeof data?.token === 'string' && data.token.length > 0) {
-            destination = `${window.location.origin}/login#token=${encodeURIComponent(data.token)}&source=magic`;
-          }
+          data = (await raw.clone().json()) as { redirectUrl?: string; token?: string; code?: string };
         } catch {
-          // If JSON parsing fails, fall back to raw.url or default destination.
+          // No JSON body available; fall through to error handling.
         }
 
-        setRedirectUrl(destination);
+        if (!data || typeof data.token !== 'string' || data.token.length === 0) {
+          throw new Error('Unable to verify this magic link. Please request a new one.');
+        }
+
+        const nextPath = resolveRedirectPath(data.redirectUrl);
+        setRedirectUrl(nextPath);
         setStatus('success');
+        await authenticateWithToken(data.token, {
+          source: 'magic',
+          redirectTo: nextPath,
+        });
+        return;
       } catch (error) {
         if (isCancelled) {
           return;
@@ -99,12 +123,28 @@ export default function MagicLink() {
 
           let message = 'This magic link is invalid or has expired. Please request a new one.';
           try {
-            const text = await response.text();
-            if (text) {
-              message = text;
+            const errorJson = await response.clone().json();
+            if (typeof errorJson?.error === 'string' && errorJson.error.length > 0) {
+              message = errorJson.error;
+            } else if (typeof errorJson?.message === 'string' && errorJson.message.length > 0) {
+              message = errorJson.message;
+            } else if (typeof errorJson?.code === 'string' && errorJson.code.length > 0) {
+              message = errorJson.code;
+            } else {
+              const text = await response.clone().text();
+              if (text) {
+                message = text;
+              }
             }
           } catch {
-            // Ignore body parsing errors and fall back to default message.
+            try {
+              const text = await response.clone().text();
+              if (text) {
+                message = text;
+              }
+            } catch {
+              // Ignore body parsing errors and fall back to default message.
+            }
           }
           setErrorMessage(message);
         } else if (error instanceof Error) {
