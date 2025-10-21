@@ -23,6 +23,12 @@ type MagicLinkResponseBody = {
   code?: string;
 };
 
+const INVALID_TOKEN_MESSAGE = 'This magic link token is malformed. Please request a new one.';
+const MISSING_TOKEN_MESSAGE = 'This magic link is missing a token or has already been used.';
+const TOKEN_PATTERN = /^[A-Za-z0-9._-]+$/;
+const MIN_TOKEN_LENGTH = 16;
+const MAX_TOKEN_LENGTH = 2048;
+
 export default function MagicLink() {
   const { authenticateWithToken } = useAuth();
   const token = useMemo(() => {
@@ -33,10 +39,28 @@ export default function MagicLink() {
     return search.get('token') ?? '';
   }, []);
 
-  const [status, setStatus] = useState<Status>(token ? 'processing' : 'error');
-  const [errorMessage, setErrorMessage] = useState<string | null>(
-    token ? null : 'This magic link is missing a token or has already been used.',
+  const isTokenValid = useMemo(() => {
+    if (!token) {
+      return false;
+    }
+    if (token.length < MIN_TOKEN_LENGTH || token.length > MAX_TOKEN_LENGTH) {
+      return false;
+    }
+    return TOKEN_PATTERN.test(token);
+  }, [token]);
+
+  const [status, setStatus] = useState<Status>(
+    token && isTokenValid ? 'processing' : 'error',
   );
+  const [errorMessage, setErrorMessage] = useState<string | null>(() => {
+    if (!token) {
+      return MISSING_TOKEN_MESSAGE;
+    }
+    if (!isTokenValid) {
+      return INVALID_TOKEN_MESSAGE;
+    }
+    return null;
+  });
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
@@ -61,7 +85,7 @@ export default function MagicLink() {
   };
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !isTokenValid) {
       return;
     }
 
@@ -119,9 +143,18 @@ export default function MagicLink() {
 
           if (response.status === 302) {
             const location = response.headers.get('location');
-            const destination = location
-              ? new URL(location, window.location.origin).toString()
-              : `${window.location.origin}${PATH.LOGIN}`;
+            const defaultDestination = `${window.location.origin}${PATH.LOGIN}`;
+            let destination = defaultDestination;
+            if (location) {
+              try {
+                const resolved = new URL(location, window.location.origin);
+                if (resolved.origin === window.location.origin) {
+                  destination = resolved.toString();
+                }
+              } catch {
+                // Ignore invalid URLs and fall back to default destination.
+              }
+            }
             setRedirectUrl(destination);
             setStatus('success');
             return;
@@ -167,7 +200,7 @@ export default function MagicLink() {
     return () => {
       isCancelled = true;
     };
-  }, [authenticateWithToken, token, attempt]);
+  }, [authenticateWithToken, isTokenValid, token, attempt]);
 
   useEffect(() => {
     if (status === 'success' && redirectUrl) {
@@ -198,7 +231,7 @@ export default function MagicLink() {
   })();
 
   const canRetry =
-    Boolean(token) && (responseStatus == null || responseStatus >= 500);
+    Boolean(token) && isTokenValid && (responseStatus == null || responseStatus >= 500);
 
   const handleContinue = () => {
     if (redirectUrl) {
@@ -209,6 +242,9 @@ export default function MagicLink() {
   };
 
   const handleRetry = () => {
+    if (!isTokenValid) {
+      return;
+    }
     setAttempt((prev) => prev + 1);
   };
 
