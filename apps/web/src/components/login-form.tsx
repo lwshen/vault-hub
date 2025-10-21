@@ -95,7 +95,6 @@ export function LoginForm({
     setLoading(true);
     try {
       await login(email, password);
-      navigate(PATH.DASHBOARD);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
