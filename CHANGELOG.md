@@ -1,3 +1,8 @@
+## [1.3.20] - 2025-10-22
+
+### 🚀 Features
+
+- Add email-first login flow with magic link and password reset (#292)
 ## [1.3.19] - 2025-10-17
 
 ### 🚀 Features
