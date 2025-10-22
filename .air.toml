@@ -3,10 +3,10 @@ tmp_dir = "tmp"
 
 [build]
   bin = "./tmp/main"
-  pre_cmd = ["cd apps/web && pnpm build --mode development"]
+  pre_cmd = ["pnpm --dir apps/web run build -- --mode development --outDir ../../internal/embed/dist"]
   cmd = "CGO_ENABLED=1 go build -o ./tmp/main ./apps/server/main.go"
   delay = 1500
-  exclude_dir = ["assets", "tmp", "vendor", "internal/embed/dist", "apps/web/node_modules"]
+  exclude_dir = ["assets", "tmp", "vendor", "internal/embed/dist", "apps/web/node_modules", "apps/web/dist"]
   exclude_file = []
   exclude_regex = ["_test.go", "_templ.go"]
   exclude_unchanged = false
