@@ -36,6 +36,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Type check**: `pnpm --dir apps/web run typecheck`
 - **Preview build**: `pnpm --dir apps/web run preview`
 - **Note**: `apps/web` is sourced from an external package; avoid editing its files unless coordinating with the frontend owners.
+- **Sync frontend before builds**: `git submodule update --init --remote apps/web`
 
 ### Live Reload (Air)
 

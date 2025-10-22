@@ -43,6 +43,9 @@ A comprehensive secure environment variable and API key management system with A
 git clone https://github.com/lwshen/vault-hub.git
 cd vault-hub
 
+# Pull the latest frontend bundle (submodule)
+git submodule update --init --remote apps/web
+
 # Required environment variables
 export JWT_SECRET=$(openssl rand -base64 64)
 export ENCRYPTION_KEY=$(openssl rand -base64 32)
@@ -168,6 +171,7 @@ vault-hub/
 └── .github/workflows/   # CI/CD pipelines
 ```
 > The `apps/web` directory is managed as an external package; avoid editing those sources directly and regenerate embedded assets via the documented build commands instead.
+> Run `git submodule update --remote apps/web` whenever you need the latest frontend before rebuilding the server or Docker image.
 
 ## 🔒 Security
 
