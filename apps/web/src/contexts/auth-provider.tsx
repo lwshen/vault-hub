@@ -1,9 +1,10 @@
-import { userApi, authApi } from '@/apis/api';
-import type { GetUserResponse } from '@lwshen/vault-hub-ts-fetch-client';
-import { AuthContext } from './auth-context';
-import { useState, useEffect, useMemo, type ReactNode, useCallback } from 'react';
+import { authApi, userApi } from '@/apis/api';
 import { PATH } from '@/const/path';
+import type { GetUserResponse } from '@lwshen/vault-hub-ts-fetch-client';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { toast } from 'sonner';
 import { navigate } from 'wouter/use-browser-location';
+import { AuthContext, type AuthenticateOptions } from './auth-context';
 
 export const AuthProvider = ({ children }: { children: ReactNode; }) => {
   const [user, setUser] = useState<GetUserResponse | null>(null);
@@ -16,6 +17,20 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     setUser(user);
   }, []);
 
+  const authenticateWithToken = useCallback(
+    async (token: string, options: AuthenticateOptions = {}) => {
+      await setToken(token);
+      const showToast = options.showToast ?? true;
+      if (options.source === 'magic' && showToast) {
+        toast.success('You are now signed in with your magic link.');
+      }
+      setIsLoading(false);
+      const redirectPath = options.redirectTo ?? PATH.DASHBOARD;
+      navigate(redirectPath);
+    },
+    [setToken],
+  );
+
   const loginWithOidc = useCallback(async () => {
     // Redirect to OIDC login endpoint
     window.location.href = '/api/auth/login/oidc';
@@ -23,29 +38,33 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      // Check for OIDC token in URL fragment (hash) first
-      // URL fragments are never sent to the server, providing better security
-      const fragment = window.location.hash.substring(1); // Remove '#' prefix
+      // Check for OIDC or magic link token in URL fragment (hash) first.
+      const fragment = window.location.hash.substring(1);
       const fragmentParams = new URLSearchParams(fragment);
-      const oidcToken = fragmentParams.get('token');
+      const fragmentToken = fragmentParams.get('token');
       const source = fragmentParams.get('source');
 
-      if (oidcToken && source === 'oidc') {
-        // Clean up URL and set token from OIDC
+      const isMagicLinkSource = source === 'magic' || source === 'magiclink';
+      const isOidcSource = source === 'oidc';
+
+      if (fragmentToken && (isOidcSource || isMagicLinkSource)) {
         try {
-          await setToken(oidcToken);
-          // Remove fragment from URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-          // Navigate to dashboard after successful OIDC login
-          setIsLoading(false);
-          navigate(PATH.DASHBOARD);
-          return; // Skip regular token check since we already set the OIDC token
+          await authenticateWithToken(fragmentToken, {
+            source: isMagicLinkSource ? 'magic' : 'oidc',
+            redirectTo: PATH.DASHBOARD,
+            showToast: isMagicLinkSource,
+          });
+          const cleanUrl = `${window.location.pathname}${window.location.search}`;
+          window.history.replaceState({}, document.title, cleanUrl);
+          return; // Skip regular token check since we already set the token.
         } catch (error) {
-          console.error('Failed to set OIDC token:', error);
-          // Remove invalid token from localStorage
+          console.error('Failed to set token from URL fragment:', error);
           localStorage.removeItem('token');
-          // Clear the fragment and continue with regular token check
-          window.history.replaceState({}, document.title, window.location.pathname);
+          if (isMagicLinkSource) {
+            toast.error('Unable to sign in with this magic link. Please request a new one.');
+          }
+          const cleanUrl = `${window.location.pathname}${window.location.search}`;
+          window.history.replaceState({}, document.title, cleanUrl);
         }
       }
 
@@ -63,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     };
 
     initializeAuth();
-  }, [setToken]);
+  }, [authenticateWithToken]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -72,11 +91,13 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
         password,
       });
       if (resp.token) {
-        await setToken(resp.token);
-        navigate(PATH.DASHBOARD);
+        await authenticateWithToken(resp.token, {
+          redirectTo: PATH.DASHBOARD,
+          showToast: false,
+        });
       }
     },
-    [setToken],
+    [authenticateWithToken],
   );
 
   const signup = useCallback(
@@ -87,11 +108,13 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
         name,
       });
       if (resp.token) {
-        await setToken(resp.token);
-        navigate(PATH.DASHBOARD);
+        await authenticateWithToken(resp.token, {
+          redirectTo: PATH.DASHBOARD,
+          showToast: false,
+        });
       }
     },
-    [setToken],
+    [authenticateWithToken],
   );
 
   const logout = useCallback(async () => {
@@ -110,6 +133,36 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
     navigate(PATH.HOME);
   }, []);
 
+  const requestPasswordReset = useCallback(async (email: string) => {
+    try {
+      await authApi.requestPasswordReset({ email });
+      toast.success(
+        "If an account exists with this email, you'll receive password reset instructions shortly.",
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to send reset instructions. Please try again.';
+      toast.error(message);
+      throw error;
+    }
+  }, []);
+
+  const requestMagicLink = useCallback(async (email: string) => {
+    try {
+      await authApi.requestMagicLink({ email });
+      toast.success("We've sent you a login link. Please check your email.");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to send magic link. Please try again.';
+      toast.error(message);
+      throw error;
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       isAuthenticated,
@@ -119,8 +172,22 @@ export const AuthProvider = ({ children }: { children: ReactNode; }) => {
       signup,
       logout,
       isLoading,
+      requestPasswordReset,
+      requestMagicLink,
+      authenticateWithToken,
     }),
-    [isAuthenticated, user, login, loginWithOidc, signup, logout, isLoading],
+    [
+      isAuthenticated,
+      user,
+      login,
+      loginWithOidc,
+      signup,
+      logout,
+      isLoading,
+      requestPasswordReset,
+      requestMagicLink,
+      authenticateWithToken,
+    ],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

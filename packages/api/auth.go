@@ -311,7 +311,7 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 	user := model.User{Email: emailStr}
 	if err := user.GetByEmail(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			slog.Warn("Magic link request user not found", "email", emailStr)
+			slog.Info("Magic link request user not found", "email", emailStr)
 			return c.Status(fiber.StatusOK).JSON(fiber.Map{
 				"success": false,
 				"code":    emailTokenCodeFailed,
@@ -343,7 +343,7 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 	}
 
 	baseURL := c.BaseURL()
-	actionURL := fmt.Sprintf("%s/api/auth/magic-link/token?token=%s", baseURL, url.QueryEscape(token))
+	actionURL := fmt.Sprintf("%s/login/magic-link?token=%s", baseURL, url.QueryEscape(token))
 	go func(u model.User, url string) {
 		sender := email.NewSender()
 		svc := email.NewService(sender, "Vault Hub")
@@ -365,24 +365,59 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 // ConsumeMagicLink verifies token, generates JWT and redirects with fragment
 func (Server) ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) error {
 	token := params.Token
+	acceptsJSON := strings.Contains(c.Get(fiber.HeaderAccept), fiber.MIMEApplicationJSON)
 	if token == "" {
+		if acceptsJSON {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "missing token",
+				"code":  emailTokenCodeFailed,
+			})
+		}
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 	t, err := model.VerifyAndConsumeEmailToken(token, model.TokenPurposeMagicLink)
 	if err != nil {
+		if acceptsJSON {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "invalid or expired token",
+				"code":  emailTokenCodeFailed,
+			})
+		}
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 	var user model.User
 	user.ID = t.UserID
 	if err := model.DB.First(&user, user.ID).Error; err != nil {
+		if acceptsJSON {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "user not found",
+				"code":  emailTokenCodeFailed,
+			})
+		}
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	jwtToken, err := user.GenerateToken()
 	if err != nil {
+		if acceptsJSON {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to generate token",
+				"code":  emailTokenCodeFailed,
+			})
+		}
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	redirectUrl := "/login#token=" + url.QueryEscape(jwtToken) + "&source=magic"
-	return c.Redirect(redirectUrl)
+	redirectFragment := "/login#token=" + url.QueryEscape(jwtToken) + "&source=magic"
+
+	if acceptsJSON {
+		return c.JSON(fiber.Map{
+			"token":       jwtToken,
+			"redirectUrl": fmt.Sprintf("%s/dashboard", c.BaseURL()),
+			"code":        emailTokenCodeSent,
+			"success":     true,
+		})
+	}
+
+	return c.Redirect(redirectFragment)
 }
 
 func deref(p *string) string {
