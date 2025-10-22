@@ -2,8 +2,13 @@ ConfigResponse:
   type: object
   required:
     - oidcEnabled
+    - emailEnabled
   properties:
     oidcEnabled:
       type: boolean
       description: Whether OIDC authentication is enabled
+      example: false
+    emailEnabled:
+      type: boolean
+      description: Whether transactional email is enabled
       example: false

@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.3
+  version: 1.0.4
   title: Vault Hub Server
 paths:
   /api/health:
@@ -952,8 +952,13 @@ components:
       type: object
       required:
         - oidcEnabled
+        - emailEnabled
       properties:
         oidcEnabled:
           type: boolean
           description: Whether OIDC authentication is enabled
+          example: false
+        emailEnabled:
+          type: boolean
+          description: Whether transactional email is enabled
           example: false

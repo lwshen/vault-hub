@@ -37,5 +37,6 @@
 
 ## Post-change Checklist
 - When modifying `packages/api/openapi/api.yaml`, bump the patch segment of the `info.version` field before regenerating artifacts unless this branch has already updated the version relative to `main`.
+- After editing files in `packages/api`, do not manually modify `packages/api/api.bundled.yaml` or `packages/api/generated.go`; run `go generate packages/api/tool.go` to regenerate them.
 - Run `golangci-lint run ./...` after backend changes to confirm the Go codebase stays clean.
 - Run `pnpm typecheck` and `pnpm lint` from `apps/web` after frontend changes to catch TypeScript and lint issues early.

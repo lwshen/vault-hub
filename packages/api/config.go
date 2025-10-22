@@ -11,7 +11,8 @@ import (
 // This endpoint performs NO database operations and is safe for public access
 func (s Server) GetConfig(ctx *fiber.Ctx) error {
 	resp := ConfigResponse{
-		OidcEnabled: config.OidcEnabled,
+		OidcEnabled:  config.OidcEnabled,
+		EmailEnabled: config.EmailEnabled,
 	}
 
 	return ctx.
