@@ -1,3 +1,8 @@
+## [1.4.1] - 2025-10-22
+
+### 🚜 Refactor
+
+- Move frontend to separate repo (#305)
 ## [1.3.22] - 2025-10-22
 
 ### 🚀 Features
