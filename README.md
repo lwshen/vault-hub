@@ -43,6 +43,9 @@ A comprehensive secure environment variable and API key management system with A
 git clone https://github.com/lwshen/vault-hub.git
 cd vault-hub
 
+# Pull the latest frontend bundle (submodule)
+git submodule update --init --remote apps/web
+
 # Required environment variables
 export JWT_SECRET=$(openssl rand -base64 64)
 export ENCRYPTION_KEY=$(openssl rand -base64 32)
@@ -56,9 +59,9 @@ go run ./apps/server/main.go
 
 ### 3. Run Web Interface (Development)
 ```bash
-cd apps/web
-pnpm install
-pnpm run dev
+# Run from the repository root
+pnpm --dir apps/web install
+pnpm --dir apps/web run dev
 # Web interface at http://localhost:5173
 ```
 
@@ -126,12 +129,11 @@ go generate packages/api/tool.go
 
 **Frontend:**
 ```bash
-cd apps/web
-pnpm install          # Install dependencies
-pnpm run dev          # Development server
-pnpm run build        # Production build
-pnpm run lint         # ESLint
-pnpm run typecheck    # TypeScript validation
+pnpm --dir apps/web install       # Install dependencies
+pnpm --dir apps/web run dev       # Development server
+pnpm --dir apps/web run build     # Production build
+pnpm --dir apps/web run lint      # ESLint
+pnpm --dir apps/web run typecheck # TypeScript validation
 ```
 
 **CLI:**
@@ -141,6 +143,13 @@ go build -o vault-hub-cli ./apps/cli/main.go
 
 # Cross-platform builds available via CI/CD
 ```
+
+**Live Reload (Air):**
+```bash
+# Rebuilds the API and refreshes the embedded frontend bundle
+air -c .air.toml
+```
+> `air` runs `pnpm --dir apps/web run build -- --mode development --outDir ../../internal/embed/dist` before rebuilding the server so the embedded assets stay in sync.
 
 ### Project Structure
 ```
@@ -161,6 +170,8 @@ vault-hub/
 ├── route/               # Routing and middleware
 └── .github/workflows/   # CI/CD pipelines
 ```
+> The `apps/web` directory is managed as an external package; avoid editing those sources directly and regenerate embedded assets via the documented build commands instead.
+> Run `git submodule update --remote apps/web` whenever you need the latest frontend before rebuilding the server or Docker image.
 
 ## 🔒 Security
 
@@ -208,6 +219,9 @@ Download the latest releases from [GitHub Releases](https://github.com/lwshen/va
 # Pull from Docker Hub (when available)
 docker pull ghcr.io/lwshen/vault-hub:latest
 docker pull ghcr.io/lwshen/vault-hub-cli:latest
+
+# Build locally (includes embedded web bundle)
+docker build . -t vault-hub:local
 ```
 
 ### Package Managers

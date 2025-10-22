@@ -4,6 +4,7 @@
 - `apps/server` hosts the Go Fiber API; routes in `apps/server/handler`, middleware in `apps/server/route`, and shared config helpers in `apps/server/internal`.
 - `apps/cli` provides the Cobra CLI backed by `internal/cli` logic and `internal/encryption` utilities.
 - `apps/web` contains the Vite + React UI (`src/pages`, `src/components`, `src/stores`); run UI assets through `pnpm`.
+- Do not edit files under `apps/web`; that directory is managed as an external codebase.
 - `apps/cron` and `scripts/` supply scheduled jobs and release chores; keep them idempotent.
 - Shared OpenAPI specs live in `packages/api`; regenerate clients with `go generate packages/api/tool.go`.
 - Reusable models reside in `model/`; container assets live under `docker/`.
@@ -13,7 +14,9 @@
 - `go build -o tmp/main ./apps/server/main.go` and `go build -o vault-hub-cli ./apps/cli/main.go` compile server and CLI binaries; add release `-ldflags` when tagging.
 - `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` runs backend unit tests.
 - `golangci-lint run ./...` enforces Go lint rules; fix before commits.
-- `cd apps/web && pnpm install && pnpm run dev` starts the web app; run `pnpm run build`, `pnpm run lint`, and `pnpm run typecheck` prior to merging.
+- `git submodule update --init --remote apps/web` before building to sync the frontend bundle.
+- `pnpm --dir apps/web install && pnpm --dir apps/web run dev` starts the web app; run `pnpm --dir apps/web run build`, `pnpm --dir apps/web run lint`, and `pnpm --dir apps/web run typecheck` prior to merging.
+- Use `air -c .air.toml` for backend live reload; the Air config automatically rebuilds the embedded frontend assets.
 
 ## Coding Style & Naming Conventions
 - Format Go code with `gofmt`; exported types use PascalCase, internal helpers remain unexported.
