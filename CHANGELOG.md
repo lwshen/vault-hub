@@ -1,3 +1,8 @@
+## [1.3.22] - 2025-10-22
+
+### 🚀 Features
+
+- Expose email enabled flag in config api (#303)
 ## [1.3.20] - 2025-10-22
 
 ### 🚀 Features
