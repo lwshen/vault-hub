@@ -30,7 +30,7 @@ ENV GO111MODULE=on \
 
 COPY . .
 
-COPY --from=frontend-builder ./apps/web/dist ./internal/embed/dist
+COPY --from=frontend-builder /app/apps/web/dist ./internal/embed/dist
 
 RUN go mod download
 
