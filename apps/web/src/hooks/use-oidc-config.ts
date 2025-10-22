@@ -3,10 +3,11 @@ import { configApi } from '@/apis/api';
 
 /**
  * Hook to fetch OIDC configuration from the backend
- * @returns Object containing oidcEnabled flag and oidcLoading state
+ * @returns Object containing public config flags and loading state
  */
 export function useOidcConfig() {
   const [oidcEnabled, setOidcEnabled] = useState<boolean>(false);
+  const [emailEnabled, setEmailEnabled] = useState<boolean>(false);
   const [oidcLoading, setOidcLoading] = useState(true);
 
   useEffect(() => {
@@ -16,6 +17,7 @@ export function useOidcConfig() {
       .then((config) => {
         if (isMounted) {
           setOidcEnabled(config.oidcEnabled);
+          setEmailEnabled(config.emailEnabled);
         }
       })
       .catch((err) => {
@@ -23,6 +25,7 @@ export function useOidcConfig() {
         if (isMounted) {
           // Default to false if fetch fails
           setOidcEnabled(false);
+          setEmailEnabled(false);
         }
       })
       .finally(() => {
@@ -36,5 +39,5 @@ export function useOidcConfig() {
     };
   }, []);
 
-  return { oidcEnabled, oidcLoading };
+  return { oidcEnabled, emailEnabled, oidcLoading };
 }

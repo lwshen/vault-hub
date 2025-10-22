@@ -38,6 +38,13 @@ const (
 	Web AuditLogSource = "web"
 )
 
+// Defines values for EmailTokenResponseCode.
+const (
+	EmailTokenFailed      EmailTokenResponseCode = "email_token_failed"
+	EmailTokenRateLimited EmailTokenResponseCode = "email_token_rate_limited"
+	EmailTokenSent        EmailTokenResponseCode = "email_token_sent"
+)
+
 // Defines values for StatusResponseDatabaseStatus.
 const (
 	StatusResponseDatabaseStatusDegraded    StatusResponseDatabaseStatus = "degraded"
@@ -123,6 +130,9 @@ type AuditMetricsResponse struct {
 
 // ConfigResponse defines model for ConfigResponse.
 type ConfigResponse struct {
+	// EmailEnabled Whether transactional email is enabled
+	EmailEnabled bool `json:"emailEnabled"`
+
 	// OidcEnabled Whether OIDC authentication is enabled
 	OidcEnabled bool `json:"oidcEnabled"`
 }
@@ -164,12 +174,15 @@ type CreateVaultRequest struct {
 
 // EmailTokenResponse defines model for EmailTokenResponse.
 type EmailTokenResponse struct {
-	// Message Human readable status message for the request
-	Message string `json:"message"`
+	// Code Machine-readable status code describing the outcome
+	Code EmailTokenResponseCode `json:"code"`
 
 	// Success Indicates whether the email token request was accepted
 	Success bool `json:"success"`
 }
+
+// EmailTokenResponseCode Machine-readable status code describing the outcome
+type EmailTokenResponseCode string
 
 // GetUserResponse defines model for GetUserResponse.
 type GetUserResponse struct {
@@ -1084,14 +1097,6 @@ func (response RequestMagicLink500JSONResponse) VisitRequestMagicLinkResponse(ct
 	ctx.Status(500)
 
 	return ctx.JSON(&response)
-}
-
-type RequestMagicLink404Response struct {
-}
-
-func (response RequestMagicLink404Response) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
-	ctx.Status(404)
-	return nil
 }
 
 type ConsumeMagicLinkRequestObject struct {
