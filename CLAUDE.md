@@ -29,12 +29,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### React Frontend (apps/web/)
 
-- **Install dependencies**: `pnpm install` (uses pnpm as package manager)
-- **Development server**: `pnpm run dev`
-- **Build production**: `pnpm run build`
-- **Lint**: `pnpm run lint`
-- **Type check**: `pnpm run typecheck`
-- **Preview build**: `pnpm run preview`
+- **Install dependencies**: `pnpm --dir apps/web install` (run from repo root)
+- **Development server**: `pnpm --dir apps/web run dev`
+- **Build production**: `pnpm --dir apps/web run build`
+- **Lint**: `pnpm --dir apps/web run lint`
+- **Type check**: `pnpm --dir apps/web run typecheck`
+- **Preview build**: `pnpm --dir apps/web run preview`
+- **Note**: `apps/web` is sourced from an external package; avoid editing its files unless coordinating with the frontend owners.
+
+### Live Reload (Air)
+
+- **Run watcher**: `air -c .air.toml`
+- Air rebuilds the Go server and triggers `pnpm --dir apps/web run build -- --mode development --outDir ../../internal/embed/dist` so embedded static assets stay fresh.
 
 ## Architecture Overview
 

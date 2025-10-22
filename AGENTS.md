@@ -14,7 +14,8 @@
 - `go build -o tmp/main ./apps/server/main.go` and `go build -o vault-hub-cli ./apps/cli/main.go` compile server and CLI binaries; add release `-ldflags` when tagging.
 - `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` runs backend unit tests.
 - `golangci-lint run ./...` enforces Go lint rules; fix before commits.
-- `cd apps/web && pnpm install && pnpm run dev` starts the web app; run `pnpm run build`, `pnpm run lint`, and `pnpm run typecheck` prior to merging.
+- `pnpm --dir apps/web install && pnpm --dir apps/web run dev` starts the web app; run `pnpm --dir apps/web run build`, `pnpm --dir apps/web run lint`, and `pnpm --dir apps/web run typecheck` prior to merging.
+- Use `air -c .air.toml` for backend live reload; the Air config automatically rebuilds the embedded frontend assets.
 
 ## Coding Style & Naming Conventions
 - Format Go code with `gofmt`; exported types use PascalCase, internal helpers remain unexported.
