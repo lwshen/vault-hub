@@ -16,8 +16,6 @@ jobs:
       - uses: actions/checkout@v5
         with:
           submodules: "recursive"
-      - name: List web
-        run: ls -al apps/web
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
