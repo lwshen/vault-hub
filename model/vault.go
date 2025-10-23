@@ -206,27 +206,27 @@ func GetVaultsByUser(userID uint, decrypt bool) ([]Vault, error) {
 
 // GetUserVaultsWithPagination returns vaults for a user with pagination
 func GetUserVaultsWithPagination(userID uint, pageSize, pageIndex int) ([]Vault, int64, error) {
-    var vaults []Vault
-    var totalCount int64
+	var vaults []Vault
+	var totalCount int64
 
-    // Count total vaults for the user (excluding soft-deleted by default)
-    if err := DB.Model(&Vault{}).Where("user_id = ?", userID).Count(&totalCount).Error; err != nil {
-        return nil, 0, err
-    }
+	// Count total vaults for the user (excluding soft-deleted by default)
+	if err := DB.Model(&Vault{}).Where("user_id = ?", userID).Count(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
 
-    // Calculate offset (pageIndex is 1-based)
-    offset := (pageIndex - 1) * pageSize
+	// Calculate offset (pageIndex is 1-based)
+	offset := (pageIndex - 1) * pageSize
 
-    // Fetch paginated vaults, newest first
-    if err := DB.Where("user_id = ?", userID).
-        Order("created_at DESC").
-        Limit(pageSize).
-        Offset(offset).
-        Find(&vaults).Error; err != nil {
-        return nil, 0, err
-    }
+	// Fetch paginated vaults, newest first
+	if err := DB.Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Limit(pageSize).
+		Offset(offset).
+		Find(&vaults).Error; err != nil {
+		return nil, 0, err
+	}
 
-    return vaults, totalCount, nil
+	return vaults, totalCount, nil
 }
 
 // Update updates a vault

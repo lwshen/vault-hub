@@ -66,42 +66,49 @@ func convertToApiVaultLite(vault *model.Vault) VaultLite {
 
 // GetVaults handles GET /api/vaults with pagination
 func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
-    user, err := getUserFromContext(c)
-    if err != nil {
-        return err
-    }
+	user, err := getUserFromContext(c)
+	if err != nil {
+		return err
+	}
 
-    // Apply defaults if not provided
-    pageSize := params.PageSize
-    pageIndex := params.PageIndex
-    if pageSize == 0 {
-        pageSize = 20
-    }
-    if pageIndex == 0 {
-        pageIndex = 1
-    }
+	// Apply defaults if not provided
+	pageSize := params.PageSize
+	pageIndex := params.PageIndex
+	if pageSize == 0 {
+		pageSize = 20
+	}
+	if pageIndex == 0 {
+		pageIndex = 1
+	}
 
-    // Validate bounds
-    if pageSize < 1 || pageSize > 1000 {
-        return handler.SendError(c, fiber.StatusBadRequest, "pageSize must be between 1 and 1000")
-    }
-    if pageIndex < 1 {
-        return handler.SendError(c, fiber.StatusBadRequest, "pageIndex must be at least 1")
-    }
+	// Validate bounds
+	if pageSize < 1 || pageSize > 1000 {
+		return handler.SendError(c, fiber.StatusBadRequest, "pageSize must be between 1 and 1000")
+	}
+	if pageIndex < 1 {
+		return handler.SendError(c, fiber.StatusBadRequest, "pageIndex must be at least 1")
+	}
 
-    // Query paginated vaults for current user via model
-    vaults, _, err := model.GetUserVaultsWithPagination(user.ID, pageSize, pageIndex)
-    if err != nil {
-        return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-    }
+	// Query paginated vaults for current user via model
+	vaults, totalCount, err := model.GetUserVaultsWithPagination(user.ID, pageSize, pageIndex)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
 
-    // Convert to API VaultLite slice
-    apiVaults := make([]VaultLite, 0, len(vaults))
-    for i := range vaults {
-        apiVaults = append(apiVaults, convertToApiVaultLite(&vaults[i]))
-    }
+	// Convert to API VaultLite slice
+	apiVaults := make([]VaultLite, 0, len(vaults))
+	for i := range vaults {
+		apiVaults = append(apiVaults, convertToApiVaultLite(&vaults[i]))
+	}
 
-    return c.Status(fiber.StatusOK).JSON(apiVaults)
+	response := VaultsResponse{
+		Vaults:     apiVaults,
+		TotalCount: int(totalCount),
+		PageSize:   pageSize,
+		PageIndex:  pageIndex,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
 }
 
 // GetVault handles GET /api/vaults/{unique_id}

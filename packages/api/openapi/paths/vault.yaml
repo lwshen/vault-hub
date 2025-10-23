@@ -26,13 +26,11 @@ vaults:
           default: 1
     responses:
       "200":
-        description: List of vaults
+        description: Paginated list of vaults
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: ../schemas/vault.yaml#/VaultLite
+              $ref: ../schemas/vault.yaml#/VaultsResponse
   post:
     description: Create a new vault
     tags:

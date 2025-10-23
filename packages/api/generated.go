@@ -350,6 +350,21 @@ type VaultLite struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
+// VaultsResponse defines model for VaultsResponse.
+type VaultsResponse struct {
+	// PageIndex Current page index (starting from 1)
+	PageIndex int `json:"pageIndex"`
+
+	// PageSize Number of vaults returned per page
+	PageSize int `json:"pageSize"`
+
+	// TotalCount Total number of vaults available for pagination
+	TotalCount int `json:"totalCount"`
+
+	// Vaults Page of vault records for the authenticated user
+	Vaults []VaultLite `json:"vaults"`
+}
+
 // GetAPIKeysParams defines parameters for GetAPIKeys.
 type GetAPIKeysParams struct {
 	// PageSize Number of API keys per page (default 20, max 1000)
@@ -1363,7 +1378,7 @@ type GetVaultsResponseObject interface {
 	VisitGetVaultsResponse(ctx *fiber.Ctx) error
 }
 
-type GetVaults200JSONResponse []VaultLite
+type GetVaults200JSONResponse VaultsResponse
 
 func (response GetVaults200JSONResponse) VisitGetVaultsResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
