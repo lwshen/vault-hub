@@ -350,6 +350,21 @@ type VaultLite struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
+// VaultsResponse defines model for VaultsResponse.
+type VaultsResponse struct {
+	// PageIndex Current page index (starting from 1)
+	PageIndex int `json:"pageIndex"`
+
+	// PageSize Number of vaults returned per page
+	PageSize int `json:"pageSize"`
+
+	// TotalCount Total number of vaults available for pagination
+	TotalCount int `json:"totalCount"`
+
+	// Vaults Page of vault records for the authenticated user
+	Vaults []VaultLite `json:"vaults"`
+}
+
 // GetAPIKeysParams defines parameters for GetAPIKeys.
 type GetAPIKeysParams struct {
 	// PageSize Number of API keys per page (default 20, max 1000)
@@ -380,6 +395,15 @@ type GetAuditLogsParams struct {
 // ConsumeMagicLinkParams defines parameters for ConsumeMagicLink.
 type ConsumeMagicLinkParams struct {
 	Token string `form:"token" json:"token"`
+}
+
+// GetVaultsParams defines parameters for GetVaults.
+type GetVaultsParams struct {
+	// PageSize Number of vaults per page (default 20, max 1000)
+	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+
+	// PageIndex Page index, starting from 1 (default 1)
+	PageIndex *int `form:"pageIndex,omitempty" json:"pageIndex,omitempty"`
 }
 
 // CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
@@ -473,7 +497,7 @@ type ServerInterface interface {
 	GetCurrentUser(c *fiber.Ctx) error
 
 	// (GET /api/vaults)
-	GetVaults(c *fiber.Ctx) error
+	GetVaults(c *fiber.Ctx, params GetVaultsParams) error
 
 	// (POST /api/vaults)
 	CreateVault(c *fiber.Ctx) error
@@ -793,7 +817,32 @@ func (siw *ServerInterfaceWrapper) GetCurrentUser(c *fiber.Ctx) error {
 // GetVaults operation middleware
 func (siw *ServerInterfaceWrapper) GetVaults(c *fiber.Ctx) error {
 
-	return siw.Handler.GetVaults(c)
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetVaultsParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "pageSize", query, &params.PageSize)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageSize: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "pageIndex" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "pageIndex", query, &params.PageIndex)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageIndex: %w", err).Error())
+	}
+
+	return siw.Handler.GetVaults(c, params)
 }
 
 // CreateVault operation middleware
@@ -1306,13 +1355,14 @@ func (response GetCurrentUser200JSONResponse) VisitGetCurrentUserResponse(ctx *f
 }
 
 type GetVaultsRequestObject struct {
+	Params GetVaultsParams
 }
 
 type GetVaultsResponseObject interface {
 	VisitGetVaultsResponse(ctx *fiber.Ctx) error
 }
 
-type GetVaults200JSONResponse []VaultLite
+type GetVaults200JSONResponse VaultsResponse
 
 func (response GetVaults200JSONResponse) VisitGetVaultsResponse(ctx *fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
@@ -2038,8 +2088,10 @@ func (sh *strictHandler) GetCurrentUser(ctx *fiber.Ctx) error {
 }
 
 // GetVaults operation middleware
-func (sh *strictHandler) GetVaults(ctx *fiber.Ctx) error {
+func (sh *strictHandler) GetVaults(ctx *fiber.Ctx, params GetVaultsParams) error {
 	var request GetVaultsRequestObject
+
+	request.Params = params
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.GetVaults(ctx.UserContext(), request.(GetVaultsRequestObject))

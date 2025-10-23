@@ -1,3 +1,25 @@
+VaultsResponse:
+  type: object
+  required:
+    - vaults
+    - totalCount
+    - pageSize
+    - pageIndex
+  properties:
+    vaults:
+      type: array
+      description: Page of vault records for the authenticated user
+      items:
+        $ref: "#/VaultLite"
+    totalCount:
+      type: integer
+      description: Total number of vaults available for pagination
+    pageSize:
+      type: integer
+      description: Number of vaults returned per page
+    pageIndex:
+      type: integer
+      description: Current page index (starting from 1)
 VaultLite:
   type: object
   required:

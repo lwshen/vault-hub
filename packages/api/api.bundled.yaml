@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.4
+  version: 1.0.5
   title: Vault Hub Server
 paths:
   /api/health:
@@ -210,15 +210,29 @@ paths:
       tags:
         - Vault
       operationId: getVaults
+      parameters:
+        - name: pageSize
+          in: query
+          description: Number of vaults per page (default 20, max 1000)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 20
+        - name: pageIndex
+          in: query
+          description: Page index, starting from 1 (default 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
       responses:
         '200':
-          description: List of vaults
+          description: Paginated list of vaults
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VaultLite'
+                $ref: '#/components/schemas/VaultsResponse'
     post:
       description: Create a new vault
       tags:
@@ -962,3 +976,25 @@ components:
           type: boolean
           description: Whether transactional email is enabled
           example: false
+    VaultsResponse:
+      type: object
+      required:
+        - vaults
+        - totalCount
+        - pageSize
+        - pageIndex
+      properties:
+        vaults:
+          type: array
+          description: Page of vault records for the authenticated user
+          items:
+            $ref: '#/components/schemas/VaultLite'
+        totalCount:
+          type: integer
+          description: Total number of vaults available for pagination
+        pageSize:
+          type: integer
+          description: Number of vaults returned per page
+        pageIndex:
+          type: integer
+          description: Current page index (starting from 1)

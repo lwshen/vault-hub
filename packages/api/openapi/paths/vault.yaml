@@ -6,15 +6,29 @@ vaults:
     tags:
       - Vault
     operationId: getVaults
+    parameters:
+      - name: pageSize
+        in: query
+        description: Number of vaults per page (default 20, max 1000)
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 20
+      - name: pageIndex
+        in: query
+        description: Page index, starting from 1 (default 1)
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
     responses:
       "200":
-        description: List of vaults
+        description: Paginated list of vaults
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: ../schemas/vault.yaml#/VaultLite
+              $ref: ../schemas/vault.yaml#/VaultsResponse
   post:
     description: Create a new vault
     tags:
