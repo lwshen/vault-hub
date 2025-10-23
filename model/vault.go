@@ -209,8 +209,10 @@ func GetUserVaultsWithPagination(userID uint, pageSize, pageIndex int) ([]Vault,
 	var vaults []Vault
 	var totalCount int64
 
-	// Count total vaults for the user (excluding soft-deleted by default)
-	if err := DB.Model(&Vault{}).Where("user_id = ?", userID).Count(&totalCount).Error; err != nil {
+	// Count total vaults for the user, explicitly excluding soft-deleted records
+	if err := DB.Model(&Vault{}).
+		Where("user_id = ? AND deleted_at IS NULL", userID).
+		Count(&totalCount).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -218,7 +220,7 @@ func GetUserVaultsWithPagination(userID uint, pageSize, pageIndex int) ([]Vault,
 	offset := (pageIndex - 1) * pageSize
 
 	// Fetch paginated vaults, newest first
-	if err := DB.Where("user_id = ?", userID).
+	if err := DB.Where("user_id = ? AND deleted_at IS NULL", userID).
 		Order("created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
