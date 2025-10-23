@@ -1,3 +1,8 @@
+## [1.4.2] - 2025-10-23
+
+### 🚀 Features
+
+- Update build process and add script for frontend submodule (#307)
 ## [1.4.1] - 2025-10-22
 
 ### 🚜 Refactor
