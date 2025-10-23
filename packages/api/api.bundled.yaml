@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.4
+  version: 1.0.5
   title: Vault Hub Server
 paths:
   /api/health:
@@ -210,6 +210,24 @@ paths:
       tags:
         - Vault
       operationId: getVaults
+      parameters:
+        - name: pageSize
+          in: query
+          required: true
+          description: Number of vaults per page (default 20, max 1000)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 20
+        - name: pageIndex
+          in: query
+          required: true
+          description: Page index, starting from 1 (default 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
       responses:
         '200':
           description: List of vaults

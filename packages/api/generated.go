@@ -382,6 +382,15 @@ type ConsumeMagicLinkParams struct {
 	Token string `form:"token" json:"token"`
 }
 
+// GetVaultsParams defines parameters for GetVaults.
+type GetVaultsParams struct {
+	// PageSize Number of vaults per page (default 20, max 1000)
+	PageSize int `form:"pageSize" json:"pageSize"`
+
+	// PageIndex Page index, starting from 1 (default 1)
+	PageIndex int `form:"pageIndex" json:"pageIndex"`
+}
+
 // CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
 type CreateAPIKeyJSONRequestBody = CreateAPIKeyRequest
 
@@ -473,7 +482,7 @@ type ServerInterface interface {
 	GetCurrentUser(c *fiber.Ctx) error
 
 	// (GET /api/vaults)
-	GetVaults(c *fiber.Ctx) error
+	GetVaults(c *fiber.Ctx, params GetVaultsParams) error
 
 	// (POST /api/vaults)
 	CreateVault(c *fiber.Ctx) error
@@ -793,7 +802,48 @@ func (siw *ServerInterfaceWrapper) GetCurrentUser(c *fiber.Ctx) error {
 // GetVaults operation middleware
 func (siw *ServerInterfaceWrapper) GetVaults(c *fiber.Ctx) error {
 
-	return siw.Handler.GetVaults(c)
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetVaultsParams
+
+	var query url.Values
+	query, err = url.ParseQuery(string(c.Request().URI().QueryString()))
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "pageSize" -------------
+
+	if paramValue := c.Query("pageSize"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument pageSize is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "pageSize", query, &params.PageSize)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageSize: %w", err).Error())
+	}
+
+	// ------------- Required query parameter "pageIndex" -------------
+
+	if paramValue := c.Query("pageIndex"); paramValue != "" {
+
+	} else {
+		err = fmt.Errorf("Query argument pageIndex is required, but not found")
+		c.Status(fiber.StatusBadRequest).JSON(err)
+		return err
+	}
+
+	err = runtime.BindQueryParameter("form", true, true, "pageIndex", query, &params.PageIndex)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageIndex: %w", err).Error())
+	}
+
+	return siw.Handler.GetVaults(c, params)
 }
 
 // CreateVault operation middleware
@@ -1306,6 +1356,7 @@ func (response GetCurrentUser200JSONResponse) VisitGetCurrentUserResponse(ctx *f
 }
 
 type GetVaultsRequestObject struct {
+	Params GetVaultsParams
 }
 
 type GetVaultsResponseObject interface {
@@ -2038,8 +2089,10 @@ func (sh *strictHandler) GetCurrentUser(ctx *fiber.Ctx) error {
 }
 
 // GetVaults operation middleware
-func (sh *strictHandler) GetVaults(ctx *fiber.Ctx) error {
+func (sh *strictHandler) GetVaults(ctx *fiber.Ctx, params GetVaultsParams) error {
 	var request GetVaultsRequestObject
+
+	request.Params = params
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.GetVaults(ctx.UserContext(), request.(GetVaultsRequestObject))
