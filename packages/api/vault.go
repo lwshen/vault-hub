@@ -64,25 +64,44 @@ func convertToApiVaultLite(vault *model.Vault) VaultLite {
 	}
 }
 
-// GetVaults handles GET /api/vaults
-func (Server) GetVaults(c *fiber.Ctx) error {
-	user, err := getUserFromContext(c)
-	if err != nil {
-		return err
-	}
+// GetVaults handles GET /api/vaults with pagination
+func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
+    user, err := getUserFromContext(c)
+    if err != nil {
+        return err
+    }
 
-	vaults, err := model.GetVaultsByUser(user.ID, false)
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
+    // Apply defaults if not provided
+    pageSize := params.PageSize
+    pageIndex := params.PageIndex
+    if pageSize == 0 {
+        pageSize = 20
+    }
+    if pageIndex == 0 {
+        pageIndex = 1
+    }
 
-	// convert to api.Vault
-	apiVaults := make([]VaultLite, len(vaults))
-	for i, vault := range vaults {
-		apiVaults[i] = convertToApiVaultLite(&vault)
-	}
+    // Validate bounds
+    if pageSize < 1 || pageSize > 1000 {
+        return handler.SendError(c, fiber.StatusBadRequest, "pageSize must be between 1 and 1000")
+    }
+    if pageIndex < 1 {
+        return handler.SendError(c, fiber.StatusBadRequest, "pageIndex must be at least 1")
+    }
 
-	return c.Status(fiber.StatusOK).JSON(apiVaults)
+    // Query paginated vaults for current user via model
+    vaults, _, err := model.GetUserVaultsWithPagination(user.ID, pageSize, pageIndex)
+    if err != nil {
+        return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+    }
+
+    // Convert to API VaultLite slice
+    apiVaults := make([]VaultLite, 0, len(vaults))
+    for i := range vaults {
+        apiVaults = append(apiVaults, convertToApiVaultLite(&vaults[i]))
+    }
+
+    return c.Status(fiber.StatusOK).JSON(apiVaults)
 }
 
 // GetVault handles GET /api/vaults/{unique_id}
