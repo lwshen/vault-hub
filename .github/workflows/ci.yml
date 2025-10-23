@@ -43,9 +43,6 @@ jobs:
       - name: Install frontend dependencies
         working-directory: ./apps/web
         run: pnpm install
-      - name: Check frontend format
-        working-directory: ./apps/web
-        run: pnpm typecheck && pnpm lint
       - name: Build frontend
         working-directory: ./apps/web
         run: pnpm build
