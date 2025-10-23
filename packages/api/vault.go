@@ -72,13 +72,13 @@ func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 	}
 
 	// Apply defaults if not provided
-	pageSize := params.PageSize
-	pageIndex := params.PageIndex
-	if pageSize == 0 {
-		pageSize = 20
+	pageSize := 20
+	if params.PageSize != nil {
+		pageSize = *params.PageSize
 	}
-	if pageIndex == 0 {
-		pageIndex = 1
+	pageIndex := 1
+	if params.PageIndex != nil {
+		pageIndex = *params.PageIndex
 	}
 
 	// Validate bounds

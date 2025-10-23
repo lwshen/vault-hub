@@ -213,7 +213,6 @@ paths:
       parameters:
         - name: pageSize
           in: query
-          required: true
           description: Number of vaults per page (default 20, max 1000)
           schema:
             type: integer
@@ -222,7 +221,6 @@ paths:
             default: 20
         - name: pageIndex
           in: query
-          required: true
           description: Page index, starting from 1 (default 1)
           schema:
             type: integer

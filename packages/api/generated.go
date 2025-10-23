@@ -400,10 +400,10 @@ type ConsumeMagicLinkParams struct {
 // GetVaultsParams defines parameters for GetVaults.
 type GetVaultsParams struct {
 	// PageSize Number of vaults per page (default 20, max 1000)
-	PageSize int `form:"pageSize" json:"pageSize"`
+	PageSize *int `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 
 	// PageIndex Page index, starting from 1 (default 1)
-	PageIndex int `form:"pageIndex" json:"pageIndex"`
+	PageIndex *int `form:"pageIndex,omitempty" json:"pageIndex,omitempty"`
 }
 
 // CreateAPIKeyJSONRequestBody defines body for CreateAPIKey for application/json ContentType.
@@ -828,32 +828,16 @@ func (siw *ServerInterfaceWrapper) GetVaults(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for query string: %w", err).Error())
 	}
 
-	// ------------- Required query parameter "pageSize" -------------
+	// ------------- Optional query parameter "pageSize" -------------
 
-	if paramValue := c.Query("pageSize"); paramValue != "" {
-
-	} else {
-		err = fmt.Errorf("Query argument pageSize is required, but not found")
-		c.Status(fiber.StatusBadRequest).JSON(err)
-		return err
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "pageSize", query, &params.PageSize)
+	err = runtime.BindQueryParameter("form", true, false, "pageSize", query, &params.PageSize)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageSize: %w", err).Error())
 	}
 
-	// ------------- Required query parameter "pageIndex" -------------
+	// ------------- Optional query parameter "pageIndex" -------------
 
-	if paramValue := c.Query("pageIndex"); paramValue != "" {
-
-	} else {
-		err = fmt.Errorf("Query argument pageIndex is required, but not found")
-		c.Status(fiber.StatusBadRequest).JSON(err)
-		return err
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "pageIndex", query, &params.PageIndex)
+	err = runtime.BindQueryParameter("form", true, false, "pageIndex", query, &params.PageIndex)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter pageIndex: %w", err).Error())
 	}
