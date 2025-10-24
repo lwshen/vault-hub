@@ -309,10 +309,11 @@ func executeFollowUpCommand(followUpCommand string, debugLog func(string, ...any
 	}
 }
 
-// truncateString truncates a string to maxLen characters
+// truncateString truncates a string to maxLen characters (properly handles Unicode)
 func truncateString(s string, maxLen int) string {
-	if len(s) <= maxLen {
+	runes := []rune(s)
+	if len(runes) <= maxLen {
 		return s
 	}
-	return s[:maxLen] + "..."
+	return string(runes[:maxLen]) + "..."
 }
