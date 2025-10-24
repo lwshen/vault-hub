@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -397,6 +398,18 @@ type ConsumeMagicLinkParams struct {
 	Token string `form:"token" json:"token"`
 }
 
+// GetVaultByNameAPIKeyParams defines parameters for GetVaultByNameAPIKey.
+type GetVaultByNameAPIKeyParams struct {
+	// XEnableClientEncryption Enable client-side encryption (server returns encrypted value)
+	XEnableClientEncryption *string `json:"X-Enable-Client-Encryption,omitempty"`
+}
+
+// GetVaultByAPIKeyParams defines parameters for GetVaultByAPIKey.
+type GetVaultByAPIKeyParams struct {
+	// XEnableClientEncryption Enable client-side encryption (server returns encrypted value)
+	XEnableClientEncryption *string `json:"X-Enable-Client-Encryption,omitempty"`
+}
+
 // GetVaultsParams defines parameters for GetVaults.
 type GetVaultsParams struct {
 	// PageSize Number of vaults per page (default 20, max 1000)
@@ -476,10 +489,10 @@ type ServerInterface interface {
 	Signup(c *fiber.Ctx) error
 
 	// (GET /api/cli/vault/name/{name})
-	GetVaultByNameAPIKey(c *fiber.Ctx, name string) error
+	GetVaultByNameAPIKey(c *fiber.Ctx, name string, params GetVaultByNameAPIKeyParams) error
 
 	// (GET /api/cli/vault/{uniqueId})
-	GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error
+	GetVaultByAPIKey(c *fiber.Ctx, uniqueId string, params GetVaultByAPIKeyParams) error
 
 	// (GET /api/cli/vaults)
 	GetVaultsByAPIKey(c *fiber.Ctx) error
@@ -761,7 +774,25 @@ func (siw *ServerInterfaceWrapper) GetVaultByNameAPIKey(c *fiber.Ctx) error {
 
 	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
 
-	return siw.Handler.GetVaultByNameAPIKey(c, name)
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetVaultByNameAPIKeyParams
+
+	headers := c.GetReqHeaders()
+
+	// ------------- Optional header parameter "X-Enable-Client-Encryption" -------------
+	if value, found := headers[http.CanonicalHeaderKey("X-Enable-Client-Encryption")]; found {
+		var XEnableClientEncryption string
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Enable-Client-Encryption", value[0], &XEnableClientEncryption, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter X-Enable-Client-Encryption: %w", err).Error())
+		}
+
+		params.XEnableClientEncryption = &XEnableClientEncryption
+
+	}
+
+	return siw.Handler.GetVaultByNameAPIKey(c, name, params)
 }
 
 // GetVaultByAPIKey operation middleware
@@ -779,7 +810,25 @@ func (siw *ServerInterfaceWrapper) GetVaultByAPIKey(c *fiber.Ctx) error {
 
 	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
 
-	return siw.Handler.GetVaultByAPIKey(c, uniqueId)
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetVaultByAPIKeyParams
+
+	headers := c.GetReqHeaders()
+
+	// ------------- Optional header parameter "X-Enable-Client-Encryption" -------------
+	if value, found := headers[http.CanonicalHeaderKey("X-Enable-Client-Encryption")]; found {
+		var XEnableClientEncryption string
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-Enable-Client-Encryption", value[0], &XEnableClientEncryption, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false})
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter X-Enable-Client-Encryption: %w", err).Error())
+		}
+
+		params.XEnableClientEncryption = &XEnableClientEncryption
+
+	}
+
+	return siw.Handler.GetVaultByAPIKey(c, uniqueId, params)
 }
 
 // GetVaultsByAPIKey operation middleware
@@ -1241,7 +1290,8 @@ func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error 
 }
 
 type GetVaultByNameAPIKeyRequestObject struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Params GetVaultByNameAPIKeyParams
 }
 
 type GetVaultByNameAPIKeyResponseObject interface {
@@ -1259,6 +1309,7 @@ func (response GetVaultByNameAPIKey200JSONResponse) VisitGetVaultByNameAPIKeyRes
 
 type GetVaultByAPIKeyRequestObject struct {
 	UniqueId string `json:"uniqueId"`
+	Params   GetVaultByAPIKeyParams
 }
 
 type GetVaultByAPIKeyResponseObject interface {
@@ -1909,10 +1960,11 @@ func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
 }
 
 // GetVaultByNameAPIKey operation middleware
-func (sh *strictHandler) GetVaultByNameAPIKey(ctx *fiber.Ctx, name string) error {
+func (sh *strictHandler) GetVaultByNameAPIKey(ctx *fiber.Ctx, name string, params GetVaultByNameAPIKeyParams) error {
 	var request GetVaultByNameAPIKeyRequestObject
 
 	request.Name = name
+	request.Params = params
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.GetVaultByNameAPIKey(ctx.UserContext(), request.(GetVaultByNameAPIKeyRequestObject))
@@ -1936,10 +1988,11 @@ func (sh *strictHandler) GetVaultByNameAPIKey(ctx *fiber.Ctx, name string) error
 }
 
 // GetVaultByAPIKey operation middleware
-func (sh *strictHandler) GetVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) error {
+func (sh *strictHandler) GetVaultByAPIKey(ctx *fiber.Ctx, uniqueId string, params GetVaultByAPIKeyParams) error {
 	var request GetVaultByAPIKeyRequestObject
 
 	request.UniqueId = uniqueId
+	request.Params = params
 
 	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
 		return sh.ssi.GetVaultByAPIKey(ctx.UserContext(), request.(GetVaultByAPIKeyRequestObject))

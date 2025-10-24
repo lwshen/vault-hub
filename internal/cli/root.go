@@ -42,6 +42,7 @@ Global flags can be set via environment variables:
 	// Create a context to pass dependencies to commands
 	ctx := &commands.CommandContext{
 		GetClient:         func() *openapi.APIClient { return Client },
+		GetAPIKey:         func() string { return APIKey },
 		DebugLog:          DebugLog,
 		MustGetStringFlag: MustGetStringFlag,
 	}
