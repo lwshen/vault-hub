@@ -39,8 +39,8 @@ func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 }
 
 // GetVaultByAPIKey - Get a single vault by unique ID for a given API key
-func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
-	return s.getVaultByAPIKey(c, uniqueId, func(apiKey *model.APIKey) (*model.Vault, error) {
+func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string, params GetVaultByAPIKeyParams) error {
+	return s.getVaultByAPIKey(c, uniqueId, params.XEnableClientEncryption, func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByUniqueID(uniqueId, apiKey.UserID)
 		return &vault, err
@@ -48,8 +48,8 @@ func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 }
 
 // GetVaultByNameAPIKey - Get a single vault by name for a given API key
-func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
-	return s.getVaultByAPIKey(c, name, func(apiKey *model.APIKey) (*model.Vault, error) {
+func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string, params GetVaultByNameAPIKeyParams) error {
+	return s.getVaultByAPIKey(c, name, params.XEnableClientEncryption, func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByName(name, apiKey.UserID)
 		return &vault, err
@@ -57,7 +57,7 @@ func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
 }
 
 // getVaultByAPIKey - Common logic for getting a vault via API key
-func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
+func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientEncryptionParam *string, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
 	apiKey, ok := c.Locals("api_key").(*model.APIKey)
 	if !ok {
 		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
@@ -84,17 +84,32 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, vaultGetter f
 	}
 
 	// Enhanced security: Apply additional client-side encryption if requested
-	enableClientEncryption := c.Get("X-Enable-Client-Encryption")
-	if enableClientEncryption == "true" {
+	enableClientEncryption := enableClientEncryptionParam != nil && *enableClientEncryptionParam == "true"
+	if enableClientEncryption {
+		slog.Debug("Client-side encryption requested", "header", *enableClientEncryptionParam, "vaultID", vault.ID)
+
 		// Get the original API key from the Authorization header to use for key derivation
 		authHeader := c.Get("Authorization")
 		originalAPIKey := authHeader[7:] // Remove "Bearer " prefix
 
+		originalValueLen := len(vault.Value)
 		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, encryptSalt)
 		if err != nil {
+			slog.Error("Failed to encrypt vault value for client", "error", err, "vaultID", vault.ID)
 			return handler.SendError(c, fiber.StatusInternalServerError, "failed to encrypt value for client")
 		}
 		vault.Value = encryptedValue
+		slog.Debug("Vault value encrypted for client",
+			"vaultID", vault.ID,
+			"originalLen", originalValueLen,
+			"encryptedLen", len(encryptedValue),
+			"salt", encryptSalt)
+	} else {
+		if enableClientEncryptionParam != nil {
+			slog.Debug("Client-side encryption not enabled", "headerValue", *enableClientEncryptionParam, "vaultID", vault.ID)
+		} else {
+			slog.Debug("No client-side encryption header received", "vaultID", vault.ID)
+		}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))

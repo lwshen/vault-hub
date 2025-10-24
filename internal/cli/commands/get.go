@@ -9,6 +9,8 @@ import (
 
 	openapi "github.com/lwshen/vault-hub-go-client"
 	"github.com/spf13/cobra"
+
+	"github.com/lwshen/vault-hub/internal/cli/encryption"
 )
 
 // NewGetCommand creates the get command
@@ -19,11 +21,16 @@ func NewGetCommand(ctx *CommandContext) *cobra.Command {
 		Long: `Get detailed information about a specific vault including its encrypted value.
 You can specify the vault by either its name or unique ID.
 
+Client-side encryption is ENABLED BY DEFAULT for enhanced security.
+The vault value is encrypted with a per-vault key derived from your API key.
+Use --no-client-encryption to disable this feature if needed.
+
 Examples:
   vault-hub get --name my-api-keys
   vault-hub get --id abc123-def456-ghi789
   vault-hub get --name my-api-keys --output ./secrets.txt
-  vault-hub get --name my-api-keys --output .env --exec "source .env && echo 'Environment loaded'"`,
+  vault-hub get --name my-api-keys --output .env --exec "source .env && echo 'Environment loaded'"
+  vault-hub get --name my-api-keys --no-client-encryption`,
 		Run: func(cmd *cobra.Command, args []string) {
 			runGetCommand(cmd, args, ctx)
 		},
@@ -33,6 +40,7 @@ Examples:
 	cmd.Flags().StringP("id", "i", "", "Vault Unique ID")
 	cmd.Flags().StringP("output", "o", "", "Output to file instead of stdout")
 	cmd.Flags().StringP("exec", "e", "", "Command to execute if vault has been updated")
+	cmd.Flags().Bool("no-client-encryption", false, "Disable client-side encryption (less secure)")
 
 	return cmd
 }
@@ -63,6 +71,36 @@ func runGetCommand(cmd *cobra.Command, _ []string, ctx *CommandContext) {
 	}
 	ctx.DebugLog("API request successful, vault retrieved")
 
+	// Decrypt vault value if client-side encryption is enabled
+	if !params.noClientEncryption {
+		ctx.DebugLog("Decrypting vault value with client-side encryption")
+		ctx.DebugLog("Received value from server (first 50 chars): %s", truncateString(vault.Value, 50))
+		ctx.DebugLog("Value length: %d bytes", len(vault.Value))
+
+		// Determine the salt (vault identifier used for key derivation)
+		salt := params.name
+		if salt == "" {
+			salt = params.id
+		}
+		ctx.DebugLog("Using salt for key derivation: %s", salt)
+
+		// Decrypt the vault value
+		decryptedValue, err := encryption.DecryptForClient(vault.Value, ctx.GetAPIKey(), salt)
+		if err != nil {
+			ctx.DebugLog("Decryption failed: %v", err)
+			ctx.DebugLog("This likely means the server did not encrypt the value (check server logs)")
+			fmt.Fprintf(os.Stderr, "Error: Failed to decrypt vault value: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Hint: Make sure the server is running the updated code and restart it if needed\n")
+			os.Exit(1)
+		}
+
+		vault.Value = decryptedValue
+		ctx.DebugLog("Vault value decrypted successfully")
+		ctx.DebugLog("Decrypted value length: %d bytes", len(decryptedValue))
+	} else {
+		ctx.DebugLog("Client-side encryption disabled, using value as-is")
+	}
+
 	// Handle output
 	handleVaultOutput(vault, params, ctx)
 	ctx.DebugLog("Get command completed successfully")
@@ -70,19 +108,22 @@ func runGetCommand(cmd *cobra.Command, _ []string, ctx *CommandContext) {
 
 // getCommandParams holds the parsed command parameters
 type getCommandParams struct {
-	name            string
-	id              string
-	outputFile      string
-	followUpCommand string
+	name               string
+	id                 string
+	outputFile         string
+	followUpCommand    string
+	noClientEncryption bool
 }
 
 // parseGetCommandFlags extracts and returns command flags
 func parseGetCommandFlags(cmd *cobra.Command, ctx *CommandContext) getCommandParams {
+	noClientEncryption, _ := cmd.Flags().GetBool("no-client-encryption")
 	return getCommandParams{
-		name:            ctx.MustGetStringFlag(cmd, "name"),
-		id:              ctx.MustGetStringFlag(cmd, "id"),
-		outputFile:      ctx.MustGetStringFlag(cmd, "output"),
-		followUpCommand: ctx.MustGetStringFlag(cmd, "exec"),
+		name:               ctx.MustGetStringFlag(cmd, "name"),
+		id:                 ctx.MustGetStringFlag(cmd, "id"),
+		outputFile:         ctx.MustGetStringFlag(cmd, "output"),
+		followUpCommand:    ctx.MustGetStringFlag(cmd, "exec"),
+		noClientEncryption: noClientEncryption,
 	}
 }
 
@@ -98,14 +139,28 @@ func validateGetParams(params getCommandParams) error {
 func fetchVault(params getCommandParams, ctx *CommandContext) (*openapi.Vault, error) {
 	apiCtx := context.Background()
 
-	if params.name != "" {
-		ctx.DebugLog("Making API request to get vault by name: %s", params.name)
-		vault, _, err := ctx.GetClient().CliAPI.GetVaultByNameAPIKey(apiCtx, params.name).Execute()
-		return vault, err
+	// Enable client-side encryption by default (unless disabled)
+	enableClientEncryption := !params.noClientEncryption
+	if enableClientEncryption {
+		ctx.DebugLog("Client-side encryption enabled, setting X-Enable-Client-Encryption header")
+		// Set the header via client configuration
+		ctx.GetClient().GetConfig().DefaultHeader["X-Enable-Client-Encryption"] = "true"
+		defer delete(ctx.GetClient().GetConfig().DefaultHeader, "X-Enable-Client-Encryption")
+	} else {
+		ctx.DebugLog("Client-side encryption disabled")
 	}
 
-	ctx.DebugLog("Making API request to get vault by ID: %s", params.id)
-	vault, _, err := ctx.GetClient().CliAPI.GetVaultByAPIKey(apiCtx, params.id).Execute()
+	var vault *openapi.Vault
+	var err error
+
+	if params.name != "" {
+		ctx.DebugLog("Making API request to get vault by name: %s", params.name)
+		vault, _, err = ctx.GetClient().CliAPI.GetVaultByNameAPIKey(apiCtx, params.name).Execute()
+	} else {
+		ctx.DebugLog("Making API request to get vault by ID: %s", params.id)
+		vault, _, err = ctx.GetClient().CliAPI.GetVaultByAPIKey(apiCtx, params.id).Execute()
+	}
+
 	return vault, err
 }
 
@@ -252,4 +307,12 @@ func executeFollowUpCommand(followUpCommand string, debugLog func(string, ...any
 	} else {
 		debugLog("Follow-up command completed successfully")
 	}
+}
+
+// truncateString truncates a string to maxLen characters
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
 }
