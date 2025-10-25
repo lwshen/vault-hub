@@ -1,3 +1,8 @@
+## [1.4.5] - 2025-10-24
+
+### 🚀 Features
+
+- Implement client-side encryption for vault retrieval (#312)
 ## [1.4.3] - 2025-10-23
 
 ### 🚀 Features
