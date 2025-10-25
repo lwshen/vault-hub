@@ -1,0 +1,6 @@
+generatorName: go-echo-server
+inputSpec: api.bundled.yaml
+outputDir: ./generated
+additionalProperties:
+  packageName: generated
+  generateInterfaces: true
