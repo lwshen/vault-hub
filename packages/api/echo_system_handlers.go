@@ -1,0 +1,175 @@
+package api
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/lwshen/vault-hub/internal/version"
+	"github.com/lwshen/vault-hub/model"
+	"github.com/lwshen/vault-hub/packages/api/generated_models"
+)
+
+// Health handles GET /api/health
+func (c *Container) Health(ctx echo.Context) error {
+	status := "ok"
+	timestamp := time.Now()
+	resp := generated_models.HealthCheckResponse{
+		Status:    status,
+		Timestamp: timestamp,
+	}
+
+	return ctx.JSON(http.StatusOK, resp)
+}
+
+// GetStatus handles GET /api/status
+func (c *Container) GetStatus(ctx echo.Context) error {
+	// Check database status with multiple health indicators
+	databaseStatus, _, _ := checkDatabaseHealthEcho()
+
+	// Check system status based on multiple factors
+	systemStatus := checkSystemHealthEcho(databaseStatus)
+
+	resp := generated_models.StatusResponse{
+		Version:        version.Version,
+		Commit:         version.Commit,
+		SystemStatus:   systemStatus,
+		DatabaseStatus: databaseStatus,
+	}
+
+	return ctx.JSON(http.StatusOK, resp)
+}
+
+// checkDatabaseHealthEcho performs comprehensive database health checks
+func checkDatabaseHealthEcho() (string, int, int64) {
+	// Test basic connectivity
+	start := time.Now()
+	if err := model.DB.Exec("SELECT 1").Error; err != nil {
+		return "unavailable", 0, 0
+	}
+	responseTime := time.Since(start).Milliseconds()
+
+	// Get database connection info
+	sqlDB, err := model.DB.DB()
+	if err != nil {
+		return "degraded", 0, responseTime
+	}
+
+	stats := sqlDB.Stats()
+
+	// Determine status based on performance metrics
+	if responseTime > 5000 { // >5 seconds is severely degraded
+		return "degraded", stats.OpenConnections, responseTime
+	}
+
+	if responseTime > 1000 || stats.OpenConnections > 80 { // >1 second or >80% of max connections
+		return "degraded", stats.OpenConnections, responseTime
+	}
+
+	return "healthy", stats.OpenConnections, responseTime
+}
+
+// checkSystemHealthEcho determines overall system status based on various factors
+func checkSystemHealthEcho(dbStatus string) string {
+	// System is unavailable if database is completely down
+	if dbStatus == "unavailable" {
+		return "unavailable"
+	}
+
+	// System degradation scenarios:
+	// 1. Database is degraded
+	if dbStatus == "degraded" {
+		return "degraded"
+	}
+
+	return "healthy"
+}
+
+// GetConfig handles GET /api/config
+func (c *Container) GetConfig(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "Config endpoint not yet implemented",
+	})
+}
+
+// GetCurrentUser handles GET /api/user
+func (c *Container) GetCurrentUser(ctx echo.Context) error {
+	user, err := getUserFromEchoContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	resp := generated_models.GetUserResponse{
+		Email: user.Email,
+	}
+
+	if user.Name != nil {
+		resp.Name = *user.Name
+	}
+
+	if user.Avatar != nil {
+		resp.Avatar = *user.Avatar
+	}
+
+	return ctx.JSON(http.StatusOK, resp)
+}
+
+// Stub implementations for API key endpoints (to be implemented later)
+
+func (c *Container) GetAPIKeys(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "Get API keys not yet implemented",
+	})
+}
+
+func (c *Container) CreateAPIKey(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "Create API key not yet implemented",
+	})
+}
+
+func (c *Container) UpdateAPIKey(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "Update API key not yet implemented",
+	})
+}
+
+func (c *Container) DeleteAPIKey(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "Delete API key not yet implemented",
+	})
+}
+
+// Stub implementations for CLI endpoints (to be implemented later)
+
+func (c *Container) GetVaultsByAPIKey(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "CLI vaults endpoint not yet implemented",
+	})
+}
+
+func (c *Container) GetVaultByAPIKey(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "CLI vault by ID endpoint not yet implemented",
+	})
+}
+
+func (c *Container) GetVaultByNameAPIKey(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "CLI vault by name endpoint not yet implemented",
+	})
+}
+
+// Stub implementations for audit endpoints (to be implemented later)
+
+func (c *Container) GetAuditLogs(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "Audit logs not yet implemented",
+	})
+}
+
+func (c *Container) GetAuditMetrics(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"message": "Audit metrics not yet implemented",
+	})
+}
