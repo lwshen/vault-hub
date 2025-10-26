@@ -31,6 +31,8 @@ func SetupRoutesEcho(e *echo.Echo) {
 	e.POST("/api/auth/password/reset/confirm", container.ConfirmPasswordReset)
 	e.POST("/api/auth/magic-link/request", container.RequestMagicLink)
 	e.GET("/api/auth/magic-link/token", container.ConsumeMagicLink)
+	e.GET("/api/auth/login/oidc", container.LoginOIDC)
+	e.GET("/api/auth/callback/oidc", container.LoginOIDCCallback)
 
 	// User endpoints
 	e.GET("/api/user", container.GetCurrentUser)

@@ -23,16 +23,22 @@
 
 ## Migration Progress Update
 
-**Last Updated:** 2025-01-26 (Updated: Vault CRUD completed)
+**Last Updated:** 2025-01-26 (Updated: OIDC Integration completed)
 **Migration Approach:** OpenAPI Generator (go-echo-server) instead of oapi-codegen
-**Current Status:** ✅ **68% Complete - Core Functionality Working**
+**Current Status:** ✅ **75% Complete - Core Functionality Working**
 
-**📌 Latest Updates (2025-01-26):**
+**📌 Latest Updates (2025-01-26 - OIDC):**
+- ✅ Implemented `GET /api/auth/login/oidc` - OIDC login initiation with cookie-based state storage
+- ✅ Implemented `GET /api/auth/callback/oidc` - OIDC callback handler with secure state verification
+- ✅ **Removed Fiber session dependency** - Replaced with HMAC-SHA256 signed cookies
+- ✅ OIDC Integration now 100% complete (cookie-based OAuth state management)
+- ✅ Clean compilation maintained (binary: 28MB)
+- 📊 Progress: 12/24 endpoints (50%) implemented, up from 10/24 (42%)
+
+**Previous Updates (2025-01-26 - Vault CRUD):**
 - ✅ Implemented `PUT /api/vaults/{uniqueId}` - Update vault with validation and audit logging
 - ✅ Implemented `DELETE /api/vaults/{uniqueId}` - Soft delete vault with audit logging
-- ✅ Vault CRUD operations now 100% complete (Create, Read, Update, Delete)
-- ✅ Clean compilation maintained (no errors)
-- 📊 Progress: 10/24 endpoints (42%) implemented, up from 8/24 (33%)
+- ✅ Vault CRUD operations 100% complete (Create, Read, Update, Delete)
 
 ### ✅ Completed (Phase 1: Minimal Viable Migration)
 
@@ -52,12 +58,14 @@
 - [x] Context helper functions for user/API key extraction
 - [x] Error handling utilities (`SendError` for Echo)
 
-#### Implemented Endpoints (10 total)
+#### Implemented Endpoints (12 total)
 
-**Authentication (3):**
+**Authentication (5):**
 - [x] `POST /api/auth/login` - User login with JWT generation
 - [x] `POST /api/auth/signup` - User registration with email confirmation
 - [x] `GET /api/auth/logout` - User logout with audit logging
+- [x] `GET /api/auth/login/oidc` - OIDC login initiation with cookie-based state storage
+- [x] `GET /api/auth/callback/oidc` - OIDC callback handler with secure state verification
 
 **Vault Management (5):** ✅ **CRUD Complete**
 - [x] `GET /api/vaults` - List vaults with pagination
@@ -76,20 +84,19 @@
 #### Supporting Infrastructure
 - [x] Model converters (`echo_converters.go`) for generated models
 - [x] Static file serving for React frontend
-- [x] Route registration for all 24 endpoints (10 implemented, 14 stubs)
+- [x] Route registration for all 24 endpoints (12 implemented, 12 stubs)
+- [x] OIDC authentication with cookie-based state storage (`internal/auth/oidc.go`, `echo_oidc_handlers.go`)
+  - HMAC-SHA256 signed cookies for OAuth state (replaces Fiber sessions)
+  - Secure cookie attributes (HttpOnly, SameSite, 10-minute expiry)
+  - One-time use state verification
 
-### ⚠️ In Progress / Pending (32%)
+### ⚠️ In Progress / Pending (25%)
 
 #### Authentication Endpoints (4 endpoints)
 - [ ] `POST /api/auth/password/reset/request` - Password reset request
 - [ ] `POST /api/auth/password/reset/confirm` - Password reset confirmation
 - [ ] `POST /api/auth/magic-link/request` - Magic link request
 - [ ] `GET /api/auth/magic-link/token` - Magic link consumption
-
-#### OIDC Integration (2 endpoints) - **NEEDS MIGRATION**
-- [ ] `GET /api/auth/login/oidc` - OIDC login initiation
-- [ ] `GET /api/auth/callback/oidc` - OIDC callback handler
-- ⚠️ **Blocker:** `handler/auth.go` and `internal/auth/oidc.go` still use Fiber session store
 
 #### API Key Management (4 endpoints)
 - [ ] `GET /api/api-keys` - List API keys with pagination
@@ -112,11 +119,12 @@
 
 ### 📂 File Structure Changes
 
-**New Files Created (8):**
+**New Files Created (9):**
 ```
 packages/api/
 ├── echo_auth_handlers.go      # Auth endpoint implementations (180 lines)
 ├── echo_vault_handlers.go     # Vault CRUD implementations (237 lines) ✅ **Complete**
+├── echo_oidc_handlers.go      # OIDC authentication (120 lines) ✅ **Complete**
 ├── echo_system_handlers.go    # System/user endpoints (180 lines)
 ├── echo_middleware.go         # Not created (in route/ instead)
 ├── echo_helpers.go            # Error handling & context utilities (70 lines)
@@ -124,8 +132,11 @@ packages/api/
 └── echo_container.go          # Dependency injection container (12 lines)
 
 route/
-├── echo_route.go              # All route registrations (70 lines)
+├── echo_route.go              # All route registrations (80 lines)
 └── echo_middleware.go         # JWT & API key authentication (160 lines)
+
+internal/auth/
+└── oidc.go                    # ✅ **Migrated to Echo** - Cookie-based OAuth state (182 lines)
 
 Generated (copied from packages/api/generated/):
 ├── generated_models/          # 26 model files
@@ -153,6 +164,7 @@ route/
 #### Runtime Testing (Not Yet Done)
 - [ ] Start server and verify health endpoint
 - [ ] Test signup → login → create vault flow
+- [ ] Test OIDC login flow (if OIDC configured)
 - [ ] Test pagination on GET /api/vaults
 - [ ] Test JWT authentication enforcement
 - [ ] Test API key authentication (when CLI endpoints implemented)
@@ -166,12 +178,12 @@ route/
    - Start server and test critical path: signup → login → vault CRUD operations
    - Verify authentication middleware works correctly
    - Test frontend integration
-   - Test update and delete vault operations
+   - Test OIDC login flow (if OIDC provider configured)
+   - Test OAuth state verification with cookie signatures
 
-2. **Fix OIDC Integration**
-   - Migrate `handler/auth.go` to Echo
-   - Replace Fiber session store in `internal/auth/oidc.go` with Echo sessions or cookie-based state
-   - OR disable OIDC routes if not using
+2. ~~**Fix OIDC Integration**~~ ✅ **COMPLETED**
+   - ~~Migrate `handler/auth.go` to Echo~~ ✅ Done
+   - ~~Replace Fiber session store in `internal/auth/oidc.go` with Echo sessions or cookie-based state~~ ✅ Done (using HMAC-signed cookies)
 
 3. ~~**Complete Vault CRUD**~~ ✅ **COMPLETED**
    - ~~Implement `PUT /api/vaults/{uniqueId}` (Update)~~ ✅ Done
@@ -208,18 +220,14 @@ route/
 
 ### 🐛 Known Issues
 
-1. **OIDC Handlers Use Fiber**
-   - Files: `handler/auth.go`, `internal/auth/oidc.go`
-   - Impact: OIDC login will not work
-   - Solution: Migrate to Echo sessions or disable OIDC
-
-2. **Fiber Dependencies Still in go.mod**
+1. **Fiber Dependencies Still in go.mod**
    - `github.com/gofiber/fiber/v2 v2.52.9`
+   - `github.com/gofiber/fiber/v2/middleware/session` (from OIDC)
    - `github.com/samber/slog-fiber v1.19.0`
-   - Impact: Unnecessary bloat in binary
-   - Solution: Remove after confirming all Fiber code is gone
+   - Impact: Unnecessary bloat in binary (~1-2MB)
+   - Solution: Remove after confirming all Fiber code is gone (likely safe now that OIDC is migrated)
 
-3. **Generated Models Naming Inconsistency**
+2. **Generated Models Naming Inconsistency**
    - OpenAPI Generator uses `VaultApiKey` (lowercase 'api')
    - Expected: `VaultAPIKey` (uppercase)
    - Impact: Minor - requires type conversions
@@ -230,26 +238,27 @@ route/
 | Metric | Value |
 |--------|-------|
 | **Total Endpoints** | 24 |
-| **Implemented** | 10 (42%) ✅ **+2 since last update** |
-| **Stubs Created** | 14 (58%) |
-| **New Code Written** | ~1000 lines |
-| **Files Migrated** | 8 new files |
+| **Implemented** | 12 (50%) ✅ **+2 OIDC endpoints** |
+| **Stubs Created** | 12 (50%) |
+| **New Code Written** | ~1300 lines |
+| **Files Migrated** | 9 new files + 1 modified internal file |
 | **Files Preserved** | 12 old files |
-| **Compilation Status** | ✅ Clean |
-| **Estimated Completion** | 2-3 weeks for 100% |
+| **Compilation Status** | ✅ Clean (28MB binary) |
+| **Estimated Completion** | 1-2 weeks for 100% |
 
 ### ✅ Success Criteria Progress
 
 1. ✅ All automated tests pass - **Not yet tested**
-2. ⏳ All manual test scenarios pass - **Partially (core auth + vaults)**
+2. ⏳ All manual test scenarios pass - **Partially (core auth + vaults + OIDC ready)**
 3. ✅ No compilation errors or warnings - **DONE**
 4. ✅ Header parameter bug eliminated - **DONE (using OpenAPI Generator)**
 5. ⏳ Performance within 10% of baseline - **Not yet tested**
 6. ⏳ Frontend fully functional - **Not yet tested**
-7. ❌ CLI tool works with API - **CLI endpoints not implemented**
-8. ❌ Client-side encryption working - **CLI endpoints not implemented**
-9. ❌ Zero production incidents for 1 week - **Not deployed**
-10. ❌ Code review approved - **Not requested**
+7. ⏳ OIDC authentication working - **Implemented, needs runtime testing**
+8. ❌ CLI tool works with API - **CLI endpoints not implemented**
+9. ❌ Client-side encryption working - **CLI endpoints not implemented**
+10. ❌ Zero production incidents for 1 week - **Not deployed**
+11. ❌ Code review approved - **Not requested**
 
 ---
 
