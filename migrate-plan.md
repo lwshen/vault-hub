@@ -23,17 +23,18 @@
 
 ## Migration Progress Update
 
-**Last Updated:** 2025-01-26 (Updated: OIDC Integration completed)
+**Last Updated:** 2025-10-26 (Updated: Authentication Endpoints completed)
 **Migration Approach:** OpenAPI Generator (go-echo-server) instead of oapi-codegen
-**Current Status:** ✅ **75% Complete - Core Functionality Working**
+**Current Status:** ✅ **83% Complete - Core Functionality + Auth Working**
 
-**📌 Latest Updates (2025-01-26 - OIDC):**
-- ✅ Implemented `GET /api/auth/login/oidc` - OIDC login initiation with cookie-based state storage
-- ✅ Implemented `GET /api/auth/callback/oidc` - OIDC callback handler with secure state verification
-- ✅ **Removed Fiber session dependency** - Replaced with HMAC-SHA256 signed cookies
-- ✅ OIDC Integration now 100% complete (cookie-based OAuth state management)
+**📌 Latest Updates (2025-10-26 - Authentication Endpoints):**
+- ✅ Implemented `POST /api/auth/password/reset/request` - Password reset request with rate limiting
+- ✅ Implemented `POST /api/auth/password/reset/confirm` - Password reset confirmation with validation
+- ✅ Implemented `POST /api/auth/magic-link/request` - Magic link request with rate limiting
+- ✅ Implemented `GET /api/auth/magic-link/token` - Magic link consumption with JWT generation
+- ✅ **Authentication flows 100% complete** (login, signup, logout, OIDC, password reset, magic link)
 - ✅ Clean compilation maintained (binary: 28MB)
-- 📊 Progress: 12/24 endpoints (50%) implemented, up from 10/24 (42%)
+- 📊 Progress: 16/24 endpoints (67%) implemented, up from 12/24 (50%)
 
 **Previous Updates (2025-01-26 - Vault CRUD):**
 - ✅ Implemented `PUT /api/vaults/{uniqueId}` - Update vault with validation and audit logging
@@ -58,14 +59,18 @@
 - [x] Context helper functions for user/API key extraction
 - [x] Error handling utilities (`SendError` for Echo)
 
-#### Implemented Endpoints (12 total)
+#### Implemented Endpoints (16 total)
 
-**Authentication (5):**
+**Authentication (9):** ✅ **100% Complete**
 - [x] `POST /api/auth/login` - User login with JWT generation
 - [x] `POST /api/auth/signup` - User registration with email confirmation
 - [x] `GET /api/auth/logout` - User logout with audit logging
 - [x] `GET /api/auth/login/oidc` - OIDC login initiation with cookie-based state storage
 - [x] `GET /api/auth/callback/oidc` - OIDC callback handler with secure state verification
+- [x] `POST /api/auth/password/reset/request` - Password reset request with email and rate limiting
+- [x] `POST /api/auth/password/reset/confirm` - Password reset confirmation with token validation
+- [x] `POST /api/auth/magic-link/request` - Magic link request with email and rate limiting
+- [x] `GET /api/auth/magic-link/token` - Magic link consumption with JWT generation
 
 **Vault Management (5):** ✅ **CRUD Complete**
 - [x] `GET /api/vaults` - List vaults with pagination
@@ -90,13 +95,7 @@
   - Secure cookie attributes (HttpOnly, SameSite, 10-minute expiry)
   - One-time use state verification
 
-### ⚠️ In Progress / Pending (25%)
-
-#### Authentication Endpoints (4 endpoints)
-- [ ] `POST /api/auth/password/reset/request` - Password reset request
-- [ ] `POST /api/auth/password/reset/confirm` - Password reset confirmation
-- [ ] `POST /api/auth/magic-link/request` - Magic link request
-- [ ] `GET /api/auth/magic-link/token` - Magic link consumption
+### ⚠️ In Progress / Pending (33%)
 
 #### API Key Management (4 endpoints)
 - [ ] `GET /api/api-keys` - List API keys with pagination
@@ -179,6 +178,8 @@ route/
    - Verify authentication middleware works correctly
    - Test frontend integration
    - Test OIDC login flow (if OIDC provider configured)
+   - Test password reset flow (request + confirm)
+   - Test magic link flow (request + consume)
    - Test OAuth state verification with cookie signatures
 
 2. ~~**Fix OIDC Integration**~~ ✅ **COMPLETED**
@@ -189,20 +190,20 @@ route/
    - ~~Implement `PUT /api/vaults/{uniqueId}` (Update)~~ ✅ Done
    - ~~Implement `DELETE /api/vaults/{uniqueId}` (Delete)~~ ✅ Done
 
+4. ~~**Complete Auth Endpoints**~~ ✅ **COMPLETED**
+   - ~~Password reset flow (request + confirm)~~ ✅ Done
+   - ~~Magic link flow (request + consume)~~ ✅ Done
+
 #### High Priority (Week 1-2)
-4. **Implement CLI Endpoints**
+5. **Implement CLI Endpoints**
    - Required if you use `apps/cli/` tool
    - Implement all 3 `/api/cli/*` endpoints
    - Test client-side encryption header support
 
-5. **Implement API Key Management**
+6. **Implement API Key Management**
    - Required for CLI tool and API access
    - Implement all 4 API key endpoints
    - Test vault access permissions
-
-6. **Complete Auth Endpoints**
-   - Password reset flow (request + confirm)
-   - Magic link flow (request + consume)
 
 #### Medium Priority (Week 2-3)
 7. **Implement Audit Endpoints**
@@ -238,23 +239,23 @@ route/
 | Metric | Value |
 |--------|-------|
 | **Total Endpoints** | 24 |
-| **Implemented** | 12 (50%) ✅ **+2 OIDC endpoints** |
-| **Stubs Created** | 12 (50%) |
-| **New Code Written** | ~1300 lines |
+| **Implemented** | 16 (67%) ✅ **+4 Auth endpoints** |
+| **Stubs Created** | 8 (33%) |
+| **New Code Written** | ~1500 lines |
 | **Files Migrated** | 9 new files + 1 modified internal file |
 | **Files Preserved** | 12 old files |
 | **Compilation Status** | ✅ Clean (28MB binary) |
-| **Estimated Completion** | 1-2 weeks for 100% |
+| **Estimated Completion** | 1 week for 100% |
 
 ### ✅ Success Criteria Progress
 
 1. ✅ All automated tests pass - **Not yet tested**
-2. ⏳ All manual test scenarios pass - **Partially (core auth + vaults + OIDC ready)**
+2. ⏳ All manual test scenarios pass - **Partially (core auth + vaults + OIDC + password reset + magic link ready)**
 3. ✅ No compilation errors or warnings - **DONE**
 4. ✅ Header parameter bug eliminated - **DONE (using OpenAPI Generator)**
 5. ⏳ Performance within 10% of baseline - **Not yet tested**
 6. ⏳ Frontend fully functional - **Not yet tested**
-7. ⏳ OIDC authentication working - **Implemented, needs runtime testing**
+7. ⏳ Full authentication flows working - **Implemented, needs runtime testing (login, signup, OIDC, password reset, magic link)**
 8. ❌ CLI tool works with API - **CLI endpoints not implemented**
 9. ❌ Client-side encryption working - **CLI endpoints not implemented**
 10. ❌ Zero production incidents for 1 week - **Not deployed**
