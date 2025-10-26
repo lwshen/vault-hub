@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -137,14 +138,100 @@ func (c *Container) CreateVault(ctx echo.Context) error {
 
 // UpdateVault handles PUT /api/vaults/{uniqueId}
 func (c *Container) UpdateVault(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "Update vault not yet implemented",
-	})
+	user, err := getUserFromEchoContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	uniqueID := ctx.Param("uniqueId")
+
+	var vault model.Vault
+	err = vault.GetByUniqueID(uniqueID, user.ID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return SendError(ctx, http.StatusNotFound, "vault not found")
+		}
+		return SendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	var input generated_models.UpdateVaultRequest
+	if err := ctx.Bind(&input); err != nil {
+		return SendError(ctx, http.StatusBadRequest, err.Error())
+	}
+
+	// Create update parameters - only set fields that are provided
+	params := model.UpdateVaultParams{}
+
+	if input.Name != "" {
+		params.Name = &input.Name
+	}
+
+	if input.Value != "" {
+		params.Value = &input.Value
+	}
+
+	if input.Description != "" {
+		params.Description = &input.Description
+	}
+
+	if input.Category != "" {
+		params.Category = &input.Category
+	}
+
+	// Validate parameters
+	errors := params.Validate()
+	if len(errors) > 0 {
+		var errorMsgs []string
+		for _, msg := range errors {
+			errorMsgs = append(errorMsgs, msg)
+		}
+		return SendError(ctx, http.StatusBadRequest, strings.Join(errorMsgs, "; "))
+	}
+
+	// Update vault
+	err = vault.Update(&params)
+	if err != nil {
+		return SendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	// Log update action
+	ip, userAgent := getClientInfoEcho(ctx)
+	if err := model.LogVaultAction(vault.ID, model.ActionUpdateVault, user.ID, model.SourceWeb, nil, ip, userAgent); err != nil {
+		slog.Error("Failed to create audit log for update vault", "error", err, "vaultID", vault.ID)
+	}
+
+	return ctx.JSON(http.StatusOK, convertToGeneratedVault(&vault))
 }
 
 // DeleteVault handles DELETE /api/vaults/{uniqueId}
 func (c *Container) DeleteVault(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "Delete vault not yet implemented",
-	})
+	user, err := getUserFromEchoContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	uniqueID := ctx.Param("uniqueId")
+
+	var vault model.Vault
+	err = vault.GetByUniqueID(uniqueID, user.ID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return SendError(ctx, http.StatusNotFound, "vault not found")
+		}
+		return SendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	// Delete vault (soft delete)
+	err = vault.Delete()
+	if err != nil {
+		return SendError(ctx, http.StatusInternalServerError, err.Error())
+	}
+
+	// Log delete action
+	ip, userAgent := getClientInfoEcho(ctx)
+	if err := model.LogVaultAction(vault.ID, model.ActionDeleteVault, user.ID, model.SourceWeb, nil, ip, userAgent); err != nil {
+		slog.Error("Failed to create audit log for delete vault", "error", err, "vaultID", vault.ID)
+	}
+
+	return ctx.NoContent(http.StatusNoContent)
 }
