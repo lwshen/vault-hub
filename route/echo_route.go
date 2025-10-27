@@ -1,23 +1,18 @@
 package route
 
 import (
-	"log/slog"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/lwshen/vault-hub/internal/embed"
-	"github.com/lwshen/vault-hub/packages/api"
 )
 
 // SetupEchoRoutes configures Echo router with all routes and middleware
-func SetupEchoRoutes(e *echo.Echo, logger *slog.Logger) error {
-	// Global middleware
-	e.Use(SlogMiddleware(logger))
-	e.Use(SecurityHeadersMiddleware())
-	e.Use(CORSMiddleware())
+func SetupEchoRoutes(e *echo.Echo) error {
+	// TODO: Add middleware when needed
+	// e.Use(SlogMiddleware(logger))
+	// e.Use(SecurityHeadersMiddleware())
+	// e.Use(CORSMiddleware())
 
 	// Import and reference the handlers to avoid circular imports
 	// TODO: Implement these handlers with proper business logic
@@ -25,25 +20,30 @@ func SetupEchoRoutes(e *echo.Echo, logger *slog.Logger) error {
 
 	// Health and status endpoints (public)
 	e.GET("/api/health", func(c echo.Context) error {
-		adapter := api.NewEchoAdapter()
-		response := adapter.ConvertHealthCheckResponse("ok", time.Now())
+		response := map[string]interface{}{
+			"status":    "ok",
+			"timestamp": time.Now(),
+		}
 		return c.JSON(http.StatusOK, response)
 	})
 
 	e.GET("/api/status", func(c echo.Context) error {
-		adapter := api.NewEchoAdapter()
-		response := api.StatusResponse{
-			Version: "1.0.0-migration",
-			Uptime: "0h 0m",
-			Database: api.StatusResponseDatabase{Status: "healthy"},
-			System: api.StatusResponseSystem{Status: "healthy"},
+		response := map[string]interface{}{
+			"version":  "1.0.0-migration",
+			"uptime":   "0h 0m",
+			"database": map[string]string{"status": "healthy"},
+			"system":   map[string]string{"status": "healthy"},
 		}
 		return c.JSON(http.StatusOK, response)
 	})
 
 	e.GET("/api/config", func(c echo.Context) error {
-		adapter := api.NewEchoAdapter()
-		response := adapter.ConvertConfigResponse()
+		response := map[string]interface{}{
+			"isOidcEnabled":      false, // TODO: Implement proper config check
+			"isEmailEnabled":     false, // TODO: Implement proper config check
+			"passwordMinLength":  8,
+			"isRegistrationOpen": true,
+		}
 		return c.JSON(http.StatusOK, response)
 	})
 
@@ -65,39 +65,9 @@ func SetupEchoRoutes(e *echo.Echo, logger *slog.Logger) error {
 
 	// TODO: Add remaining endpoints with proper handlers
 	// Vault endpoints, API key endpoints, etc.
+	// TODO: Add static file serving when needed
 
 	return nil
 }
 
-	// Static file serving (SPA support)
-	embedFS, err := embed.GetDistFS()
-	if err != nil {
-		slog.Error("Failed to initialize embedded filesystem", "error", err)
-		os.Exit(1)
-	}
-
-	// Serve static files
-	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-		Root:       "dist",
-		Browse:      false,
-		HTML5:       true,
-		Index:       "index.html",
-		IgnoreBase:  false,
-		RootURL:     "/",
-		Filesystem:  http.FS(embedFS),
-	}))
-
-	return nil
-}
-
-// handleOIDCLogin handles OIDC login redirect (custom implementation)
-func handleOIDCLogin(c echo.Context) error {
-	// TODO: Implement OIDC login logic similar to existing handler.LoginOidc
-	return echo.NewHTTPError(http.StatusNotImplemented, "OIDC login not yet migrated to Echo")
-}
-
-// handleOIDCCallback handles OIDC callback (custom implementation)
-func handleOIDCCallback(c echo.Context) error {
-	// TODO: Implement OIDC callback logic similar to existing handler.LoginOidcCallback
-	return echo.NewHTTPError(http.StatusNotImplemented, "OIDC callback not yet migrated to Echo")
-}
+// TODO: Implement OIDC handlers when needed

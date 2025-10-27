@@ -5,24 +5,24 @@ import (
 	"errors"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/internal/config"
 	"golang.org/x/oauth2"
 )
 
 var (
-	provider     *oidc.Provider
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	sessionStore *session.Store
+	provider    *oidc.Provider
+	verifier    *oidc.IDTokenVerifier
+	oauthConfig *oauth2.Config
+	// TODO: Implement Echo session storage
+	sessionStates map[string]string
 )
 
 func init() {
+	sessionStates = make(map[string]string)
 	enabled := config.OidcEnabled
 	slog.Info("OIDC", "enabled", enabled)
 	if enabled {
@@ -35,11 +35,8 @@ func init() {
 }
 
 func SetupOIDC() error {
-	sessionStore = session.New(session.Config{
-		KeyLookup:  "cookie:auth_session",
-		Expiration: time.Hour * 1,
-	})
-
+	// TODO: Implement proper Echo session storage
+	// For now using simple in-memory state storage
 	ctx := context.Background()
 	oidcProvider, err := oidc.NewProvider(ctx, config.OidcIssuer)
 	if err != nil {
@@ -56,12 +53,9 @@ func SetupOIDC() error {
 	return nil
 }
 
-func AuthCodeURL(ctx *fiber.Ctx, baseUrl string) (string, error) {
+func AuthCodeURL(ctx echo.Context, baseUrl string) (string, error) {
 	state := generateState()
-	err := storeInSession(ctx, "oauth", state)
-	if err != nil {
-		return "", err
-	}
+	sessionStates[state] = state // Simple in-memory storage
 	oauthConfig.RedirectURL = baseUrl + "/api/auth/callback/oidc"
 	return oauthConfig.AuthCodeURL(state), nil
 }
@@ -88,11 +82,12 @@ func verifyToken(ctx context.Context, token *oauth2.Token) (*oidc.IDToken, error
 	return verifier.Verify(ctx, rawIDToken)
 }
 
-func VerifyState(ctx *fiber.Ctx, state string) error {
-	storedState, err := getFromSession(ctx, "oauth")
-	if err != nil {
-		return err
+func VerifyState(ctx echo.Context, state string) error {
+	storedState, exists := sessionStates[state]
+	if !exists {
+		return errors.New("state not found in session")
 	}
+	delete(sessionStates, state) // Clean up
 	if storedState != state {
 		return errors.New("cannot verify state")
 	}
@@ -108,23 +103,5 @@ func generateState() string {
 	return uuid.New().String()
 }
 
-func storeInSession(ctx *fiber.Ctx, key string, value string) error {
-	session, err := sessionStore.Get(ctx)
-	if err != nil {
-		return err
-	}
-	session.Set(key, value)
-	return session.Save()
-}
-
-func getFromSession(ctx *fiber.Ctx, key string) (string, error) {
-	session, err := sessionStore.Get(ctx)
-	if err != nil {
-		return "", err
-	}
-	value, ok := session.Get(key).(string)
-	if !ok {
-		return "", errors.New("session value for key " + key + " is not a string")
-	}
-	return value, nil
-}
+// TODO: Implement proper Echo session storage
+// For now using simple in-memory state storage above

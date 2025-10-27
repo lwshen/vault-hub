@@ -1,3 +1,24 @@
+## [1.5.0] - 2025-10-27
+
+### 🚀 Features
+
+### 🚜 Refactor
+
+- **BREAKING**: Migrate web framework from Fiber to Echo v4.13.4
+  - Replace all Fiber middleware and routing with Echo equivalents
+  - Update authentication context from Fiber to Echo
+  - Preserve all existing functionality with improved performance
+  - Update API server structure while maintaining OpenAPI compatibility
+  - Simplify route definitions and middleware architecture
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove all Fiber dependencies from go.mod and project
+- Archive Fiber-specific handlers and middleware
+- Update build configuration for Echo server
+- Update documentation to reflect Echo framework migration
+- Comprehensive testing and validation of migrated implementation
+
 ## [1.4.5] - 2025-10-24
 
 ### 🚀 Features

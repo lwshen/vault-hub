@@ -1,22 +1,28 @@
 package main
 
 import (
-	"log"
+	"context"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/internal/config"
 	"github.com/lwshen/vault-hub/internal/version"
 	"github.com/lwshen/vault-hub/model"
 	"github.com/lwshen/vault-hub/route"
-	slogfiber "github.com/samber/slog-fiber"
 )
 
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	logger.Info("Starting VaultHub Server", "version", version.Version, "commit", version.Commit)
+	logger.Info("Starting VaultHub Echo Server",
+		"version", version.Version,
+		"commit", version.Commit,
+		"framework", "Echo")
 
 	err := model.Open(logger)
 	if err != nil {
@@ -24,11 +30,49 @@ func main() {
 		os.Exit(1)
 	}
 
-	app := fiber.New()
+	// Create Echo instance
+	e := echo.New()
 
-	app.Use(slogfiber.New(logger))
+	// Configure Echo
+	e.HideBanner = true
+	e.HidePort = false
+	e.Debug = false // Set based on environment in production
 
-	route.SetupRoutes(app)
+	// Add authentication middleware
+	e.Use(route.EchoJWTMiddleware())
 
-	log.Fatal(app.Listen(":" + config.AppPort))
+	// Setup routes with middleware
+	err = route.SetupEchoRoutes(e)
+	if err != nil {
+		logger.Error("Failed to setup routes", "error", err)
+		os.Exit(1)
+	}
+
+	// Start server in a goroutine for graceful shutdown
+	go func() {
+		addr := ":" + config.AppPort
+		logger.Info("Server starting", "address", addr)
+
+		if err := e.Start(addr); err != nil && err != http.ErrServerClosed {
+			logger.Error("Failed to start server", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	logger.Info("Server shutting down...")
+
+	// Give outstanding requests 30 seconds to complete
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := e.Shutdown(ctx); err != nil {
+		logger.Error("Server forced to shutdown", "error", err)
+	}
+
+	logger.Info("Server stopped")
 }

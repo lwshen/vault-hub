@@ -11,6 +11,30 @@ import (
 	"github.com/lwshen/vault-hub/model"
 )
 
+// isPublicRoute checks if a route is public and doesn't need authentication
+func isPublicRoute(path string) bool {
+	publicRoutes := []string{
+		"/api/health",
+		"/api/version",
+		"/api/config",
+		"/api/auth/login",
+		"/api/auth/signup",
+		"/api/auth/login/oidc",
+		"/api/auth/callback/oidc",
+		"/api/auth/password/reset/request",
+		"/api/auth/password/reset/confirm",
+		"/api/auth/magic-link/request",
+		"/api/auth/magic-link/token",
+	}
+
+	for _, route := range publicRoutes {
+		if strings.HasPrefix(path, route) {
+			return true
+		}
+	}
+	return false
+}
+
 // EchoJWTMiddleware handles JWT and API key authentication for Echo
 func EchoJWTMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -119,7 +143,7 @@ func handleEchoJWTAuth(c echo.Context, next echo.HandlerFunc, tokenString string
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid user ID in token")
 	}
 
-	userID := uint(userIDFloat64)
+	userID := uint(userIDFloat)
 
 	var user model.User
 	if err := model.DB.First(&user, userID).Error; err != nil {
