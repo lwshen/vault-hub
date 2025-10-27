@@ -25,6 +25,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
 	github.com/getkin/kin-openapi v0.131.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
@@ -46,6 +47,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/oapi-codegen/oapi-codegen/v2 v2.4.1 // indirect
+	github.com/oapi-codegen/runtime v1.1.2 // indirect
 	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037 // indirect
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
