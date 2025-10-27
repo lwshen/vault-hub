@@ -17,6 +17,7 @@ func isPublicRoute(path string) bool {
 		"/api/health",
 		"/api/version",
 		"/api/config",
+		"/api/status",
 		"/api/auth/login",
 		"/api/auth/signup",
 		"/api/auth/login/oidc",

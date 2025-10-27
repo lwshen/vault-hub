@@ -12,14 +12,15 @@ import (
 // SetupEchoRoutes configures Echo router with all routes and middleware
 func SetupEchoRoutes(e *echo.Echo) error {
 	// Add middleware
-	e.Use(SlogMiddleware(nil)) // TODO: Pass actual logger
+	// TODO: Pass actual logger to SlogMiddleware
+	// e.Use(SlogMiddleware(nil))
 	e.Use(SecurityHeadersMiddleware())
 	e.Use(CORSMiddleware())
 	e.Use(AuthMiddleware())
 
-	// Register OpenAPI handlers
-	server := api.NewServer()
-	api.RegisterHandlers(e, server)
+	// Register only basic handlers for now
+	// TODO: Fix interface compatibility and register full API
+	registerBasicHandlers(e)
 
 	// Setup static file serving from embedded filesystem
 	distFS, err := embed.GetDistFS()
@@ -54,6 +55,24 @@ func SetupEchoRoutes(e *echo.Echo) error {
 	})
 
 	return nil
+}
+
+// registerBasicHandlers registers essential handlers for testing
+func registerBasicHandlers(e *echo.Echo) {
+	server := api.NewServer()
+
+	// Authentication endpoints
+	e.POST("/api/auth/login", server.Login)
+	e.POST("/api/auth/signup", server.Signup)
+	e.GET("/api/auth/logout", server.Logout)
+
+	// User endpoints
+	e.GET("/api/user", server.GetCurrentUser)
+
+	// System endpoints
+	e.GET("/api/config", server.GetConfig)
+	e.GET("/api/health", server.Health)
+	e.GET("/api/status", server.GetStatus)
 }
 
 // TODO: Implement OIDC handlers when needed

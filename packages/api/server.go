@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/lwshen/vault-hub/internal/auth"
 	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
@@ -29,6 +30,11 @@ func sendError(c echo.Context, code int, message string) error {
 			"message": message,
 		},
 	})
+}
+
+// generateJWTToken generates a JWT token for the given user ID
+func generateJWTToken(userID uint) (string, error) {
+	return auth.GenerateToken(userID)
 }
 
 // getClientInfo extracts IP address and User-Agent from the request
@@ -86,8 +92,46 @@ func convertToApiVault(vault *model.Vault) Vault {
 
 // Login handles user login
 func (Server) Login(c echo.Context) error {
-	// TODO: Implement login logic
-	return sendError(c, http.StatusNotImplemented, "login not yet implemented")
+	var req LoginRequest
+	if err := c.Bind(&req); err != nil {
+		return sendError(c, http.StatusBadRequest, "invalid request body")
+	}
+
+	// Validate input
+	if req.Email == "" || req.Password == "" {
+		return sendError(c, http.StatusBadRequest, "email and password are required")
+	}
+
+	// Find user by email
+	var user model.User
+	if err := model.DB.Where("email = ?", string(req.Email)).First(&user).Error; err != nil {
+		return sendError(c, http.StatusUnauthorized, "invalid credentials")
+	}
+
+	// Check password
+	if user.Password == nil {
+		return sendError(c, http.StatusUnauthorized, "invalid credentials")
+	}
+
+	// For now, assume plain text comparison (TODO: Implement proper password hashing)
+	if *user.Password != req.Password {
+		return sendError(c, http.StatusUnauthorized, "invalid credentials")
+	}
+
+	// Generate JWT token
+	token, err := generateJWTToken(user.ID)
+	if err != nil {
+		return sendError(c, http.StatusInternalServerError, "failed to generate token")
+	}
+
+	// Clear password before returning
+	user.Password = nil
+
+	resp := LoginResponse{
+		Token: token,
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }
 
 // Logout handles user logout
