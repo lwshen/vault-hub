@@ -27,7 +27,10 @@ A comprehensive secure environment variable and API key management system with A
 - **Scheduled execution** with Docker cron support for automation
 - **Automated synchronization** for CI/CD and production environments
 
-### 🗄️ Database Support
+### 🔄 Migration Notice
+**Framework Update**: VaultHub has been migrated from Fiber to Echo web framework as of version 1.4.0. All existing functionality is preserved with improved performance and maintainability. See the CHANGELOG.md for detailed migration notes.
+
+## 🗄️ Database Support
 - **SQLite** (default, zero-config)
 - **MySQL** for production deployments
 - **PostgreSQL** for enterprise use
@@ -88,11 +91,12 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 ## 🏗️ Architecture
 
 ### Backend (Go)
-- **Web Framework**: Fiber v2.52.9
+- **Web Framework**: Echo v4.13.4
 - **Database ORM**: GORM v1.31.0
 - **Authentication**: golang-jwt/jwt/v5 + optional OIDC
-- **API**: OpenAPI 3.0 specification with auto-generated code
+- **API**: OpenAPI 3.0 specification with OpenAPI Generator
 - **CLI**: Cobra v1.10.1 framework
+- **Logging**: Structured logging with slog
 
 ### Frontend (React)
 - **React**: 19.1.1 with TypeScript 5.9.2
@@ -125,6 +129,7 @@ JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...
 
 # Generate API code (after modifying OpenAPI files)
 go generate packages/api/tool.go
+# This generates both Fiber (legacy) and Echo (new) server stubs
 ```
 
 **Frontend:**
@@ -155,7 +160,7 @@ air -c .air.toml
 ```
 vault-hub/
 ├── apps/
-│   ├── server/           # Go backend (Fiber web server)
+│   ├── server/           # Go backend (Echo web server)
 │   ├── cli/              # Go CLI (Cobra commands)
 │   ├── web/              # React frontend (Vite + TypeScript)
 │   └── cron/             # Go cron service for scheduled CLI execution

@@ -1,0 +1,29 @@
+{
+  "packageName": "api",
+  "packageVersion": "1.0.0",
+  "generateServer": true,
+  "generateClient": false,
+  "generatorName": "go-echo-server",
+  "outputDir": "./gen-v2",
+  "apiPackage": "api",
+  "modelPackage": "models",
+  "serverPackage": "server",
+  "goModule": "github.com/lwshen/vault-hub",
+  "withGoMod": false,
+  "withXML": false,
+  "enumPropertyNaming": "PascalCase",
+  "reservedWordMappings": {
+    "interface": "interfaceType",
+    "type": "typeDefinition"
+  },
+  "additionalProperties": {
+    "generateInterfaces": true,
+    "generateMiddleware": false,
+    "useTags": true,
+    "strictSpec": true,
+    "validateSpec": true,
+    "gitUserId": "lwshen",
+    "gitRepoId": "vault-hub",
+    "supportingFiles": "true"
+  }
+}
