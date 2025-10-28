@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/internal/auth"
 	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // ensure that we've conformed to the `ServerInterface` with a compile-time check
@@ -38,23 +38,6 @@ func sendError(c echo.Context, code int, message string) error {
 // generateJWTToken generates a JWT token for the given user ID
 func generateJWTToken(userID uint) (string, error) {
 	return auth.GenerateToken(userID)
-}
-
-// getClientInfo extracts IP address and User-Agent from the request
-func getClientInfo(c echo.Context) (string, string) {
-	// Get IP address (check for forwarded headers first)
-	ip := c.Request().Header.Get("X-Forwarded-For")
-	if ip == "" {
-		ip = c.Request().Header.Get("X-Real-IP")
-	}
-	if ip == "" {
-		ip = c.RealIP()
-	}
-
-	// Get User-Agent
-	userAgent := c.Request().Header.Get("User-Agent")
-
-	return ip, userAgent
 }
 
 // getUserFromContext extracts the authenticated user from the context
@@ -583,18 +566,18 @@ func (Server) GetAPIKeys(c echo.Context, params GetAPIKeysParams) error {
 		isActive := true // Default to true since model doesn't have IsActive field
 
 		apiKeyResponses[i] = VaultAPIKey{
-			Id:           int64(key.ID),
-			Name:         key.Name,
-			IsActive:     isActive,
-			CreatedAt:    key.CreatedAt,
-			UpdatedAt:    &key.UpdatedAt,
-			LastUsedAt:   key.LastUsedAt,
-			ExpiresAt:    key.ExpiresAt,
+			Id:         int64(key.ID), // nolint:gosec // Database IDs are typically within int64 range
+			Name:       key.Name,
+			IsActive:   isActive,
+			CreatedAt:  key.CreatedAt,
+			UpdatedAt:  &key.UpdatedAt,
+			LastUsedAt: key.LastUsedAt,
+			ExpiresAt:  key.ExpiresAt,
 		}
 	}
 
 	resp := APIKeysResponse{
-		ApiKeys:   apiKeyResponses,
+		ApiKeys:    apiKeyResponses,
 		TotalCount: int(total),
 		PageIndex:  int(pageIndex),
 		PageSize:   int(pageSize),
@@ -662,13 +645,13 @@ func (Server) CreateAPIKey(c echo.Context) error {
 	isActive := true // New keys are active by default
 
 	resp := VaultAPIKey{
-		Id:           int64(apiKey.ID),
-		Name:         apiKey.Name,
-		IsActive:     isActive,
-		CreatedAt:    apiKey.CreatedAt,
-		UpdatedAt:    &apiKey.UpdatedAt,
-		LastUsedAt:   apiKey.LastUsedAt,
-		ExpiresAt:    apiKey.ExpiresAt,
+		Id:         int64(apiKey.ID), // nolint:gosec // Database IDs are typically within int64 range
+		Name:       apiKey.Name,
+		IsActive:   isActive,
+		CreatedAt:  apiKey.CreatedAt,
+		UpdatedAt:  &apiKey.UpdatedAt,
+		LastUsedAt: apiKey.LastUsedAt,
+		ExpiresAt:  apiKey.ExpiresAt,
 	}
 
 	return c.JSON(http.StatusCreated, resp)
@@ -734,13 +717,13 @@ func (Server) UpdateAPIKey(c echo.Context, id int64) error {
 	isActive := true // Default to true since model doesn't have IsActive field
 
 	resp := VaultAPIKey{
-		Id:           int64(apiKey.ID),
-		Name:         apiKey.Name,
-		IsActive:     isActive,
-		CreatedAt:    apiKey.CreatedAt,
-		UpdatedAt:    &apiKey.UpdatedAt,
-		LastUsedAt:   apiKey.LastUsedAt,
-		ExpiresAt:    apiKey.ExpiresAt,
+		Id:         int64(apiKey.ID), // nolint:gosec // Database IDs are typically within int64 range
+		Name:       apiKey.Name,
+		IsActive:   isActive,
+		CreatedAt:  apiKey.CreatedAt,
+		UpdatedAt:  &apiKey.UpdatedAt,
+		LastUsedAt: apiKey.LastUsedAt,
+		ExpiresAt:  apiKey.ExpiresAt,
 	}
 
 	return c.JSON(http.StatusOK, resp)

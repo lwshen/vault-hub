@@ -99,7 +99,6 @@ func AuthMiddleware() echo.MiddlewareFunc {
 	}
 }
 
-
 // jwtOnlyMiddleware ensures non-API-key routes only accept JWT authentication
 func jwtOnlyMiddleware(c echo.Context, next echo.HandlerFunc) error {
 	authHeader := c.Request().Header.Get("Authorization")
