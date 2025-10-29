@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/lwshen/vault-hub/internal/config"
 	"github.com/lwshen/vault-hub/internal/version"
 	"github.com/lwshen/vault-hub/model"
 	"github.com/lwshen/vault-hub/packages/api/generated_models"
@@ -86,10 +87,14 @@ func checkSystemHealthEcho(dbStatus string) string {
 }
 
 // GetConfig handles GET /api/config
+// Returns public configuration that requires no authentication
 func (c *Container) GetConfig(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "Config endpoint not yet implemented",
-	})
+	resp := generated_models.ConfigResponse{
+		OidcEnabled:  config.OidcEnabled,
+		EmailEnabled: config.EmailEnabled,
+	}
+
+	return ctx.JSON(http.StatusOK, resp)
 }
 
 // GetCurrentUser handles GET /api/user
