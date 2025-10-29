@@ -1,7 +1,6 @@
 package generated_models
 
 type AuditLogsResponse struct {
-
 	AuditLogs []AuditLog `json:"auditLogs"`
 
 	// Total number of logs matching the filter criteria

@@ -55,11 +55,13 @@ func (c *Container) GetVaults(ctx echo.Context) error {
 		apiVaults = append(apiVaults, convertToGeneratedVaultLite(&vaults[i]))
 	}
 
+	// Safe conversion with bounds checking (these values are already validated)
+	// pageSize is max 1000, pageIndex is validated >= 1, totalCount from DB
 	response := generated_models.VaultsResponse{
 		Vaults:     apiVaults,
-		TotalCount: int32(totalCount),
-		PageSize:   int32(pageSize),
-		PageIndex:  int32(pageIndex),
+		TotalCount: safeInt64ToInt32(totalCount),
+		PageSize:   int32(pageSize),  // #nosec G115 -- validated max 1000
+		PageIndex:  int32(pageIndex), // #nosec G115 -- validated >= 1
 	}
 
 	return ctx.JSON(http.StatusOK, response)

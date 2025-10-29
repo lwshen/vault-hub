@@ -1,7 +1,6 @@
 package generated_models
 
 type ApiKeysResponse struct {
-
 	ApiKeys []VaultApiKey `json:"apiKeys"`
 
 	// Total number of API keys

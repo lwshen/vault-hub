@@ -1,46 +1,42 @@
 package generated_handlers
+
 import (
-	"github.com/lwshen/vault-hub/packages/api/generated_models"
 	"github.com/labstack/echo/v4"
+	"github.com/lwshen/vault-hub/packages/api/generated_models"
 	"net/http"
 )
 
-// CreateVault - 
+// CreateVault -
 func (c *Container) CreateVault(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// DeleteVault - 
+// DeleteVault -
 func (c *Container) DeleteVault(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// GetVault - 
+// GetVault -
 func (c *Container) GetVault(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// GetVaults - 
+// GetVaults -
 func (c *Container) GetVaults(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// UpdateVault - 
+// UpdateVault -
 func (c *Container) UpdateVault(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
-

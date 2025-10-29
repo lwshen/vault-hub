@@ -1,62 +1,56 @@
 package generated_handlers
+
 import (
-	"github.com/lwshen/vault-hub/packages/api/generated_models"
 	"github.com/labstack/echo/v4"
+	"github.com/lwshen/vault-hub/packages/api/generated_models"
 	"net/http"
 )
 
-// ConfirmPasswordReset - 
+// ConfirmPasswordReset -
 func (c *Container) ConfirmPasswordReset(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// ConsumeMagicLink - 
+// ConsumeMagicLink -
 func (c *Container) ConsumeMagicLink(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// Login - 
+// Login -
 func (c *Container) Login(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// Logout - 
+// Logout -
 func (c *Container) Logout(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// RequestMagicLink - 
+// RequestMagicLink -
 func (c *Container) RequestMagicLink(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// RequestPasswordReset - 
+// RequestPasswordReset -
 func (c *Container) RequestPasswordReset(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
 
-
-// Signup - 
+// Signup -
 func (c *Container) Signup(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, generated_models.HelloWorld {
+	return ctx.JSON(http.StatusOK, generated_models.HelloWorld{
 		Message: "Hello World",
 	})
 }
-

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"math"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -49,13 +50,15 @@ func getUserFromEchoContext(ctx echo.Context) (*model.User, error) {
 	return user, nil
 }
 
-// getUserIDFromContext extracts the user ID from the Echo context (for API key auth)
-func getUserIDFromEchoContext(ctx echo.Context) (*uint, error) {
-	userID, ok := ctx.Get("user_id").(*uint)
-	if !ok {
-		return nil, SendError(ctx, http.StatusUnauthorized, "user_id not found in context")
+// safeInt64ToInt32 safely converts int64 to int32, capping at int32 max value
+func safeInt64ToInt32(val int64) int32 {
+	if val > math.MaxInt32 {
+		return math.MaxInt32
 	}
-	return userID, nil
+	if val < math.MinInt32 {
+		return math.MinInt32
+	}
+	return int32(val)
 }
 
 // getAPIKeyFromContext extracts the API key from the Echo context

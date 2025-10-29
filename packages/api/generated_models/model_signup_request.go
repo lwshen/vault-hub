@@ -1,7 +1,6 @@
 package generated_models
 
 type SignupRequest struct {
-
 	Email string `json:"email"`
 
 	Password string `json:"password"`
