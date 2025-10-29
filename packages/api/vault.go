@@ -2,6 +2,7 @@ package api
 
 import (
 	"log/slog"
+	"net/http"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,21 +12,18 @@ import (
 	"gorm.io/gorm"
 )
 
-// getClientInfo extracts IP address and User-Agent from the request
+// getClientInfo extracts IP address and User-Agent from the request.
 func getClientInfo(c *fiber.Ctx) (string, string) {
-	// Get IP address (check for forwarded headers first)
-	ip := c.Get("X-Forwarded-For")
-	if ip == "" {
-		ip = c.Get("X-Real-IP")
-	}
-	if ip == "" {
-		ip = c.IP()
-	}
+	info := ExtractClientInfo(func(key string) string {
+		return c.Get(key)
+	}, c.IP())
+	return info.IP, info.UserAgent
+}
 
-	// Get User-Agent
-	userAgent := c.Get("User-Agent")
-
-	return ip, userAgent
+func getClientInfoDetails(c *fiber.Ctx) ClientInfo {
+	return ExtractClientInfo(func(key string) string {
+		return c.Get(key)
+	}, c.IP())
 }
 
 // getUserFromContext extracts the authenticated user from the context
@@ -64,14 +62,12 @@ func convertToApiVaultLite(vault *model.Vault) VaultLite {
 	}
 }
 
-// GetVaults handles GET /api/vaults with pagination
-func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
-	user, err := getUserFromContext(c)
-	if err != nil {
-		return err
+// GetVaultsForUser handles listing vaults with pagination logic.
+func GetVaultsForUser(user *model.User, params GetVaultsParams) (VaultsResponse, *APIError) {
+	if user == nil {
+		return VaultsResponse{}, newAPIError(http.StatusUnauthorized, "user not found in context")
 	}
 
-	// Apply defaults if not provided
 	pageSize := 20
 	if params.PageSize != nil {
 		pageSize = *params.PageSize
@@ -81,21 +77,18 @@ func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 		pageIndex = *params.PageIndex
 	}
 
-	// Validate bounds
 	if pageSize < 1 || pageSize > 1000 {
-		return handler.SendError(c, fiber.StatusBadRequest, "pageSize must be between 1 and 1000")
+		return VaultsResponse{}, newAPIError(http.StatusBadRequest, "pageSize must be between 1 and 1000")
 	}
 	if pageIndex < 1 {
-		return handler.SendError(c, fiber.StatusBadRequest, "pageIndex must be at least 1")
+		return VaultsResponse{}, newAPIError(http.StatusBadRequest, "pageIndex must be at least 1")
 	}
 
-	// Query paginated vaults for current user via model
 	vaults, totalCount, err := model.GetUserVaultsWithPagination(user.ID, pageSize, pageIndex)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		return VaultsResponse{}, newAPIError(http.StatusInternalServerError, err.Error())
 	}
 
-	// Convert to API VaultLite slice
 	apiVaults := make([]VaultLite, 0, len(vaults))
 	for i := range vaults {
 		apiVaults = append(apiVaults, convertToApiVaultLite(&vaults[i]))
@@ -108,6 +101,147 @@ func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 		PageIndex:  pageIndex,
 	}
 
+	return response, nil
+}
+
+// GetVaultForUser retrieves a single vault and logs access.
+func GetVaultForUser(user *model.User, uniqueID string, clientInfo ClientInfo) (Vault, *APIError) {
+	if user == nil {
+		return Vault{}, newAPIError(http.StatusUnauthorized, "user not found in context")
+	}
+
+	var vault model.Vault
+	if err := vault.GetByUniqueID(uniqueID, user.ID); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return Vault{}, newAPIError(http.StatusNotFound, "vault not found")
+		}
+		return Vault{}, newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	if err := model.LogVaultAction(vault.ID, model.ActionReadVault, user.ID, model.SourceWeb, nil, clientInfo.IP, clientInfo.UserAgent); err != nil {
+		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
+	}
+
+	return convertToApiVault(&vault), nil
+}
+
+// CreateVaultForUser validates and persists a new vault.
+func CreateVaultForUser(user *model.User, input CreateVaultRequest, clientInfo ClientInfo) (Vault, *APIError) {
+	if user == nil {
+		return Vault{}, newAPIError(http.StatusUnauthorized, "user not found in context")
+	}
+
+	uniqueID, err := uuid.NewV7()
+	if err != nil {
+		return Vault{}, newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	params := model.CreateVaultParams{
+		UniqueID:    uniqueID.String(),
+		UserID:      user.ID,
+		Name:        input.Name,
+		Value:       input.Value,
+		Description: getStringValue(input.Description),
+		Category:    getStringValue(input.Category),
+	}
+
+	if errors := params.Validate(); len(errors) > 0 {
+		var errorMsgs []string
+		for _, msg := range errors {
+			errorMsgs = append(errorMsgs, msg)
+		}
+		return Vault{}, newAPIError(http.StatusBadRequest, strings.Join(errorMsgs, "; "))
+	}
+
+	vault, err := params.Create()
+	if err != nil {
+		return Vault{}, newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	if err := model.LogVaultAction(vault.ID, model.ActionCreateVault, user.ID, model.SourceWeb, nil, clientInfo.IP, clientInfo.UserAgent); err != nil {
+		slog.Error("Failed to create audit log for create vault", "error", err, "vaultID", vault.ID)
+	}
+
+	return convertToApiVault(vault), nil
+}
+
+// UpdateVaultForUser applies updates to an existing vault.
+func UpdateVaultForUser(user *model.User, uniqueID string, input UpdateVaultRequest, clientInfo ClientInfo) (Vault, *APIError) {
+	if user == nil {
+		return Vault{}, newAPIError(http.StatusUnauthorized, "user not found in context")
+	}
+
+	var vault model.Vault
+	if err := vault.GetByUniqueID(uniqueID, user.ID); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return Vault{}, newAPIError(http.StatusNotFound, "vault not found")
+		}
+		return Vault{}, newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	params := model.UpdateVaultParams{
+		Name:        input.Name,
+		Value:       input.Value,
+		Description: input.Description,
+		Category:    input.Category,
+	}
+
+	if errors := params.Validate(); len(errors) > 0 {
+		var errorMsgs []string
+		for _, msg := range errors {
+			errorMsgs = append(errorMsgs, msg)
+		}
+		return Vault{}, newAPIError(http.StatusBadRequest, strings.Join(errorMsgs, "; "))
+	}
+
+	if err := vault.Update(&params); err != nil {
+		return Vault{}, newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	if err := model.LogVaultAction(vault.ID, model.ActionUpdateVault, user.ID, model.SourceWeb, nil, clientInfo.IP, clientInfo.UserAgent); err != nil {
+		slog.Error("Failed to create audit log for update vault", "error", err, "vaultID", vault.ID)
+	}
+
+	return convertToApiVault(&vault), nil
+}
+
+// DeleteVaultForUser removes a vault owned by the authenticated user.
+func DeleteVaultForUser(user *model.User, uniqueID string, clientInfo ClientInfo) *APIError {
+	if user == nil {
+		return newAPIError(http.StatusUnauthorized, "user not found in context")
+	}
+
+	var vault model.Vault
+	if err := vault.GetByUniqueID(uniqueID, user.ID); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return newAPIError(http.StatusNotFound, "vault not found")
+		}
+		return newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	if err := vault.Delete(); err != nil {
+		return newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	if err := model.LogVaultAction(vault.ID, model.ActionDeleteVault, user.ID, model.SourceWeb, nil, clientInfo.IP, clientInfo.UserAgent); err != nil {
+		slog.Error("Failed to create audit log for delete vault", "error", err, "vaultID", vault.ID)
+	}
+
+	return nil
+}
+
+// GetVaults handles GET /api/vaults with pagination
+func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
+	user, err := getUserFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	response, apiErr := GetVaultsForUser(user, params)
+	if apiErr != nil {
+		return handler.SendError(c, apiErr.Status, apiErr.Message)
+	}
+
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
@@ -118,22 +252,12 @@ func (Server) GetVault(c *fiber.Ctx, uniqueID string) error {
 		return err
 	}
 
-	var vault model.Vault
-	err = vault.GetByUniqueID(uniqueID, user.ID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
-		}
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	resp, apiErr := GetVaultForUser(user, uniqueID, getClientInfoDetails(c))
+	if apiErr != nil {
+		return handler.SendError(c, apiErr.Status, apiErr.Message)
 	}
 
-	// Log read action
-	ip, userAgent := getClientInfo(c)
-	if err := model.LogVaultAction(vault.ID, model.ActionReadVault, user.ID, model.SourceWeb, nil, ip, userAgent); err != nil {
-		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
-	}
-
-	return c.Status(fiber.StatusOK).JSON(convertToApiVault(&vault))
+	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
 // CreateVault handles POST /api/vaults
@@ -148,43 +272,12 @@ func (Server) CreateVault(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	// Create parameters
-	uniqueID, err := uuid.NewV7()
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
-	params := model.CreateVaultParams{
-		UniqueID:    uniqueID.String(),
-		UserID:      user.ID,
-		Name:        input.Name,
-		Value:       input.Value,
-		Description: getStringValue(input.Description),
-		Category:    getStringValue(input.Category),
+	resp, apiErr := CreateVaultForUser(user, input, getClientInfoDetails(c))
+	if apiErr != nil {
+		return handler.SendError(c, apiErr.Status, apiErr.Message)
 	}
 
-	// Validate parameters
-	errors := params.Validate()
-	if len(errors) > 0 {
-		var errorMsgs []string
-		for _, msg := range errors {
-			errorMsgs = append(errorMsgs, msg)
-		}
-		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMsgs, "; "))
-	}
-
-	// Create vault
-	vault, err := params.Create()
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	// Log create action
-	ip, userAgent := getClientInfo(c)
-	if err := model.LogVaultAction(vault.ID, model.ActionCreateVault, user.ID, model.SourceWeb, nil, ip, userAgent); err != nil {
-		slog.Error("Failed to create audit log for create vault", "error", err, "vaultID", vault.ID)
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(convertToApiVault(vault))
+	return c.Status(fiber.StatusCreated).JSON(resp)
 }
 
 // UpdateVault handles PUT /api/vaults/{unique_id}
@@ -208,35 +301,12 @@ func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	// Create update parameters
-	params := model.UpdateVaultParams{
-		Name:        input.Name,
-		Value:       input.Value,
-		Description: input.Description,
-		Category:    input.Category,
+	resp, apiErr := UpdateVaultForUser(user, uniqueID, input, getClientInfoDetails(c))
+	if apiErr != nil {
+		return handler.SendError(c, apiErr.Status, apiErr.Message)
 	}
 
-	// Validate parameters
-	errors := params.Validate()
-	if len(errors) > 0 {
-		var errorMsgs []string
-		for _, msg := range errors {
-			errorMsgs = append(errorMsgs, msg)
-		}
-		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMsgs, "; "))
-	}
-
-	// Update vault
-	err = vault.Update(&params)
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	// Log update action
-	ip, userAgent := getClientInfo(c)
-	_ = model.LogVaultAction(vault.ID, model.ActionUpdateVault, user.ID, model.SourceWeb, nil, ip, userAgent)
-
-	return c.Status(fiber.StatusOK).JSON(convertToApiVault(&vault))
+	return c.Status(fiber.StatusOK).JSON(resp)
 }
 
 // DeleteVault handles DELETE /api/vaults/{unique_id}
@@ -246,24 +316,9 @@ func (Server) DeleteVault(c *fiber.Ctx, uniqueID string) error {
 		return err
 	}
 
-	var vault model.Vault
-	err = vault.GetByUniqueID(uniqueID, user.ID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
-		}
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	if apiErr := DeleteVaultForUser(user, uniqueID, getClientInfoDetails(c)); apiErr != nil {
+		return handler.SendError(c, apiErr.Status, apiErr.Message)
 	}
-
-	// Delete vault
-	err = vault.Delete()
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	// Log delete action
-	ip, userAgent := getClientInfo(c)
-	_ = model.LogVaultAction(vault.ID, model.ActionDeleteVault, user.ID, model.SourceWeb, nil, ip, userAgent)
 
 	return c.SendStatus(fiber.StatusNoContent)
 }

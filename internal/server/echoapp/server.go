@@ -35,14 +35,12 @@ func NewServer(opts Options) (*echo.Echo, error) {
 	e.Use(middleware.CORS())
 	e.Use(SecurityMiddleware())
 
-	if err := mountStatic(e, logger); err != nil {
-		return nil, err
-	}
-
 	return e, nil
 }
 
-func mountStatic(e *echo.Echo, logger *slog.Logger) error {
+// MountStatic registers handlers for serving embedded frontend assets. Call
+// this after API routes are in place to avoid wildcard conflicts.
+func MountStatic(e *echo.Echo, logger *slog.Logger) error {
 	distFS, err := embed.GetDistFS()
 	if err != nil {
 		return err

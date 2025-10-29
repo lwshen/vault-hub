@@ -7,14 +7,18 @@ import (
 	"github.com/lwshen/vault-hub/internal/config"
 )
 
-// GetConfig returns public configuration that requires no authentication
-// This endpoint performs NO database operations and is safe for public access
-func (s Server) GetConfig(ctx *fiber.Ctx) error {
-	resp := ConfigResponse{
+// PublicConfig exposes non-sensitive flags for clients.
+func PublicConfig() ConfigResponse {
+	return ConfigResponse{
 		OidcEnabled:  config.OidcEnabled,
 		EmailEnabled: config.EmailEnabled,
 	}
+}
 
+// GetConfig returns public configuration that requires no authentication
+// This endpoint performs NO database operations and is safe for public access
+func (s Server) GetConfig(ctx *fiber.Ctx) error {
+	resp := PublicConfig()
 	return ctx.
 		Status(http.StatusOK).
 		JSON(resp)

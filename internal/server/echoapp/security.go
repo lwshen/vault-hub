@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/internal/config"
 	"github.com/lwshen/vault-hub/model"
 )

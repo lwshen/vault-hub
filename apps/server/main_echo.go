@@ -36,6 +36,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	echoapp.RegisterRoutes(e)
+
+	if err := echoapp.MountStatic(e, logger); err != nil {
+		logger.Error("Failed to mount static assets", "error", err)
+		os.Exit(1)
+	}
+
 	go func() {
 		if err := e.Start(":" + config.AppPort); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Error("Echo server exited", "error", err)
