@@ -114,52 +114,6 @@ func (c *Container) GetCurrentUser(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, resp)
 }
 
-// Stub implementations for API key endpoints (to be implemented later)
-
-func (c *Container) GetAPIKeys(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "Get API keys not yet implemented",
-	})
-}
-
-func (c *Container) CreateAPIKey(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "Create API key not yet implemented",
-	})
-}
-
-func (c *Container) UpdateAPIKey(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "Update API key not yet implemented",
-	})
-}
-
-func (c *Container) DeleteAPIKey(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "Delete API key not yet implemented",
-	})
-}
-
-// Stub implementations for CLI endpoints (to be implemented later)
-
-func (c *Container) GetVaultsByAPIKey(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "CLI vaults endpoint not yet implemented",
-	})
-}
-
-func (c *Container) GetVaultByAPIKey(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "CLI vault by ID endpoint not yet implemented",
-	})
-}
-
-func (c *Container) GetVaultByNameAPIKey(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "CLI vault by name endpoint not yet implemented",
-	})
-}
-
 // Stub implementations for audit endpoints (to be implemented later)
 
 func (c *Container) GetAuditLogs(ctx echo.Context) error {

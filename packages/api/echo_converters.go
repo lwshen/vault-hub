@@ -32,7 +32,7 @@ func convertToGeneratedVaultLite(vault *model.Vault) generated_models.VaultLite 
 	}
 }
 
-// convertToGeneratedAPIKey converts a model.APIKey to a generated.VaultApiKey
+// convertToGeneratedAPIKey converts a model.APIKey to a generated.VaultApiKey (without vaults)
 func convertToGeneratedAPIKey(key *model.APIKey) generated_models.VaultApiKey {
 	// #nosec G115
 	id := int64(key.ID)
@@ -41,7 +41,7 @@ func convertToGeneratedAPIKey(key *model.APIKey) generated_models.VaultApiKey {
 		Id:        id,
 		Name:      key.Name,
 		CreatedAt: key.CreatedAt,
-		IsActive:  true,
+		IsActive:  !key.DeletedAt.Valid,
 	}
 
 	if key.ExpiresAt != nil {
@@ -52,7 +52,46 @@ func convertToGeneratedAPIKey(key *model.APIKey) generated_models.VaultApiKey {
 		result.LastUsedAt = *key.LastUsedAt
 	}
 
+	result.UpdatedAt = key.UpdatedAt
+
 	return result
+}
+
+// convertToGeneratedAPIKeyWithVaults converts a model.APIKey to a generated.VaultApiKey with vaults
+func convertToGeneratedAPIKeyWithVaults(apiKey *model.APIKey) (*generated_models.VaultApiKey, error) {
+	// Get accessible vaults for this API key
+	vaults, err := apiKey.GetAccessibleVaults()
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert vaults to VaultLite
+	apiVaults := make([]generated_models.VaultLite, 0)
+	for _, vault := range vaults {
+		apiVaults = append(apiVaults, convertToGeneratedVaultLite(&vault))
+	}
+
+	// #nosec G115
+	id := int64(apiKey.ID)
+	result := generated_models.VaultApiKey{
+		Id:        id,
+		Name:      apiKey.Name,
+		Vaults:    apiVaults,
+		IsActive:  !apiKey.DeletedAt.Valid,
+		CreatedAt: apiKey.CreatedAt,
+	}
+
+	if apiKey.ExpiresAt != nil {
+		result.ExpiresAt = *apiKey.ExpiresAt
+	}
+
+	if apiKey.LastUsedAt != nil {
+		result.LastUsedAt = *apiKey.LastUsedAt
+	}
+
+	result.UpdatedAt = apiKey.UpdatedAt
+
+	return &result, nil
 }
 
 // convertToGeneratedAuditLog converts a model.AuditLog to generated.AuditLog
