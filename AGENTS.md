@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `apps/server` hosts the Go Fiber API; routes in `apps/server/handler`, middleware in `apps/server/route`, and shared config helpers in `apps/server/internal`.
+- `apps/server` hosts the Go Echo API; routes in `apps/server/handler`, middleware in `apps/server/route`, and shared config helpers in `apps/server/internal`.
 - `apps/cli` provides the Cobra CLI backed by `internal/cli` logic and `internal/encryption` utilities.
 - `apps/web` contains the Vite + React UI (`src/pages`, `src/components`, `src/stores`); run UI assets through `pnpm`.
 - Do not edit files under `apps/web`; that directory is managed as an external codebase.
