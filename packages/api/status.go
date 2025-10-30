@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/internal/version"
 	"github.com/lwshen/vault-hub/model"
 )
 
-func (s Server) GetStatus(ctx *fiber.Ctx) error {
+func (s Server) GetStatus(ctx echo.Context) error {
 	// Check database status with multiple health indicators
 	databaseStatus, dbConnections, dbResponseTime := checkDatabaseHealth()
 
@@ -23,9 +23,7 @@ func (s Server) GetStatus(ctx *fiber.Ctx) error {
 		DatabaseStatus: databaseStatus,
 	}
 
-	return ctx.
-		Status(http.StatusOK).
-		JSON(resp)
+	return ctx.JSON(http.StatusOK, resp)
 }
 
 // checkDatabaseHealth performs comprehensive database health checks

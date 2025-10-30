@@ -5,12 +5,12 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/lwshen/vault-hub/internal/config"
 	"github.com/lwshen/vault-hub/internal/version"
 	"github.com/lwshen/vault-hub/model"
 	"github.com/lwshen/vault-hub/route"
-	slogfiber "github.com/samber/slog-fiber"
 )
 
 func main() {
@@ -24,11 +24,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	app := fiber.New()
+	e := echo.New()
 
-	app.Use(slogfiber.New(logger))
+	// Add Echo middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(route.SlogMiddleware(logger))
 
-	route.SetupRoutes(app)
+	route.SetupRoutes(e)
 
-	log.Fatal(app.Listen(":" + config.AppPort))
+	log.Fatal(e.Start(":" + config.AppPort))
 }

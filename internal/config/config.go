@@ -27,6 +27,7 @@ var (
 	DatabaseUrl       string
 	JwtSecret         string
 	EncryptionKey     string
+	SessionSecret     string
 	OidcEnabled       bool
 	OidcClientId      string
 	OidcClientSecret  string
@@ -57,6 +58,7 @@ func init() {
 	AppPort = getEnv("APP_PORT", "3000")
 	JwtSecret = getEnv("JWT_SECRET", "")
 	EncryptionKey = getEnv("ENCRYPTION_KEY", "")
+	SessionSecret = getEnv("SESSION_SECRET", "")
 	DatabaseType = DatabaseTypeEnum(getEnv("DATABASE_TYPE", "sqlite"))
 	DatabaseUrl = getEnv("DATABASE_URL", "data.db")
 
