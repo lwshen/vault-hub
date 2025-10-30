@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
+	"net/http"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	"gorm.io/gorm"
@@ -35,7 +36,7 @@ func convertToApiAuditLog(auditLog *model.AuditLog) AuditLog {
 
 // GetAuditLogs retrieves filtered and paginated audit logs for the authenticated user
 // It supports filtering by vault, date range, and pagination parameters
-func (Server) GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error {
+func (Server) GetAuditLogs(c echo.Context, params GetAuditLogsParams) error {
 	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
@@ -44,7 +45,7 @@ func (Server) GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error {
 
 	// Validate request parameters
 	if err := validateAuditLogParams(params); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 
 	// Build filter parameters
@@ -56,13 +57,13 @@ func (Server) GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error {
 	// Fetch audit logs and total count
 	logs, totalCount, err := fetchAuditLogsWithCount(filterParams)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		return handler.SendError(c, http.StatusInternalServerError, err.Error())
 	}
 
 	// Convert to API format and prepare response
 	response := buildAuditLogsResponse(logs, totalCount, params)
 
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.JSON(http.StatusOK, response)
 }
 
 // validateAuditLogParams validates pagination and other request parameters
@@ -147,7 +148,7 @@ func buildAuditLogsResponse(logs []model.AuditLog, totalCount int64, params GetA
 	}
 }
 
-func (Server) GetAuditMetrics(c *fiber.Ctx) error {
+func (Server) GetAuditMetrics(c echo.Context) error {
 	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
@@ -157,7 +158,7 @@ func (Server) GetAuditMetrics(c *fiber.Ctx) error {
 	// Get all metrics in a single optimized query
 	metrics, err := model.GetAllAuditMetrics(user.ID)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		return handler.SendError(c, http.StatusInternalServerError, err.Error())
 	}
 
 	// Prepare response
@@ -168,5 +169,5 @@ func (Server) GetAuditMetrics(c *fiber.Ctx) error {
 		ApiKeyEventsLast30Days: int(metrics.APIKeyEventsLast30Days),
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.JSON(http.StatusOK, response)
 }

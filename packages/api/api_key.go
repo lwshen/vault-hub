@@ -3,16 +3,17 @@ package api
 import (
 	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	"gorm.io/gorm"
 )
 
 // auditAPIKeyOperation creates an audit log entry for API key operations
-func auditAPIKeyOperation(c *fiber.Ctx, action model.ActionType, userID uint, apiKeyID uint, apiKeyName string) {
+func auditAPIKeyOperation(c echo.Context, action model.ActionType, userID uint, apiKeyID uint, apiKeyName string) {
 	ip, userAgent := getClientInfo(c)
 
 	err := model.LogAPIKeyAction(apiKeyID, action, userID, model.SourceWeb, ip, userAgent)
@@ -66,7 +67,7 @@ func convertToApiAPIKey(apiKey *model.APIKey) (*VaultAPIKey, error) {
 }
 
 // GetAPIKeys - Get API keys for the current user with pagination
-func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
+func (s Server) GetAPIKeys(c echo.Context, params GetAPIKeysParams) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
@@ -86,16 +87,16 @@ func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
 
 	// Validate parameters
 	if pageSize < 1 || pageSize > 1000 {
-		return handler.SendError(c, fiber.StatusBadRequest, "pageSize must be between 1 and 1000")
+		return handler.SendError(c, http.StatusBadRequest, "pageSize must be between 1 and 1000")
 	}
 	if pageIndex < 1 {
-		return handler.SendError(c, fiber.StatusBadRequest, "pageIndex must be at least 1")
+		return handler.SendError(c, http.StatusBadRequest, "pageIndex must be at least 1")
 	}
 
 	// Get paginated API keys for the user
 	apiKeys, totalCount, err := model.GetUserAPIKeysWithPagination(user.ID, pageSize, pageIndex)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to get API keys")
+		return handler.SendError(c, http.StatusInternalServerError, "failed to get API keys")
 	}
 
 	// Convert to API format - initialize with empty slice to ensure [] in JSON
@@ -103,7 +104,7 @@ func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
 	for _, apiKey := range apiKeys {
 		apiAPIKey, err := convertToApiAPIKey(&apiKey)
 		if err != nil {
-			return handler.SendError(c, fiber.StatusInternalServerError, "failed to convert API key")
+			return handler.SendError(c, http.StatusInternalServerError, "failed to convert API key")
 		}
 		apiKeyList = append(apiKeyList, *apiAPIKey)
 	}
@@ -116,12 +117,12 @@ func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
 		PageIndex:  pageIndex,
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.JSON(http.StatusOK, response)
 }
 
 // CreateAPIKey handles the creation of a new API key
 // It validates the request, converts vault IDs, creates the key, and returns the response
-func (s Server) CreateAPIKey(c *fiber.Ctx) error {
+func (s Server) CreateAPIKey(c echo.Context) error {
 	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
@@ -131,7 +132,7 @@ func (s Server) CreateAPIKey(c *fiber.Ctx) error {
 	// Parse and validate request
 	req, err := parseCreateAPIKeyRequest(c)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, "invalid request body")
+		return handler.SendError(c, http.StatusBadRequest, "invalid request body")
 	}
 
 	// Convert vault unique IDs to database IDs
@@ -145,19 +146,19 @@ func (s Server) CreateAPIKey(c *fiber.Ctx) error {
 
 	// Validate parameters
 	if err := validateCreateAPIKeyParams(params); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, "validation failed")
+		return handler.SendError(c, http.StatusBadRequest, "validation failed")
 	}
 
 	// Create the API key
 	apiKey, plainKey, err := createAPIKey(params)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to create API key")
+		return handler.SendError(c, http.StatusInternalServerError, "failed to create API key")
 	}
 
 	// Convert to API format
 	apiAPIKey, err := convertToApiAPIKey(apiKey)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to convert API key")
+		return handler.SendError(c, http.StatusInternalServerError, "failed to convert API key")
 	}
 
 	// Log the creation for audit purposes
@@ -168,13 +169,13 @@ func (s Server) CreateAPIKey(c *fiber.Ctx) error {
 		Key:    plainKey,
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(response)
+	return c.JSON(http.StatusCreated, response)
 }
 
 // parseCreateAPIKeyRequest parses the request body for API key creation
-func parseCreateAPIKeyRequest(c *fiber.Ctx) (CreateAPIKeyRequest, error) {
+func parseCreateAPIKeyRequest(c echo.Context) (CreateAPIKeyRequest, error) {
 	var req CreateAPIKeyRequest
-	err := c.BodyParser(&req)
+	err := c.Bind(&req)
 	return req, err
 }
 
@@ -238,7 +239,7 @@ func createAPIKey(params model.CreateAPIKeyParams) (*model.APIKey, string, error
 
 // UpdateAPIKey handles updating an existing API key's properties
 // It validates ownership, processes the update request, and returns the updated key
-func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
+func (s Server) UpdateAPIKey(c echo.Context, id int64) error {
 	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
@@ -254,7 +255,7 @@ func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
 	// Parse update request
 	req, err := parseUpdateAPIKeyRequest(c)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, "invalid request body")
+		return handler.SendError(c, http.StatusBadRequest, "invalid request body")
 	}
 
 	// Convert vault unique IDs to database IDs if provided
@@ -268,24 +269,24 @@ func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
 
 	// Validate update parameters
 	if err := validateUpdateAPIKeyParams(updateParams, user.ID, apiKey.ID); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, "validation failed")
+		return handler.SendError(c, http.StatusBadRequest, "validation failed")
 	}
 
 	// Perform the update
 	if err := updateAPIKey(apiKey, updateParams); err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to update API key")
+		return handler.SendError(c, http.StatusInternalServerError, "failed to update API key")
 	}
 
 	// Convert to API format
 	apiAPIKey, err := convertToApiAPIKey(apiKey)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to convert API key")
+		return handler.SendError(c, http.StatusInternalServerError, "failed to convert API key")
 	}
 
 	// Log the update for audit purposes
 	auditAPIKeyOperation(c, model.ActionUpdateAPIKey, user.ID, apiKey.ID, apiKey.Name)
 
-	return c.Status(fiber.StatusOK).JSON(*apiAPIKey)
+	return c.JSON(http.StatusOK, *apiAPIKey)
 }
 
 // findAPIKeyByID finds an API key by ID and validates user ownership
@@ -302,9 +303,9 @@ func findAPIKeyByID(id int64, userID uint) (*model.APIKey, error) {
 }
 
 // parseUpdateAPIKeyRequest parses the request body for API key updates
-func parseUpdateAPIKeyRequest(c *fiber.Ctx) (UpdateAPIKeyRequest, error) {
+func parseUpdateAPIKeyRequest(c echo.Context) (UpdateAPIKeyRequest, error) {
 	var req UpdateAPIKeyRequest
-	err := c.BodyParser(&req)
+	err := c.Bind(&req)
 	return req, err
 }
 
@@ -348,7 +349,7 @@ func updateAPIKey(apiKey *model.APIKey, params model.UpdateAPIKeyParams) error {
 }
 
 // DeleteAPIKey - Delete an API key
-func (s Server) DeleteAPIKey(c *fiber.Ctx, id int64) error {
+func (s Server) DeleteAPIKey(c echo.Context, id int64) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
@@ -359,19 +360,19 @@ func (s Server) DeleteAPIKey(c *fiber.Ctx, id int64) error {
 	err = model.DB.Where("id = ? AND user_id = ?", id, user.ID).First(&apiKey).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return handler.SendError(c, fiber.StatusNotFound, "API key not found")
+			return handler.SendError(c, http.StatusNotFound, "API key not found")
 		}
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to get API key")
+		return handler.SendError(c, http.StatusInternalServerError, "failed to get API key")
 	}
 
 	// Delete the API key (soft delete)
 	err = apiKey.Delete()
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to delete API key")
+		return handler.SendError(c, http.StatusInternalServerError, "failed to delete API key")
 	}
 
 	// Create audit log for API key deletion
 	auditAPIKeyOperation(c, model.ActionDeleteAPIKey, user.ID, apiKey.ID, apiKey.Name)
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return c.NoContent(http.StatusNoContent)
 }

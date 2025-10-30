@@ -4,16 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/internal/email"
 	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
-
-	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
@@ -39,15 +39,15 @@ func formatTTLForEmail(d time.Duration) string {
 	}
 }
 
-func (Server) Login(c *fiber.Ctx) error {
+func (Server) Login(c echo.Context) error {
 	var input LoginRequest
-	if err := c.BodyParser(&input); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	if err := c.Bind(&input); err != nil {
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 
 	email, err := getEmail(input.Email)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 
 	clientIP, userAgent := getClientInfo(c)
@@ -56,16 +56,16 @@ func (Server) Login(c *fiber.Ctx) error {
 		Email: email,
 	}
 	if err := user.GetByEmail(); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, "Invalid email or password")
+		return handler.SendError(c, http.StatusBadRequest, "Invalid email or password")
 	}
 
 	if !user.ComparePassword(input.Password) {
-		return handler.SendError(c, fiber.StatusBadRequest, "Invalid email or password")
+		return handler.SendError(c, http.StatusBadRequest, "Invalid email or password")
 	}
 
 	token, err := user.GenerateToken()
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		return handler.SendError(c, http.StatusInternalServerError, err.Error())
 	}
 
 	// Record successful login audit log
@@ -77,16 +77,16 @@ func (Server) Login(c *fiber.Ctx) error {
 		Token: token,
 	}
 
-	return c.Status(fiber.StatusOK).JSON(resp)
+	return c.JSON(http.StatusOK, resp)
 }
 
 // Signup handles user registration requests
 // It validates input, creates the user account, and returns a JWT token
-func (Server) Signup(c *fiber.Ctx) error {
+func (Server) Signup(c echo.Context) error {
 	// Parse request body
 	input, err := parseSignupRequest(c)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 
 	// Extract client information for audit logging
@@ -95,13 +95,13 @@ func (Server) Signup(c *fiber.Ctx) error {
 	// Validate and create user parameters
 	createParams, err := buildUserCreateParams(input)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 
 	// Create the user account
 	user, err := createUser(createParams)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		return handler.SendError(c, http.StatusInternalServerError, err.Error())
 	}
 
 	slog.Info("User created", "email", user.Email, "name", *user.Name)
@@ -126,20 +126,20 @@ func (Server) Signup(c *fiber.Ctx) error {
 	// Generate authentication token
 	token, err := user.GenerateToken()
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		return handler.SendError(c, http.StatusInternalServerError, err.Error())
 	}
 
 	resp := SignupResponse{
 		Token: token,
 	}
 
-	return c.Status(fiber.StatusOK).JSON(resp)
+	return c.JSON(http.StatusOK, resp)
 }
 
 // parseSignupRequest parses and validates the signup request body
-func parseSignupRequest(c *fiber.Ctx) (SignupRequest, error) {
+func parseSignupRequest(c echo.Context) (SignupRequest, error) {
 	var input SignupRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind(&input); err != nil {
 		return input, err
 	}
 	return input, nil
@@ -189,10 +189,11 @@ func logSignupAudit(userID uint, clientIP, userAgent string) {
 	}
 }
 
-func (Server) Logout(c *fiber.Ctx) error {
+func (Server) Logout(c echo.Context) error {
 	// Try to get user information from context (set by JWT middleware)
 	// If there is no authentication information, this should not prevent logout operation
-	user, ok := c.Locals("user").(*model.User)
+	userVal := c.Get("user")
+	user, ok := userVal.(*model.User)
 	if ok && user != nil {
 		clientIP, userAgent := getClientInfo(c)
 		if err := model.LogUserAction(model.ActionLogoutUser, user.ID, model.SourceWeb, clientIP, userAgent); err != nil {
@@ -200,7 +201,7 @@ func (Server) Logout(c *fiber.Ctx) error {
 		}
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "Successfully logged out",
 	})
 }
@@ -210,14 +211,14 @@ func getEmail(email openapi_types.Email) (string, error) {
 }
 
 // RequestPasswordReset creates a password reset token and sends email
-func (Server) RequestPasswordReset(c *fiber.Ctx) error {
+func (Server) RequestPasswordReset(c echo.Context) error {
 	var input PasswordResetRequest
-	if err := c.BodyParser(&input); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	if err := c.Bind(&input); err != nil {
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 	emailStr, err := getEmail(input.Email)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 	// Always respond 200 to avoid user enumeration
 	// Attempt to find user; if not found, still return success
@@ -228,8 +229,8 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 			slog.Error("Failed to check password reset rate limit", "error", rateErr, "userID", user.ID)
 		} else if limited {
 			slog.Warn("Password reset email rate limited", "userID", user.ID, "retryAfter", retryAfter)
-			c.Set(fiber.HeaderRetryAfter, fmt.Sprintf("%.0f", retryAfter.Seconds()))
-			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+			c.Set("Retry-After", fmt.Sprintf("%.0f", retryAfter.Seconds()))
+			return c.JSON(http.StatusTooManyRequests, map[string]interface{}{
 				"success": false,
 				"code":    emailTokenCodeRateLimited,
 			})
@@ -238,13 +239,17 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 		token, _, err := model.CreateEmailToken(user.ID, model.TokenPurposeResetPassword, PasswordResetTTL)
 		if err != nil {
 			slog.Error("Failed to create password reset token", "error", err, "userID", user.ID)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 				"success": false,
 				"code":    emailTokenCodeFailed,
 			})
 		}
 
-		baseURL := c.BaseURL()
+		scheme := c.Scheme()
+		if c.Request().Header.Get("X-Forwarded-Proto") != "" {
+			scheme = c.Request().Header.Get("X-Forwarded-Proto")
+		}
+		baseURL := scheme + "://" + c.Request().Host
 		actionURL := fmt.Sprintf("%s/reset?token=%s", baseURL, url.QueryEscape(token))
 		go func(u model.User, url string) {
 			sender := email.NewSender()
@@ -258,67 +263,67 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 			}
 		}(user, actionURL)
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"success": true,
 		"code":    emailTokenCodeSent,
 	})
 }
 
 // ConfirmPasswordReset verifies token and updates password
-func (Server) ConfirmPasswordReset(c *fiber.Ctx) error {
+func (Server) ConfirmPasswordReset(c echo.Context) error {
 	var input PasswordResetConfirmRequest
-	if err := c.BodyParser(&input); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	if err := c.Bind(&input); err != nil {
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 	t, err := model.VerifyAndConsumeEmailToken(input.Token, model.TokenPurposeResetPassword)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, "invalid or expired token")
+		return handler.SendError(c, http.StatusBadRequest, "invalid or expired token")
 	}
 	var user model.User
 	user.ID = t.UserID
 	if err := model.DB.First(&user, user.ID).Error; err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, "user not found")
+		return handler.SendError(c, http.StatusInternalServerError, "user not found")
 	}
 	// update password
 	if input.NewPassword == "" {
-		return handler.SendError(c, fiber.StatusBadRequest, "newPassword is required")
+		return handler.SendError(c, http.StatusBadRequest, "newPassword is required")
 	}
 	params := model.CreateUserParams{Email: user.Email, Password: &input.NewPassword, Name: deref(user.Name)}
 	if errs := params.Validate(); len(errs) > 0 {
-		return handler.SendError(c, fiber.StatusBadRequest, "password does not meet requirements")
+		return handler.SendError(c, http.StatusBadRequest, "password does not meet requirements")
 	}
 	hashed, err := model.HashPassword(input.NewPassword)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to hash password")
+		return handler.SendError(c, http.StatusInternalServerError, "failed to hash password")
 	}
 	user.Password = &hashed
 	if err := model.DB.Save(&user).Error; err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, "failed to update password")
+		return handler.SendError(c, http.StatusInternalServerError, "failed to update password")
 	}
-	return c.SendStatus(fiber.StatusOK)
+	return c.NoContent(http.StatusOK)
 }
 
 // RequestMagicLink creates a magic link login token and emails it
-func (Server) RequestMagicLink(c *fiber.Ctx) error {
+func (Server) RequestMagicLink(c echo.Context) error {
 	var input MagicLinkRequest
-	if err := c.BodyParser(&input); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	if err := c.Bind(&input); err != nil {
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 	emailStr, err := getEmail(input.Email)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+		return handler.SendError(c, http.StatusBadRequest, err.Error())
 	}
 	user := model.User{Email: emailStr}
 	if err := user.GetByEmail(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			slog.Info("Magic link request user not found", "email", emailStr)
-			return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			return c.JSON(http.StatusOK, map[string]interface{}{
 				"success": false,
 				"code":    emailTokenCodeFailed,
 			})
 		}
 		slog.Error("Failed to look up user for magic link", "email", emailStr, "error", err)
-		return handler.SendError(c, fiber.StatusInternalServerError, "Unable to send a magic link right now.")
+		return handler.SendError(c, http.StatusInternalServerError, "Unable to send a magic link right now.")
 	}
 
 	limited, retryAfter, rateErr := model.EmailTokenRateLimited(user.ID, model.TokenPurposeMagicLink, EmailSendCooldown)
@@ -326,8 +331,8 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 		slog.Error("Failed to check magic link rate limit", "error", rateErr, "userID", user.ID)
 	} else if limited {
 		slog.Warn("Magic link email rate limited", "userID", user.ID, "retryAfter", retryAfter)
-		c.Set(fiber.HeaderRetryAfter, fmt.Sprintf("%.0f", retryAfter.Seconds()))
-		return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+		c.Set("Retry-After", fmt.Sprintf("%.0f", retryAfter.Seconds()))
+		return c.JSON(http.StatusTooManyRequests, map[string]interface{}{
 			"success": false,
 			"code":    emailTokenCodeRateLimited,
 		})
@@ -336,13 +341,17 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 	token, _, tokenErr := model.CreateEmailToken(user.ID, model.TokenPurposeMagicLink, MagicLinkTTL)
 	if tokenErr != nil {
 		slog.Error("Failed to create magic link token", "error", tokenErr, "userID", user.ID)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"success": false,
 			"code":    emailTokenCodeFailed,
 		})
 	}
 
-	baseURL := c.BaseURL()
+	scheme := c.Scheme()
+	if c.Request().Header.Get("X-Forwarded-Proto") != "" {
+		scheme = c.Request().Header.Get("X-Forwarded-Proto")
+	}
+	baseURL := scheme + "://" + c.Request().Host
 	actionURL := fmt.Sprintf("%s/login/magic-link?token=%s", baseURL, url.QueryEscape(token))
 	go func(u model.User, url string) {
 		sender := email.NewSender()
@@ -356,68 +365,73 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 		}
 	}(user, actionURL)
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"success": true,
 		"code":    emailTokenCodeSent,
 	})
 }
 
 // ConsumeMagicLink verifies token, generates JWT and redirects with fragment
-func (Server) ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) error {
+func (Server) ConsumeMagicLink(c echo.Context, params ConsumeMagicLinkParams) error {
 	token := params.Token
-	acceptsJSON := strings.Contains(c.Get(fiber.HeaderAccept), fiber.MIMEApplicationJSON)
+	acceptsJSON := strings.Contains(c.Request().Header.Get("Accept"), "application/json")
 	if token == "" {
 		if acceptsJSON {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"error": "missing token",
 				"code":  emailTokenCodeFailed,
 			})
 		}
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.NoContent(http.StatusBadRequest)
 	}
 	t, err := model.VerifyAndConsumeEmailToken(token, model.TokenPurposeMagicLink)
 	if err != nil {
 		if acceptsJSON {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"error": "invalid or expired token",
 				"code":  emailTokenCodeFailed,
 			})
 		}
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.NoContent(http.StatusBadRequest)
 	}
 	var user model.User
 	user.ID = t.UserID
 	if err := model.DB.First(&user, user.ID).Error; err != nil {
 		if acceptsJSON {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 				"error": "user not found",
 				"code":  emailTokenCodeFailed,
 			})
 		}
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 	jwtToken, err := user.GenerateToken()
 	if err != nil {
 		if acceptsJSON {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 				"error": "failed to generate token",
 				"code":  emailTokenCodeFailed,
 			})
 		}
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 	redirectFragment := "/login#token=" + url.QueryEscape(jwtToken) + "&source=magic"
 
 	if acceptsJSON {
-		return c.JSON(fiber.Map{
+		scheme := c.Scheme()
+		if c.Request().Header.Get("X-Forwarded-Proto") != "" {
+			scheme = c.Request().Header.Get("X-Forwarded-Proto")
+		}
+		baseURL := scheme + "://" + c.Request().Host
+		return c.JSON(http.StatusOK, map[string]interface{}{
 			"token":       jwtToken,
-			"redirectUrl": fmt.Sprintf("%s/dashboard", c.BaseURL()),
+			"redirectUrl": fmt.Sprintf("%s/dashboard", baseURL),
 			"code":        emailTokenCodeSent,
 			"success":     true,
 		})
 	}
 
-	return c.Redirect(redirectFragment)
+	return c.Redirect(http.StatusFound, redirectFragment)
 }
 
 func deref(p *string) string {

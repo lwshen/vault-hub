@@ -2,9 +2,10 @@ package handler
 
 import (
 	"log/slog"
+	"net/http"
 	"net/url"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/internal/auth"
 	"github.com/lwshen/vault-hub/model"
 )
@@ -14,36 +15,40 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
-func LoginOidc(c *fiber.Ctx) error {
-	baseUrl := c.BaseURL()
-	url, err := auth.AuthCodeURL(c, baseUrl)
+func LoginOidc(c echo.Context) error {
+	scheme := c.Scheme()
+	if c.Request().Header.Get("X-Forwarded-Proto") != "" {
+		scheme = c.Request().Header.Get("X-Forwarded-Proto")
+	}
+	baseUrl := scheme + "://" + c.Request().Host
+	authURL, err := auth.AuthCodeURL(c, baseUrl)
 	if err != nil {
 		slog.Error("Failed to get OIDC URL", "error", err)
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.NoContent(http.StatusInternalServerError)
 	}
-	slog.Debug("Login with OIDC", "url", url)
-	return c.Redirect(url)
+	slog.Debug("Login with OIDC", "url", authURL)
+	return c.Redirect(http.StatusFound, authURL)
 }
 
-func LoginOidcCallback(c *fiber.Ctx) error {
-	code := c.Query("code")
-	state := c.Query("state")
-	slog.Debug("Login with OIDC callback", "uri", c.Request().URI(), "code", code, "state", state)
+func LoginOidcCallback(c echo.Context) error {
+	code := c.QueryParam("code")
+	state := c.QueryParam("state")
+	slog.Debug("Login with OIDC callback", "uri", c.Request().URL.String(), "code", code, "state", state)
 
 	err := auth.VerifyState(c, state)
 	if err != nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.NoContent(http.StatusBadRequest)
 	}
 
-	token, err := auth.Verify(c.Context(), code)
+	token, err := auth.Verify(c.Request().Context(), code)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 	slog.Debug("Login with OIDC callback", "token", token)
 
-	userInfo, err := auth.UserInfo(c.Context(), token)
+	userInfo, err := auth.UserInfo(c.Request().Context(), token)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 	slog.Debug("Login with OIDC callback", "userInfo", userInfo)
 
@@ -51,14 +56,14 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 	var claims map[string]interface{}
 	if err := userInfo.Claims(&claims); err != nil {
 		slog.Error("Failed to extract OIDC claims", "error", err)
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	// Extract email from claims
 	email, ok := claims["email"].(string)
 	if !ok || email == "" {
 		slog.Error("OIDC userInfo missing email claim", "claims", claims)
-		return c.SendStatus(fiber.StatusBadRequest)
+		return c.NoContent(http.StatusBadRequest)
 	}
 
 	// Look up user by email
@@ -81,7 +86,7 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 		newUser, createErr := createParams.Create()
 		if createErr != nil {
 			slog.Error("Failed to create user from OIDC", "error", createErr, "email", email)
-			return c.SendStatus(fiber.StatusInternalServerError)
+			return c.NoContent(http.StatusInternalServerError)
 		}
 		user = *newUser
 		slog.Info("User created from OIDC", "email", email, "name", name)
@@ -91,7 +96,7 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 	jwtToken, err := user.GenerateToken()
 	if err != nil {
 		slog.Error("Failed to generate token for OIDC user", "error", err, "userID", user.ID)
-		return c.SendStatus(fiber.StatusInternalServerError)
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	// Record successful login audit log
@@ -103,20 +108,20 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 	// Redirect back to frontend with token in URL fragment (hash) for security
 	// URL fragments are never sent to the server, preventing token leakage in logs, Referer headers, and browser history
 	redirectUrl := "/login#token=" + url.QueryEscape(jwtToken) + "&source=oidc"
-	return c.Redirect(redirectUrl)
+	return c.Redirect(http.StatusFound, redirectUrl)
 }
 
 // getClientInfo extracts IP address and User-Agent from the request
-func getClientInfo(c *fiber.Ctx) (string, string) {
+func getClientInfo(c echo.Context) (string, string) {
 	// Get IP address (check for forwarded headers first)
-	ip := c.Get("X-Forwarded-For")
+	ip := c.Request().Header.Get("X-Forwarded-For")
 	if ip == "" {
-		ip = c.Get("X-Real-IP")
+		ip = c.Request().Header.Get("X-Real-IP")
 	}
 	if ip == "" {
-		ip = c.IP()
+		ip = c.RealIP()
 	}
 	// Get User-Agent
-	userAgent := c.Get("User-Agent")
+	userAgent := c.Request().Header.Get("User-Agent")
 	return ip, userAgent
 }

@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/labstack/echo/v4"
 )
 
-func (Server) Health(ctx *fiber.Ctx) error {
+func (Server) Health(ctx echo.Context) error {
 	status := "ok"
 	time := time.Now()
 	resp := HealthCheckResponse{
@@ -15,7 +15,5 @@ func (Server) Health(ctx *fiber.Ctx) error {
 		Timestamp: &time,
 	}
 
-	return ctx.
-		Status(http.StatusOK).
-		JSON(resp)
+	return ctx.JSON(http.StatusOK, resp)
 }
