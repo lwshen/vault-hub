@@ -6,8 +6,11 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"log/slog"
+	"net/http"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
@@ -16,6 +19,87 @@ import (
 	"gorm.io/gorm"
 )
 
+// GetVaultsForAPIKey lists all vaults accessible to the provided API key.
+func GetVaultsForAPIKey(apiKey *model.APIKey) ([]VaultLite, *APIError) {
+	if apiKey == nil {
+		return nil, newAPIError(http.StatusUnauthorized, "API key not found in context")
+	}
+
+	vaults, err := apiKey.GetAccessibleVaults()
+	if err != nil {
+		return nil, newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	apiVaults := make([]VaultLite, len(vaults))
+	for i := range vaults {
+		apiVaults[i] = convertToApiVaultLite(&vaults[i])
+	}
+
+	return apiVaults, nil
+}
+
+// GetVaultByAPIKeyWithLookup centralizes vault retrieval, authorization, audit
+// logging, and optional client-side encryption for API key traffic.
+func GetVaultByAPIKeyWithLookup(apiKey *model.APIKey, lookup func(*model.APIKey) (*model.Vault, error), encryptSalt string, enableClientEncryption bool, clientInfo ClientInfo, authorizationHeader string, encryptionFlagProvided bool) (Vault, *APIError) {
+	if apiKey == nil {
+		return Vault{}, newAPIError(http.StatusUnauthorized, "API key not found in context")
+	}
+
+	vault, err := lookup(apiKey)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return Vault{}, newAPIError(http.StatusNotFound, "vault not found")
+		}
+		return Vault{}, newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	if !apiKey.HasVaultAccess(vault.ID) {
+		return Vault{}, newAPIError(http.StatusForbidden, "API key does not have access to this vault")
+	}
+
+	if err := model.LogVaultAction(vault.ID, model.ActionReadVault, apiKey.UserID, model.SourceCLI, &apiKey.ID, clientInfo.IP, clientInfo.UserAgent); err != nil {
+		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
+	}
+
+	if enableClientEncryption {
+		plainKey, err := deriveAPIKeyFromAuthorization(authorizationHeader)
+		if err != nil {
+			return Vault{}, newAPIError(http.StatusBadRequest, err.Error())
+		}
+
+		originalValueLen := len(vault.Value)
+		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, plainKey, encryptSalt)
+		if err != nil {
+			slog.Error("Failed to encrypt vault value for client", "error", err, "vaultID", vault.ID)
+			return Vault{}, newAPIError(http.StatusInternalServerError, "failed to encrypt value for client")
+		}
+		vault.Value = encryptedValue
+		slog.Debug("Vault value encrypted for client", "vaultID", vault.ID, "originalLen", originalValueLen, "encryptedLen", len(encryptedValue), "salt", encryptSalt)
+	} else if encryptionFlagProvided {
+		slog.Debug("Client-side encryption not enabled", "vaultID", vault.ID)
+	} else {
+		slog.Debug("No client-side encryption preference provided", "vaultID", vault.ID)
+	}
+
+	return convertToApiVault(vault), nil
+}
+
+func deriveAPIKeyFromAuthorization(header string) (string, error) {
+	if header == "" {
+		return "", fmt.Errorf("Authorization header required for client encryption")
+	}
+
+	parts := strings.SplitN(header, " ", 2)
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+		return "", fmt.Errorf("invalid Authorization header format")
+	}
+	if !strings.HasPrefix(parts[1], "vhub_") {
+		return "", fmt.Errorf("API key required for client encryption")
+	}
+
+	return parts[1], nil
+}
+
 // GetVaultsByAPIKey - Get all vaults for a given API key
 func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 	apiKey, ok := c.Locals("api_key").(*model.APIKey)
@@ -23,19 +107,12 @@ func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
 	}
 
-	// Get all accessible vaults for this API key (encrypted)
-	vaults, err := apiKey.GetAccessibleVaults()
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	resp, apiErr := GetVaultsForAPIKey(apiKey)
+	if apiErr != nil {
+		return handler.SendError(c, apiErr.Status, apiErr.Message)
 	}
 
-	// Convert to API VaultLite format (no decryption needed)
-	apiVaults := make([]VaultLite, len(vaults))
-	for i, vault := range vaults {
-		apiVaults[i] = convertToApiVaultLite(&vault)
-	}
-
-	return c.Status(fiber.StatusOK).JSON(apiVaults)
+	return c.Status(http.StatusOK).JSON(resp)
 }
 
 // GetVaultByAPIKey - Get a single vault by unique ID for a given API key
@@ -63,56 +140,14 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientE
 		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
 	}
 
-	// Get the vault using the provided getter function
-	vault, err := vaultGetter(apiKey)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
-		}
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	// Check if the API key has access to this specific vault
-	if !apiKey.HasVaultAccess(vault.ID) {
-		return handler.SendError(c, fiber.StatusForbidden, "API key does not have access to this vault")
-	}
-
-	// Log read action (using the API key user ID)
-	ip, userAgent := getClientInfo(c)
-	if err := model.LogVaultAction(vault.ID, model.ActionReadVault, apiKey.UserID, model.SourceCLI, &apiKey.ID, ip, userAgent); err != nil {
-		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
-	}
-
-	// Enhanced security: Apply additional client-side encryption if requested
+	clientInfo := getClientInfoDetails(c)
 	enableClientEncryption := enableClientEncryptionParam != nil && *enableClientEncryptionParam == "true"
-	if enableClientEncryption {
-		slog.Debug("Client-side encryption requested", "header", *enableClientEncryptionParam, "vaultID", vault.ID)
-
-		// Get the original API key from the Authorization header to use for key derivation
-		authHeader := c.Get("Authorization")
-		originalAPIKey := authHeader[7:] // Remove "Bearer " prefix
-
-		originalValueLen := len(vault.Value)
-		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, encryptSalt)
-		if err != nil {
-			slog.Error("Failed to encrypt vault value for client", "error", err, "vaultID", vault.ID)
-			return handler.SendError(c, fiber.StatusInternalServerError, "failed to encrypt value for client")
-		}
-		vault.Value = encryptedValue
-		slog.Debug("Vault value encrypted for client",
-			"vaultID", vault.ID,
-			"originalLen", originalValueLen,
-			"encryptedLen", len(encryptedValue),
-			"salt", encryptSalt)
-	} else {
-		if enableClientEncryptionParam != nil {
-			slog.Debug("Client-side encryption not enabled", "headerValue", *enableClientEncryptionParam, "vaultID", vault.ID)
-		} else {
-			slog.Debug("No client-side encryption header received", "vaultID", vault.ID)
-		}
+	resp, apiErr := GetVaultByAPIKeyWithLookup(apiKey, vaultGetter, encryptSalt, enableClientEncryption, clientInfo, c.Get("Authorization"), enableClientEncryptionParam != nil)
+	if apiErr != nil {
+		return handler.SendError(c, apiErr.Status, apiErr.Message)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))
+	return c.Status(http.StatusOK).JSON(resp)
 }
 
 // encryptForClientWithDerivedKey encrypts the vault value using a key derived from the API key

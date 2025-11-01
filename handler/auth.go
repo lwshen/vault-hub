@@ -16,7 +16,7 @@ type LoginResponse struct {
 
 func LoginOidc(c *fiber.Ctx) error {
 	baseUrl := c.BaseURL()
-	url, err := auth.AuthCodeURL(c, baseUrl)
+	url, err := auth.AuthCodeURL(baseUrl)
 	if err != nil {
 		slog.Error("Failed to get OIDC URL", "error", err)
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -30,7 +30,7 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 	state := c.Query("state")
 	slog.Debug("Login with OIDC callback", "uri", c.Request().URI(), "code", code, "state", state)
 
-	err := auth.VerifyState(c, state)
+	err := auth.VerifyState(state)
 	if err != nil {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}

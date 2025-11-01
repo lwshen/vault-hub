@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
@@ -33,36 +34,45 @@ func convertToApiAuditLog(auditLog *model.AuditLog) AuditLog {
 	}
 }
 
-// GetAuditLogs retrieves filtered and paginated audit logs for the authenticated user
-// It supports filtering by vault, date range, and pagination parameters
+// GetAuditLogsForUser retrieves filtered and paginated audit logs for the
+// authenticated user. It supports filtering by vault, date range, and
+// pagination parameters while remaining framework-agnostic for reuse in Echo.
+func GetAuditLogsForUser(user *model.User, params GetAuditLogsParams) (AuditLogsResponse, *APIError) {
+	if user == nil {
+		return AuditLogsResponse{}, newAPIError(http.StatusUnauthorized, "user not found in context")
+	}
+
+	if err := validateAuditLogParams(params); err != nil {
+		return AuditLogsResponse{}, newAPIError(http.StatusBadRequest, err.Error())
+	}
+
+	filterParams, err := buildAuditLogFilterParams(params, user.ID)
+	if err != nil {
+		return AuditLogsResponse{}, newAPIError(http.StatusBadRequest, err.Error())
+	}
+
+	logs, totalCount, err := fetchAuditLogsWithCount(filterParams)
+	if err != nil {
+		return AuditLogsResponse{}, newAPIError(http.StatusInternalServerError, err.Error())
+	}
+
+	response := buildAuditLogsResponse(logs, totalCount, params)
+	return response, nil
+}
+
+// GetAuditLogs retains the Fiber handler by delegating to GetAuditLogsForUser.
 func (Server) GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error {
-	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
-	// Validate request parameters
-	if err := validateAuditLogParams(params); err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	resp, apiErr := GetAuditLogsForUser(user, params)
+	if apiErr != nil {
+		return handler.SendError(c, apiErr.Status, apiErr.Message)
 	}
 
-	// Build filter parameters
-	filterParams, err := buildAuditLogFilterParams(params, user.ID)
-	if err != nil {
-		return err
-	}
-
-	// Fetch audit logs and total count
-	logs, totalCount, err := fetchAuditLogsWithCount(filterParams)
-	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
-	}
-
-	// Convert to API format and prepare response
-	response := buildAuditLogsResponse(logs, totalCount, params)
-
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.Status(http.StatusOK).JSON(resp)
 }
 
 // validateAuditLogParams validates pagination and other request parameters
@@ -147,20 +157,18 @@ func buildAuditLogsResponse(logs []model.AuditLog, totalCount int64, params GetA
 	}
 }
 
-func (Server) GetAuditMetrics(c *fiber.Ctx) error {
-	// Get authenticated user
-	user, err := getUserFromContext(c)
-	if err != nil {
-		return err
+// GetAuditMetricsForUser provides a framework-neutral implementation for
+// retrieving audit metrics.
+func GetAuditMetricsForUser(user *model.User) (AuditMetricsResponse, *APIError) {
+	if user == nil {
+		return AuditMetricsResponse{}, newAPIError(http.StatusUnauthorized, "user not found in context")
 	}
 
-	// Get all metrics in a single optimized query
 	metrics, err := model.GetAllAuditMetrics(user.ID)
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		return AuditMetricsResponse{}, newAPIError(http.StatusInternalServerError, err.Error())
 	}
 
-	// Prepare response
 	response := AuditMetricsResponse{
 		TotalEventsLast30Days:  int(metrics.TotalEventsLast30Days),
 		EventsCountLast24Hours: int(metrics.EventsCountLast24Hours),
@@ -168,5 +176,20 @@ func (Server) GetAuditMetrics(c *fiber.Ctx) error {
 		ApiKeyEventsLast30Days: int(metrics.APIKeyEventsLast30Days),
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response)
+	return response, nil
+}
+
+// GetAuditMetrics keeps the Fiber handler delegating to the helper for reuse.
+func (Server) GetAuditMetrics(c *fiber.Ctx) error {
+	user, err := getUserFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	resp, apiErr := GetAuditMetricsForUser(user)
+	if apiErr != nil {
+		return handler.SendError(c, apiErr.Status, apiErr.Message)
+	}
+
+	return c.Status(http.StatusOK).JSON(resp)
 }
