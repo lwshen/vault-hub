@@ -68,3 +68,45 @@ func convertToGeneratedAPIKeyWithVaults(apiKey *model.APIKey) (*generated_models
 
 	return &result, nil
 }
+
+// convertToGeneratedAuditLog converts a model.AuditLog to a generated.AuditLog
+func convertToGeneratedAuditLog(auditLog *model.AuditLog) generated_models.AuditLog {
+	result := generated_models.AuditLog{
+		CreatedAt: auditLog.CreatedAt,
+		Action:    string(auditLog.Action),
+		Source:    string(auditLog.Source),
+		IpAddress: auditLog.IPAddress,
+		UserAgent: auditLog.UserAgent,
+	}
+
+	// Convert vault if present
+	if auditLog.Vault != nil {
+		vaultLite := convertToGeneratedVaultLite(auditLog.Vault)
+		result.Vault = vaultLite
+	}
+
+	// Convert API key if present
+	if auditLog.APIKey != nil {
+		// For audit logs, we don't need the full vault access list
+		// Just basic API key info
+		// #nosec G115
+		id := int64(auditLog.APIKey.ID)
+		apiKeyLite := generated_models.VaultApiKey{
+			Id:        id,
+			Name:      auditLog.APIKey.Name,
+			Vaults:    []generated_models.VaultLite{}, // Empty for audit log display
+			IsActive:  !auditLog.APIKey.DeletedAt.Valid,
+			CreatedAt: auditLog.APIKey.CreatedAt,
+			UpdatedAt: auditLog.APIKey.UpdatedAt,
+		}
+		if auditLog.APIKey.ExpiresAt != nil {
+			apiKeyLite.ExpiresAt = *auditLog.APIKey.ExpiresAt
+		}
+		if auditLog.APIKey.LastUsedAt != nil {
+			apiKeyLite.LastUsedAt = *auditLog.APIKey.LastUsedAt
+		}
+		result.ApiKey = apiKeyLite
+	}
+
+	return result
+}

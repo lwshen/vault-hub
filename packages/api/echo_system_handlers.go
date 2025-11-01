@@ -118,17 +118,3 @@ func (c *Container) GetCurrentUser(ctx echo.Context) error {
 
 	return ctx.JSON(http.StatusOK, resp)
 }
-
-// Stub implementations for audit endpoints (to be implemented later)
-
-func (c *Container) GetAuditLogs(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "Audit logs not yet implemented",
-	})
-}
-
-func (c *Container) GetAuditMetrics(ctx echo.Context) error {
-	return ctx.JSON(http.StatusOK, map[string]string{
-		"message": "Audit metrics not yet implemented",
-	})
-}
