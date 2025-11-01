@@ -1,0 +1,28 @@
+# OpenAPI Generator configuration for the upcoming go-server swap.
+# This file is consumed by openapi-generator-cli via:
+#   npx @openapitools/openapi-generator-cli generate \
+#     -g go-server \
+#     -c packages/api/openapi-generator/config-go-server.yaml
+#
+# The output directory intentionally lives under .openapi-generator/server so we
+# can review artifacts without overwriting the current oapi-codegen outputs.
+generatorName: go-server
+inputSpec: ../api.bundled.yaml
+outputDir: ../.openapi-generator/server
+
+additionalProperties:
+  packageName: api
+  moduleName: github.com/lwshen/vault-hub/packages/api
+  apiNameSuffix: Handler
+  sourceFolder: internal
+  featureCORS: true
+  featureMetrics: false
+  featureGoVersion: "1.24"
+  withGoCodegenComment: true
+# TODO: Evaluate whether strict interface parity requires custom templates.
+
+globalProperties:
+  apiTests: false
+  modelTests: false
+  modelDocs: false
+  apiDocs: false

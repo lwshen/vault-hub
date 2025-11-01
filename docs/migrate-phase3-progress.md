@@ -15,3 +15,10 @@
 ## Outstanding Work
 - Adopt the official OpenAPI generator pipeline in Phase 4 and update the strict handlers accordingly.
 - Add integration coverage for the shared helper layer and Echo routes (JWT/API-key/OIDC smoke tests) to guard behavior parity.
+
+## Integration Test Plan (In Progress)
+- **Auth flows**: exercise login/signup/logout/password-reset/magic-link endpoints using both JWT and API-key credentials to confirm shared helpers translate context correctly.
+- **Vault CRUD**: verify listing, detail, create, update, and delete operations for personal and CLI contexts; assert audit trail entries when mutations occur.
+- **Audit metrics**: hit `/api/audit-logs` and `/api/audit-logs/metrics` with pagination + filters to ensure old Fiber query semantics remain intact.
+- **OIDC state**: simulate expired/invalid states and concurrent callbacks to validate the new state store behavior.
+- **Rate limiting**: run edge-case requests that previously returned `Retry-After` to ensure new middleware surfaces headers consistently.

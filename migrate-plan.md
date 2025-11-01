@@ -38,6 +38,7 @@
 
 ### 4. Adopt Official OpenAPI Generator
 - Evaluate the OpenAPI Generator CLI options (Docker wrapper vs. local CLI) and decide on tooling integration (e.g., add a `tools/openapi-generator-config.yaml` or `packages/api/config.yaml`).
+- Stage preview scaffolding (`packages/api/openapi-generator/*.yaml`, `packages/api/generate-openapi.sh`) so contributors can exercise the official generator without disrupting the `oapi-codegen` flow.
 - Replace existing `go:generate` directives to invoke `openapi-generator-cli generate` with the Go server + client targets needed by the project.
 - Configure generator options for module path, package naming, and Echo integration (e.g., customizing templates or using `--additional-properties` for Echo compatibility).
 - Regenerate server stubs and shared models; update build scripts (`go generate`, CI workflows) to use the new generator and remove `oapi-codegen` dependencies.

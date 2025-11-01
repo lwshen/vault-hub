@@ -40,5 +40,7 @@ data.db
 # Generated OpenAPI bundle
 api/api.bundled.yaml
 
+packages/api/.openapi-generator/
+
 internal/embed/dist/*
 !internal/embed/dist/.gitkeep
