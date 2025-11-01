@@ -47,9 +47,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 VaultHub is a comprehensive secure environment variable and API key management system with AES-256-GCM encryption, consisting of three main components:
 
-### Backend (Go + Fiber)
+### Backend (Go + Echo)
 
-- **Entry point**: `apps/server/main.go` - Sets up Fiber web server
+- **Entry point**: `apps/server/main.go` - Sets up Echo web server
 - **Database**: GORM with support for SQLite, MySQL, PostgreSQL
 - **API**: OpenAPI 3.0 spec in `packages/api/openapi/api.yaml`, generated code in `packages/api/generated.go`
 - **Models**: `model/` - Database entities (User, Vault, AuditLog, APIKey)
@@ -169,8 +169,8 @@ The application enforces strict authentication rules via middleware (`route/midd
 
 ### Context Variables
 
-- **API Key Auth**: Sets `c.Locals("user_id", &key.UserID)` and `c.Locals("api_key", key)`
-- **JWT Auth**: Sets `c.Locals("user", &user)` (full User object)
+- **API Key Auth**: Sets `ctx.Set("user_id", &key.UserID)` and `ctx.Set("api_key", key)` using Echo context
+- **JWT Auth**: Sets `ctx.Set("user", &user)` (full User object) using Echo context
 
 ### API Endpoints
 
@@ -383,7 +383,7 @@ vault-hub/
 │   ├── cli/              # Command-line interface (Go + Cobra)
 │   │   ├── main.go       # CLI entry point
 │   │   └── README.md     # CLI documentation
-│   ├── server/           # Backend server (Go + Fiber)
+│   ├── server/           # Backend server (Go + Echo)
 │   │   └── main.go       # Server entry point
 │   └── web/              # Frontend application (React + TypeScript)
 │       ├── src/          # React source code

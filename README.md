@@ -88,7 +88,7 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 ## 🏗️ Architecture
 
 ### Backend (Go)
-- **Web Framework**: Fiber v2.52.9
+- **Web Framework**: Echo v4.13.3
 - **Database ORM**: GORM v1.31.0
 - **Authentication**: golang-jwt/jwt/v5 + optional OIDC
 - **API**: OpenAPI 3.0 specification with auto-generated code
@@ -155,7 +155,7 @@ air -c .air.toml
 ```
 vault-hub/
 ├── apps/
-│   ├── server/           # Go backend (Fiber web server)
+│   ├── server/           # Go backend (Echo web server)
 │   ├── cli/              # Go CLI (Cobra commands)
 │   ├── web/              # React frontend (Vite + TypeScript)
 │   └── cron/             # Go cron service for scheduled CLI execution

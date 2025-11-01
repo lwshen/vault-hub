@@ -1,0 +1,1322 @@
+openapi: 3.0.0
+info:
+  title: Vault Hub Server
+  version: 1.0.6
+servers:
+- url: /
+paths:
+  /api/health:
+    get:
+      description: Check the health status of backend
+      operationId: health
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthCheckResponse"
+          description: Service is healthy
+  /api/config:
+    get:
+      description: Returns public configuration settings that don't require authentication
+        (no database operations)
+      operationId: getConfig
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResponse"
+          description: Configuration retrieved successfully
+      summary: Get public configuration
+      tags:
+      - Config
+  /api/status:
+    get:
+      description: "Returns comprehensive system status including version, health,\
+        \ and performance metrics"
+      operationId: getStatus
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+          description: System status retrieved successfully
+      summary: Get system status
+      tags:
+      - Status
+  /api/auth/login:
+    post:
+      description: Login with email and password
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+          description: Login successfully
+      tags:
+      - Auth
+  /api/auth/signup:
+    post:
+      description: Sign up a new user
+      operationId: signup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignupResponse"
+          description: Sign up successfully
+      tags:
+      - Auth
+  /api/auth/logout:
+    get:
+      description: Logout
+      operationId: logout
+      responses:
+        "200":
+          description: OK
+      tags:
+      - Auth
+  /api/auth/password/reset/request:
+    post:
+      description: Request a password reset email
+      operationId: requestPasswordReset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+          description: Email sent (if account exists)
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+          description: Too many requests for this user
+          headers:
+            Retry-After:
+              explode: false
+              schema:
+                description: Seconds until another request can be made
+                type: string
+              style: simple
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+          description: Unable to send email
+      tags:
+      - Auth
+  /api/auth/password/reset/confirm:
+    post:
+      description: Confirm password reset with token
+      operationId: confirmPasswordReset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetConfirmRequest"
+        required: true
+      responses:
+        "200":
+          description: Password updated
+      tags:
+      - Auth
+  /api/auth/magic-link/request:
+    post:
+      description: Request a magic link login email
+      operationId: requestMagicLink
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MagicLinkRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+          description: Email sent (if account exists)
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+          description: Too many requests for this user
+          headers:
+            Retry-After:
+              explode: false
+              schema:
+                description: Seconds until another request can be made
+                type: string
+              style: simple
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailTokenResponse"
+          description: Unable to send email
+      tags:
+      - Auth
+  /api/auth/magic-link/token:
+    get:
+      description: Consume magic link token and redirect with JWT
+      operationId: consumeMagicLink
+      parameters:
+      - explode: true
+        in: query
+        name: token
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "302":
+          description: Redirect to frontend with token fragment
+      tags:
+      - Auth
+  /api/user:
+    get:
+      description: Get current user by credential
+      operationId: getCurrentUser
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUserResponse"
+          description: User Info
+      tags:
+      - User
+  /api/vaults:
+    get:
+      description: Get all vaults for the current user
+      operationId: getVaults
+      parameters:
+      - description: "Number of vaults per page (default 20, max 1000)"
+        explode: true
+        in: query
+        name: pageSize
+        required: false
+        schema:
+          default: 20
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: "Page index, starting from 1 (default 1)"
+        explode: true
+        in: query
+        name: pageIndex
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultsResponse"
+          description: Paginated list of vaults
+      tags:
+      - Vault
+    post:
+      description: Create a new vault
+      operationId: createVault
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVaultRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vault"
+          description: Vault created successfully
+      tags:
+      - Vault
+  /api/vaults/{uniqueId}:
+    delete:
+      description: Delete a vault
+      operationId: deleteVault
+      parameters:
+      - description: Vault Unique ID
+        explode: false
+        in: path
+        name: uniqueId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Vault deleted successfully
+      tags:
+      - Vault
+    get:
+      description: Get a specific vault by Unique ID
+      operationId: getVault
+      parameters:
+      - description: Vault Unique ID
+        explode: false
+        in: path
+        name: uniqueId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vault"
+          description: Vault details
+      tags:
+      - Vault
+    put:
+      description: Update a vault
+      operationId: updateVault
+      parameters:
+      - description: Vault Unique ID
+        explode: false
+        in: path
+        name: uniqueId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVaultRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vault"
+          description: Vault updated successfully
+      tags:
+      - Vault
+  /api/audit-logs:
+    get:
+      description: Get audit logs with optional filtering and pagination
+      operationId: getAuditLogs
+      parameters:
+      - description: Filter logs from this date (ISO 8601 format)
+        explode: true
+        in: query
+        name: startDate
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: Filter logs until this date (ISO 8601 format)
+        explode: true
+        in: query
+        name: endDate
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: Filter logs by vault unique ID
+        explode: true
+        in: query
+        name: vaultUniqueId
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: "Number of logs per page (default 100, max 1000)"
+        explode: true
+        in: query
+        name: pageSize
+        required: true
+        schema:
+          default: 20
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: "Page index, starting from 0 (default 0)"
+        explode: true
+        in: query
+        name: pageIndex
+        required: true
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogsResponse"
+          description: List of audit logs
+      tags:
+      - Audit
+  /api/audit-logs/metrics:
+    get:
+      description: Get audit log metrics including total events and categorized counts
+      operationId: getAuditMetrics
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditMetricsResponse"
+          description: Audit log metrics
+      tags:
+      - Audit
+  /api/api-keys:
+    get:
+      description: Get API keys for the current user with pagination
+      operationId: getAPIKeys
+      parameters:
+      - description: "Number of API keys per page (default 20, max 1000)"
+        explode: true
+        in: query
+        name: pageSize
+        required: true
+        schema:
+          default: 20
+          maximum: 1000
+          minimum: 1
+          type: integer
+        style: form
+      - description: "Page index, starting from 1 (default 1)"
+        explode: true
+        in: query
+        name: pageIndex
+        required: true
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIKeysResponse"
+          description: List of API keys
+      tags:
+      - APIKey
+    post:
+      description: Create a new API key
+      operationId: createAPIKey
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAPIKeyRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAPIKeyResponse"
+          description: API key created successfully
+      tags:
+      - APIKey
+  /api/api-keys/{id}:
+    delete:
+      description: Delete an API key
+      operationId: deleteAPIKey
+      parameters:
+      - description: API Key ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      responses:
+        "204":
+          description: API key deleted successfully
+      tags:
+      - APIKey
+    patch:
+      description: Update an API key (enable/disable or modify properties)
+      operationId: updateAPIKey
+      parameters:
+      - description: API Key ID
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAPIKeyRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultAPIKey"
+          description: API key updated successfully
+      tags:
+      - APIKey
+  /api/cli/vaults:
+    get:
+      description: Get all vaults accessible by API key
+      operationId: getVaultsByAPIKey
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/VaultLite"
+                type: array
+          description: List of vaults accessible by API key
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Cli
+  /api/cli/vault/{uniqueId}:
+    get:
+      description: Get a specific vault by Unique ID using API key
+      operationId: getVaultByAPIKey
+      parameters:
+      - description: Vault Unique ID
+        explode: false
+        in: path
+        name: uniqueId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Enable client-side encryption (server returns encrypted value)
+        explode: false
+        in: header
+        name: X-Enable-Client-Encryption
+        required: false
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vault"
+          description: Vault details
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Cli
+  /api/cli/vault/name/{name}:
+    get:
+      description: Get a specific vault by name using API key
+      operationId: getVaultByNameAPIKey
+      parameters:
+      - description: Vault name
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Enable client-side encryption (server returns encrypted value)
+        explode: false
+        in: header
+        name: X-Enable-Client-Encryption
+        required: false
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vault"
+          description: Vault details
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Cli
+components:
+  schemas:
+    EnableClientEncryption:
+      description: Enable additional client-side encryption using key derived from
+        API key + vault unique ID
+      enum:
+      - "true"
+      - "false"
+      example: "true"
+      type: string
+    HealthCheckResponse:
+      example:
+        status: ok
+        timestamp: 2023-10-11T12:34:56Z
+      properties:
+        status:
+          example: ok
+          type: string
+        timestamp:
+          example: 2023-10-11T12:34:56Z
+          format: date-time
+          type: string
+      type: object
+    LoginRequest:
+      example:
+        password: password
+        email: email
+      properties:
+        email:
+          format: email
+          type: string
+        password:
+          type: string
+      required:
+      - email
+      - password
+      type: object
+    LoginResponse:
+      example:
+        token: token
+      properties:
+        token:
+          type: string
+      required:
+      - token
+      type: object
+    SignupRequest:
+      example:
+        password: password
+        name: name
+        email: email
+      properties:
+        email:
+          format: email
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+      required:
+      - email
+      - name
+      - password
+      type: object
+    SignupResponse:
+      example:
+        token: token
+      properties:
+        token:
+          type: string
+      required:
+      - token
+      type: object
+    PasswordResetRequest:
+      example:
+        email: email
+      properties:
+        email:
+          format: email
+          type: string
+      required:
+      - email
+      type: object
+    PasswordResetConfirmRequest:
+      example:
+        newPassword: newPassword
+        token: token
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+      required:
+      - newPassword
+      - token
+      type: object
+    MagicLinkRequest:
+      example:
+        email: email
+      properties:
+        email:
+          format: email
+          type: string
+      required:
+      - email
+      type: object
+    EmailTokenResponse:
+      example:
+        code: email_token_sent
+        success: true
+      properties:
+        success:
+          description: Indicates whether the email token request was accepted
+          type: boolean
+        code:
+          description: Machine-readable status code describing the outcome
+          enum:
+          - email_token_sent
+          - email_token_rate_limited
+          - email_token_failed
+          type: string
+      required:
+      - code
+      - success
+      type: object
+    GetUserResponse:
+      example:
+        name: name
+        avatar: avatar
+        email: email
+      properties:
+        email:
+          format: email
+          type: string
+        name:
+          type: string
+        avatar:
+          type: string
+      required:
+      - email
+      type: object
+    VaultLite:
+      example:
+        name: name
+        description: description
+        category: category
+        uniqueId: uniqueId
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        uniqueId:
+          description: Unique identifier for the vault
+          type: string
+        name:
+          description: Human-readable name
+          type: string
+        description:
+          description: Human-readable description
+          type: string
+        category:
+          description: Category/type of vault
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+      - name
+      - uniqueId
+      type: object
+    Vault:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        description: description
+        category: category
+        userId: 0
+        value: value
+        uniqueId: uniqueId
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        uniqueId:
+          description: Unique identifier for the vault
+          type: string
+        userId:
+          description: ID of the user who owns this vault
+          format: int64
+          type: integer
+        name:
+          description: Human-readable name
+          type: string
+        value:
+          description: Encrypted value
+          type: string
+        description:
+          description: Human-readable description
+          type: string
+        category:
+          description: Category/type of vault
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+      - name
+      - uniqueId
+      - value
+      type: object
+    CreateVaultRequest:
+      example:
+        name: name
+        description: description
+        category: category
+        value: value
+      properties:
+        name:
+          description: Human-readable name
+          maxLength: 255
+          minLength: 1
+          type: string
+        value:
+          description: Value to be encrypted and stored
+          minLength: 1
+          type: string
+        description:
+          description: Human-readable description
+          maxLength: 500
+          type: string
+        category:
+          description: Category/type of vault
+          maxLength: 100
+          type: string
+      required:
+      - name
+      - value
+      type: object
+    UpdateVaultRequest:
+      example:
+        name: name
+        description: description
+        category: category
+        value: value
+      properties:
+        name:
+          description: Human-readable name
+          maxLength: 255
+          minLength: 1
+          type: string
+        value:
+          description: Value to be encrypted and stored
+          minLength: 1
+          type: string
+        description:
+          description: Human-readable description
+          maxLength: 500
+          type: string
+        category:
+          description: Category/type of vault
+          maxLength: 100
+          type: string
+      type: object
+    AuditLogsResponse:
+      example:
+        auditLogs:
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          apiKey:
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            lastUsedAt: 2000-01-23T04:56:07.000+00:00
+            name: name
+            vaults:
+            - name: name
+              description: description
+              category: category
+              uniqueId: uniqueId
+              updatedAt: 2000-01-23T04:56:07.000+00:00
+            - name: name
+              description: description
+              category: category
+              uniqueId: uniqueId
+              updatedAt: 2000-01-23T04:56:07.000+00:00
+            id: 0
+            isActive: true
+            expiresAt: 2000-01-23T04:56:07.000+00:00
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          ipAddress: ipAddress
+          action: read_vault
+          userAgent: userAgent
+          source: web
+          vault:
+            name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          apiKey:
+            createdAt: 2000-01-23T04:56:07.000+00:00
+            lastUsedAt: 2000-01-23T04:56:07.000+00:00
+            name: name
+            vaults:
+            - name: name
+              description: description
+              category: category
+              uniqueId: uniqueId
+              updatedAt: 2000-01-23T04:56:07.000+00:00
+            - name: name
+              description: description
+              category: category
+              uniqueId: uniqueId
+              updatedAt: 2000-01-23T04:56:07.000+00:00
+            id: 0
+            isActive: true
+            expiresAt: 2000-01-23T04:56:07.000+00:00
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          ipAddress: ipAddress
+          action: read_vault
+          userAgent: userAgent
+          source: web
+          vault:
+            name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+        pageIndex: 5
+        pageSize: 1
+        totalCount: 6
+      properties:
+        auditLogs:
+          items:
+            $ref: "#/components/schemas/AuditLog"
+          type: array
+        totalCount:
+          description: Total number of logs matching the filter criteria
+          type: integer
+        pageSize:
+          description: Number of logs per page
+          type: integer
+        pageIndex:
+          description: Current page index (starting from 0)
+          type: integer
+      required:
+      - auditLogs
+      - pageIndex
+      - pageSize
+      - totalCount
+      type: object
+    AuditLog:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        apiKey:
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          lastUsedAt: 2000-01-23T04:56:07.000+00:00
+          name: name
+          vaults:
+          - name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          id: 0
+          isActive: true
+          expiresAt: 2000-01-23T04:56:07.000+00:00
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        ipAddress: ipAddress
+        action: read_vault
+        userAgent: userAgent
+        source: web
+        vault:
+          name: name
+          description: description
+          category: category
+          uniqueId: uniqueId
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        createdAt:
+          description: When the action occurred
+          format: date-time
+          type: string
+        vault:
+          $ref: "#/components/schemas/VaultLite"
+        apiKey:
+          $ref: "#/components/schemas/VaultAPIKey"
+        action:
+          description: Type of action performed
+          enum:
+          - read_vault
+          - update_vault
+          - delete_vault
+          - create_vault
+          - login_user
+          - register_user
+          - logout_user
+          - create_api_key
+          - update_api_key
+          - delete_api_key
+          type: string
+        source:
+          description: Source of the request (web interface or CLI)
+          enum:
+          - web
+          - cli
+          type: string
+        ipAddress:
+          description: IP address from which the action was performed
+          type: string
+        userAgent:
+          description: User agent string from the client
+          type: string
+      required:
+      - action
+      - createdAt
+      - source
+      - userId
+      type: object
+    AuditMetricsResponse:
+      example:
+        apiKeyEventsLast30Days: 5
+        vaultEventsLast30Days: 1
+        eventsCountLast24Hours: 6
+        totalEventsLast30Days: 0
+      properties:
+        totalEventsLast30Days:
+          description: Total number of audit events in the last 30 days
+          type: integer
+        eventsCountLast24Hours:
+          description: Number of audit events in the last 24 hours
+          type: integer
+        vaultEventsLast30Days:
+          description: Number of vault-related events in the last 30 days
+          type: integer
+        apiKeyEventsLast30Days:
+          description: Number of API key-related events in the last 30 days
+          type: integer
+      required:
+      - apiKeyEventsLast30Days
+      - eventsCountLast24Hours
+      - totalEventsLast30Days
+      - vaultEventsLast30Days
+      type: object
+    APIKeysResponse:
+      example:
+        pageIndex: 1
+        apiKeys:
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          lastUsedAt: 2000-01-23T04:56:07.000+00:00
+          name: name
+          vaults:
+          - name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          id: 0
+          isActive: true
+          expiresAt: 2000-01-23T04:56:07.000+00:00
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        - createdAt: 2000-01-23T04:56:07.000+00:00
+          lastUsedAt: 2000-01-23T04:56:07.000+00:00
+          name: name
+          vaults:
+          - name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          id: 0
+          isActive: true
+          expiresAt: 2000-01-23T04:56:07.000+00:00
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        pageSize: 6
+        totalCount: 0
+      properties:
+        apiKeys:
+          items:
+            $ref: "#/components/schemas/VaultAPIKey"
+          type: array
+        totalCount:
+          description: Total number of API keys
+          type: integer
+        pageSize:
+          description: Number of API keys per page
+          type: integer
+        pageIndex:
+          description: Current page index (starting from 1)
+          type: integer
+      required:
+      - apiKeys
+      - pageIndex
+      - pageSize
+      - totalCount
+      type: object
+    VaultAPIKey:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        lastUsedAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        vaults:
+        - name: name
+          description: description
+          category: category
+          uniqueId: uniqueId
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        - name: name
+          description: description
+          category: category
+          uniqueId: uniqueId
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        id: 0
+        isActive: true
+        expiresAt: 2000-01-23T04:56:07.000+00:00
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          description: Unique API key ID
+          format: int64
+          type: integer
+        name:
+          description: Human-readable name for the API key
+          type: string
+        vaults:
+          description: Array of vaults this key can access (null/empty = all user's
+            vaults)
+          items:
+            $ref: "#/components/schemas/VaultLite"
+          type: array
+        expiresAt:
+          description: Optional expiration date
+          format: date-time
+          type: string
+        lastUsedAt:
+          description: When the key was last used
+          format: date-time
+          type: string
+        isActive:
+          description: Whether the key is currently active
+          type: boolean
+        createdAt:
+          description: When the key was created
+          format: date-time
+          type: string
+        updatedAt:
+          description: When the key was last updated
+          format: date-time
+          type: string
+      required:
+      - createdAt
+      - id
+      - isActive
+      - name
+      type: object
+    CreateAPIKeyRequest:
+      properties:
+        name:
+          description: Human-readable name for the API key
+          maxLength: 255
+          minLength: 1
+          type: string
+        vaultUniqueIds:
+          description: Array of vault unique IDs this key can access (empty = all
+            user's vaults)
+          items:
+            type: string
+          type: array
+        expiresAt:
+          description: Optional expiration date
+          format: date-time
+          type: string
+      required:
+      - name
+      type: object
+    CreateAPIKeyResponse:
+      example:
+        apiKey:
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          lastUsedAt: 2000-01-23T04:56:07.000+00:00
+          name: name
+          vaults:
+          - name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          - name: name
+            description: description
+            category: category
+            uniqueId: uniqueId
+            updatedAt: 2000-01-23T04:56:07.000+00:00
+          id: 0
+          isActive: true
+          expiresAt: 2000-01-23T04:56:07.000+00:00
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        key: key
+      properties:
+        apiKey:
+          $ref: "#/components/schemas/VaultAPIKey"
+        key:
+          description: The generated API key (only shown once)
+          type: string
+      required:
+      - apiKey
+      - key
+      type: object
+    UpdateAPIKeyRequest:
+      properties:
+        name:
+          description: Human-readable name for the API key
+          maxLength: 255
+          minLength: 1
+          type: string
+        vaultUniqueIds:
+          description: Array of vault unique IDs this key can access (empty = all
+            user's vaults)
+          items:
+            type: string
+          type: array
+        expiresAt:
+          description: Optional expiration date
+          format: date-time
+          type: string
+      type: object
+    StatusResponse:
+      example:
+        databaseStatus: healthy
+        systemStatus: healthy
+        commit: abc1234
+        version: v1.0.0
+      properties:
+        version:
+          description: Application version
+          example: v1.0.0
+          type: string
+        commit:
+          description: Git commit hash
+          example: abc1234
+          type: string
+        systemStatus:
+          description: System operational status
+          enum:
+          - healthy
+          - degraded
+          - unavailable
+          example: healthy
+          type: string
+        databaseStatus:
+          description: Database connection status
+          enum:
+          - healthy
+          - degraded
+          - unavailable
+          example: healthy
+          type: string
+      required:
+      - commit
+      - databaseStatus
+      - systemStatus
+      - version
+      type: object
+    ConfigResponse:
+      example:
+        emailEnabled: false
+        oidcEnabled: false
+      properties:
+        oidcEnabled:
+          description: Whether OIDC authentication is enabled
+          example: false
+          type: boolean
+        emailEnabled:
+          description: Whether transactional email is enabled
+          example: false
+          type: boolean
+      required:
+      - emailEnabled
+      - oidcEnabled
+      type: object
+    VaultsResponse:
+      example:
+        pageIndex: 1
+        vaults:
+        - name: name
+          description: description
+          category: category
+          uniqueId: uniqueId
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        - name: name
+          description: description
+          category: category
+          uniqueId: uniqueId
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        pageSize: 6
+        totalCount: 0
+      properties:
+        vaults:
+          description: Page of vault records for the authenticated user
+          items:
+            $ref: "#/components/schemas/VaultLite"
+          type: array
+        totalCount:
+          description: Total number of vaults available for pagination
+          type: integer
+        pageSize:
+          description: Number of vaults returned per page
+          type: integer
+        pageIndex:
+          description: Current page index (starting from 1)
+          type: integer
+      required:
+      - pageIndex
+      - pageSize
+      - totalCount
+      - vaults
+      type: object
+  securitySchemes:
+    apiKeyAuth:
+      scheme: bearer
+      type: http

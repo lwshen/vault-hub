@@ -2,24 +2,26 @@ package auth
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"log/slog"
+	"net/http"
 	"os"
-	"time"
+	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/internal/config"
 	"golang.org/x/oauth2"
 )
 
 var (
-	provider     *oidc.Provider
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	sessionStore *session.Store
+	provider    *oidc.Provider
+	verifier    *oidc.IDTokenVerifier
+	oauthConfig *oauth2.Config
 )
 
 func init() {
@@ -35,11 +37,6 @@ func init() {
 }
 
 func SetupOIDC() error {
-	sessionStore = session.New(session.Config{
-		KeyLookup:  "cookie:auth_session",
-		Expiration: time.Hour * 1,
-	})
-
 	ctx := context.Background()
 	oidcProvider, err := oidc.NewProvider(ctx, config.OidcIssuer)
 	if err != nil {
@@ -56,16 +53,32 @@ func SetupOIDC() error {
 	return nil
 }
 
-func AuthCodeURL(ctx *fiber.Ctx, baseUrl string) (string, error) {
+// AuthCodeURLEcho generates OIDC authorization URL and stores state in signed cookie (Echo version)
+func AuthCodeURLEcho(ctx echo.Context, baseURL string) (string, error) {
 	state := generateState()
-	err := storeInSession(ctx, "oauth", state)
+	err := storeStateInCookie(ctx, state)
 	if err != nil {
 		return "", err
 	}
-	oauthConfig.RedirectURL = baseUrl + "/api/auth/callback/oidc"
+	oauthConfig.RedirectURL = baseURL + "/api/auth/callback/oidc"
 	return oauthConfig.AuthCodeURL(state), nil
 }
 
+// VerifyStateEcho verifies OAuth state from signed cookie (Echo version)
+func VerifyStateEcho(ctx echo.Context, state string) error {
+	storedState, err := getStateFromCookie(ctx)
+	if err != nil {
+		return err
+	}
+	if storedState != state {
+		return errors.New("state mismatch")
+	}
+	// Delete cookie after verification (one-time use)
+	deleteStateCookie(ctx)
+	return nil
+}
+
+// Verify exchanges authorization code for OAuth token
 func Verify(ctx context.Context, code string) (*oauth2.Token, error) {
 	token, err := oauthConfig.Exchange(ctx, code)
 	if err != nil {
@@ -80,6 +93,7 @@ func Verify(ctx context.Context, code string) (*oauth2.Token, error) {
 	return token, nil
 }
 
+// verifyToken validates the ID token from OAuth response
 func verifyToken(ctx context.Context, token *oauth2.Token) (*oidc.IDToken, error) {
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
@@ -88,43 +102,79 @@ func verifyToken(ctx context.Context, token *oauth2.Token) (*oidc.IDToken, error
 	return verifier.Verify(ctx, rawIDToken)
 }
 
-func VerifyState(ctx *fiber.Ctx, state string) error {
-	storedState, err := getFromSession(ctx, "oauth")
-	if err != nil {
-		return err
-	}
-	if storedState != state {
-		return errors.New("cannot verify state")
-	}
-	return nil
-}
-
+// UserInfo fetches user information from OIDC provider
 func UserInfo(ctx context.Context, token *oauth2.Token) (*oidc.UserInfo, error) {
 	tokenSource := oauthConfig.TokenSource(ctx, token)
 	return provider.UserInfo(ctx, tokenSource)
 }
 
+// generateState creates a random state string for OAuth CSRF protection
 func generateState() string {
 	return uuid.New().String()
 }
 
-func storeInSession(ctx *fiber.Ctx, key string, value string) error {
-	session, err := sessionStore.Get(ctx)
-	if err != nil {
-		return err
-	}
-	session.Set(key, value)
-	return session.Save()
+// storeStateInCookie stores OAuth state in a signed cookie
+func storeStateInCookie(ctx echo.Context, state string) error {
+	signature := signState(state)
+	cookieValue := state + "." + signature
+
+	cookie := new(http.Cookie)
+	cookie.Name = "oauth_state"
+	cookie.Value = cookieValue
+	cookie.HttpOnly = true
+	cookie.Secure = ctx.Request().TLS != nil || ctx.Request().Header.Get("X-Forwarded-Proto") == "https"
+	cookie.SameSite = http.SameSiteLaxMode
+	cookie.MaxAge = 600 // 10 minutes
+	cookie.Path = "/"
+
+	ctx.SetCookie(cookie)
+	return nil
 }
 
-func getFromSession(ctx *fiber.Ctx, key string) (string, error) {
-	session, err := sessionStore.Get(ctx)
+// getStateFromCookie retrieves and verifies OAuth state from signed cookie
+func getStateFromCookie(ctx echo.Context) (string, error) {
+	cookie, err := ctx.Cookie("oauth_state")
 	if err != nil {
-		return "", err
+		return "", errors.New("oauth state cookie not found")
 	}
-	value, ok := session.Get(key).(string)
-	if !ok {
-		return "", errors.New("session value for key " + key + " is not a string")
+
+	// Parse state and signature
+	parts := strings.Split(cookie.Value, ".")
+	if len(parts) != 2 {
+		return "", errors.New("invalid oauth state cookie format")
 	}
-	return value, nil
+
+	state := parts[0]
+	signature := parts[1]
+
+	// Verify signature
+	if !verifyStateSignature(state, signature) {
+		return "", errors.New("oauth state signature verification failed")
+	}
+
+	return state, nil
+}
+
+// deleteStateCookie removes the OAuth state cookie after use
+func deleteStateCookie(ctx echo.Context) {
+	cookie := new(http.Cookie)
+	cookie.Name = "oauth_state"
+	cookie.Value = ""
+	cookie.HttpOnly = true
+	cookie.MaxAge = -1 // Delete cookie
+	cookie.Path = "/"
+	ctx.SetCookie(cookie)
+}
+
+// signState creates HMAC-SHA256 signature for OAuth state
+func signState(state string) string {
+	h := hmac.New(sha256.New, []byte(config.JwtSecret))
+	h.Write([]byte(state))
+	return base64.URLEncoding.EncodeToString(h.Sum(nil))
+}
+
+// verifyStateSignature verifies HMAC-SHA256 signature of OAuth state
+func verifyStateSignature(state, signature string) bool {
+	expectedSignature := signState(state)
+	return hmac.Equal([]byte(signature), []byte(expectedSignature))
 }
