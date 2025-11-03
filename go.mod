@@ -13,7 +13,7 @@ require (
 	github.com/lwshen/vault-hub-go-client v1.3.19
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/orandin/slog-gorm v1.4.0
-	github.com/resend/resend-go/v2 v2.27.0
+	github.com/resend/resend-go/v2 v2.28.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/slog-fiber v1.18.1
 	github.com/spf13/cobra v1.10.1
