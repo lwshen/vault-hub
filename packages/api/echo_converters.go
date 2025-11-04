@@ -16,8 +16,8 @@ func convertToGeneratedVault(vault *model.Vault) generated_models.Vault {
 		Value:       vault.Value,
 		Description: vault.Description,
 		Category:    vault.Category,
-		CreatedAt:   vault.CreatedAt,
-		UpdatedAt:   vault.UpdatedAt,
+		CreatedAt:   &vault.CreatedAt,
+		UpdatedAt:   &vault.UpdatedAt,
 	}
 }
 
@@ -28,7 +28,7 @@ func convertToGeneratedVaultLite(vault *model.Vault) generated_models.VaultLite 
 		Name:        vault.Name,
 		Description: vault.Description,
 		Category:    vault.Category,
-		UpdatedAt:   vault.UpdatedAt,
+		UpdatedAt:   &vault.UpdatedAt,
 	}
 }
 
@@ -57,14 +57,14 @@ func convertToGeneratedAPIKeyWithVaults(apiKey *model.APIKey) (*generated_models
 	}
 
 	if apiKey.ExpiresAt != nil {
-		result.ExpiresAt = *apiKey.ExpiresAt
+		result.ExpiresAt = apiKey.ExpiresAt
 	}
 
 	if apiKey.LastUsedAt != nil {
-		result.LastUsedAt = *apiKey.LastUsedAt
+		result.LastUsedAt = apiKey.LastUsedAt
 	}
 
-	result.UpdatedAt = apiKey.UpdatedAt
+	result.UpdatedAt = &apiKey.UpdatedAt
 
 	return &result, nil
 }
@@ -97,13 +97,13 @@ func convertToGeneratedAuditLog(auditLog *model.AuditLog) generated_models.Audit
 			Vaults:    []generated_models.VaultLite{}, // Empty for audit log display
 			IsActive:  !auditLog.APIKey.DeletedAt.Valid,
 			CreatedAt: auditLog.APIKey.CreatedAt,
-			UpdatedAt: auditLog.APIKey.UpdatedAt,
+			UpdatedAt: &auditLog.APIKey.UpdatedAt,
 		}
 		if auditLog.APIKey.ExpiresAt != nil {
-			apiKeyLite.ExpiresAt = *auditLog.APIKey.ExpiresAt
+			apiKeyLite.ExpiresAt = auditLog.APIKey.ExpiresAt
 		}
 		if auditLog.APIKey.LastUsedAt != nil {
-			apiKeyLite.LastUsedAt = *auditLog.APIKey.LastUsedAt
+			apiKeyLite.LastUsedAt = auditLog.APIKey.LastUsedAt
 		}
 		result.ApiKey = apiKeyLite
 	}

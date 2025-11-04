@@ -751,6 +751,7 @@ components:
           type: string
         updatedAt:
           format: date-time
+          nullable: true
           type: string
       required:
       - name
@@ -788,9 +789,11 @@ components:
           type: string
         createdAt:
           format: date-time
+          nullable: true
           type: string
         updatedAt:
           format: date-time
+          nullable: true
           type: string
       required:
       - name
@@ -1133,10 +1136,12 @@ components:
         expiresAt:
           description: Optional expiration date
           format: date-time
+          nullable: true
           type: string
         lastUsedAt:
           description: When the key was last used
           format: date-time
+          nullable: true
           type: string
         isActive:
           description: Whether the key is currently active
@@ -1148,6 +1153,7 @@ components:
         updatedAt:
           description: When the key was last updated
           format: date-time
+          nullable: true
           type: string
       required:
       - createdAt
@@ -1171,6 +1177,7 @@ components:
         expiresAt:
           description: Optional expiration date
           format: date-time
+          nullable: true
           type: string
       required:
       - name
@@ -1223,6 +1230,7 @@ components:
         expiresAt:
           description: Optional expiration date
           format: date-time
+          nullable: true
           type: string
       type: object
     StatusResponse:

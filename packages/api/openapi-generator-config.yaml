@@ -4,3 +4,4 @@ outputDir: ./generated
 additionalProperties:
   packageName: generated
   generateInterfaces: true
+  withGoModelsOnlyGenerate: true

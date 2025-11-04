@@ -24,7 +24,7 @@ type Vault struct {
 	// Category/type of vault
 	Category string `json:"category,omitempty"`
 
-	CreatedAt time.Time `json:"createdAt,omitempty"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 
-	UpdatedAt time.Time `json:"updatedAt,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }

@@ -42,10 +42,12 @@ VaultAPIKey:
     expiresAt:
       type: string
       format: date-time
+      nullable: true
       description: Optional expiration date
     lastUsedAt:
       type: string
       format: date-time
+      nullable: true
       description: When the key was last used
     isActive:
       type: boolean
@@ -57,6 +59,7 @@ VaultAPIKey:
     updatedAt:
       type: string
       format: date-time
+      nullable: true
       description: When the key was last updated
 CreateAPIKeyRequest:
   type: object
@@ -76,6 +79,7 @@ CreateAPIKeyRequest:
     expiresAt:
       type: string
       format: date-time
+      nullable: true
       description: Optional expiration date
 CreateAPIKeyResponse:
   type: object
@@ -104,4 +108,5 @@ UpdateAPIKeyRequest:
     expiresAt:
       type: string
       format: date-time
+      nullable: true
       description: Optional expiration date

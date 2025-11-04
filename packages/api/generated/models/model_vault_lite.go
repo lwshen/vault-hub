@@ -18,5 +18,5 @@ type VaultLite struct {
 	// Category/type of vault
 	Category string `json:"category,omitempty"`
 
-	UpdatedAt time.Time `json:"updatedAt,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }

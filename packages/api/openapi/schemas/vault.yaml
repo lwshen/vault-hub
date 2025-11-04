@@ -41,6 +41,7 @@ VaultLite:
     updatedAt:
       type: string
       format: date-time
+      nullable: true
 Vault:
   type: object
   required:
@@ -70,9 +71,11 @@ Vault:
     createdAt:
       type: string
       format: date-time
+      nullable: true
     updatedAt:
       type: string
       format: date-time
+      nullable: true
 CreateVaultRequest:
   type: object
   required:

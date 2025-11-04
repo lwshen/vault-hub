@@ -176,8 +176,8 @@ func buildCreateAPIKeyParams(req generated_models.CreateApiKeyRequest, userID ui
 	}
 
 	// Handle optional ExpiresAt field
-	if !req.ExpiresAt.IsZero() {
-		params.ExpiresAt = &req.ExpiresAt
+	if req.ExpiresAt != nil {
+		params.ExpiresAt = req.ExpiresAt
 	}
 
 	return params
@@ -270,8 +270,8 @@ func buildUpdateAPIKeyParams(req generated_models.UpdateApiKeyRequest, vaultIDs 
 	}
 
 	// Handle optional ExpiresAt field
-	if !req.ExpiresAt.IsZero() {
-		params.ExpiresAt = &req.ExpiresAt
+	if req.ExpiresAt != nil {
+		params.ExpiresAt = req.ExpiresAt
 	}
 
 	return params

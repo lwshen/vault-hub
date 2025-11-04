@@ -677,6 +677,7 @@ components:
         updatedAt:
           type: string
           format: date-time
+          nullable: true
     Vault:
       type: object
       required:
@@ -706,9 +707,11 @@ components:
         createdAt:
           type: string
           format: date-time
+          nullable: true
         updatedAt:
           type: string
           format: date-time
+          nullable: true
     CreateVaultRequest:
       type: object
       required:
@@ -879,10 +882,12 @@ components:
         expiresAt:
           type: string
           format: date-time
+          nullable: true
           description: Optional expiration date
         lastUsedAt:
           type: string
           format: date-time
+          nullable: true
           description: When the key was last used
         isActive:
           type: boolean
@@ -894,6 +899,7 @@ components:
         updatedAt:
           type: string
           format: date-time
+          nullable: true
           description: When the key was last updated
     CreateAPIKeyRequest:
       type: object
@@ -913,6 +919,7 @@ components:
         expiresAt:
           type: string
           format: date-time
+          nullable: true
           description: Optional expiration date
     CreateAPIKeyResponse:
       type: object
@@ -941,6 +948,7 @@ components:
         expiresAt:
           type: string
           format: date-time
+          nullable: true
           description: Optional expiration date
     StatusResponse:
       type: object

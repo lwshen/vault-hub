@@ -13,5 +13,5 @@ type CreateApiKeyRequest struct {
 	VaultUniqueIds []string `json:"vaultUniqueIds,omitempty"`
 
 	// Optional expiration date
-	ExpiresAt time.Time `json:"expiresAt,omitempty"`
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 }

@@ -16,10 +16,10 @@ type VaultApiKey struct {
 	Vaults []VaultLite `json:"vaults,omitempty"`
 
 	// Optional expiration date
-	ExpiresAt time.Time `json:"expiresAt,omitempty"`
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 
 	// When the key was last used
-	LastUsedAt time.Time `json:"lastUsedAt,omitempty"`
+	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
 
 	// Whether the key is currently active
 	IsActive bool `json:"isActive"`
@@ -28,5 +28,5 @@ type VaultApiKey struct {
 	CreatedAt time.Time `json:"createdAt"`
 
 	// When the key was last updated
-	UpdatedAt time.Time `json:"updatedAt,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
