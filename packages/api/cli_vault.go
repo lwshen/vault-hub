@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
+	"github.com/lwshen/vault-hub/internal/constants"
 	"github.com/lwshen/vault-hub/model"
 	"golang.org/x/crypto/pbkdf2"
 	"gorm.io/gorm"
@@ -39,8 +40,15 @@ func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 }
 
 // GetVaultByAPIKey - Get a single vault by unique ID for a given API key
-func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string, params GetVaultByAPIKeyParams) error {
-	return s.getVaultByAPIKey(c, uniqueId, params.XEnableClientEncryption, func(apiKey *model.APIKey) (*model.Vault, error) {
+func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
+	// Read X-Enable-Client-Encryption header directly
+	headerValue := c.Get(constants.HeaderClientEncryption)
+	var enableClientEncryptionParam *string
+	if headerValue != "" {
+		enableClientEncryptionParam = &headerValue
+	}
+
+	return s.getVaultByAPIKey(c, uniqueId, enableClientEncryptionParam, func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByUniqueID(uniqueId, apiKey.UserID)
 		return &vault, err
@@ -48,8 +56,15 @@ func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string, params GetVaultB
 }
 
 // GetVaultByNameAPIKey - Get a single vault by name for a given API key
-func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string, params GetVaultByNameAPIKeyParams) error {
-	return s.getVaultByAPIKey(c, name, params.XEnableClientEncryption, func(apiKey *model.APIKey) (*model.Vault, error) {
+func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
+	// Read X-Enable-Client-Encryption header directly
+	headerValue := c.Get(constants.HeaderClientEncryption)
+	var enableClientEncryptionParam *string
+	if headerValue != "" {
+		enableClientEncryptionParam = &headerValue
+	}
+
+	return s.getVaultByAPIKey(c, name, enableClientEncryptionParam, func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByName(name, apiKey.UserID)
 		return &vault, err
@@ -90,7 +105,11 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientE
 
 		// Get the original API key from the Authorization header to use for key derivation
 		authHeader := c.Get("Authorization")
-		originalAPIKey := authHeader[7:] // Remove "Bearer " prefix
+		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+			slog.Error("Invalid Authorization header format for client-side encryption", "vaultID", vault.ID)
+			return handler.SendError(c, fiber.StatusBadRequest, "invalid authorization header format")
+		}
+		originalAPIKey := authHeader[7:]
 
 		originalValueLen := len(vault.Value)
 		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, encryptSalt)

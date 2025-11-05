@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/lwshen/vault-hub/internal/cli/encryption"
+	"github.com/lwshen/vault-hub/internal/constants"
 )
 
 // NewGetCommand creates the get command
@@ -142,10 +143,10 @@ func fetchVault(params getCommandParams, ctx *CommandContext) (*openapi.Vault, e
 	// Enable client-side encryption by default (unless disabled)
 	enableClientEncryption := !params.noClientEncryption
 	if enableClientEncryption {
-		ctx.DebugLog("Client-side encryption enabled, setting X-Enable-Client-Encryption header")
+		ctx.DebugLog("Client-side encryption enabled, setting %s header", constants.HeaderClientEncryption)
 		// Set the header via client configuration
-		ctx.GetClient().GetConfig().DefaultHeader["X-Enable-Client-Encryption"] = "true"
-		defer delete(ctx.GetClient().GetConfig().DefaultHeader, "X-Enable-Client-Encryption")
+		ctx.GetClient().GetConfig().DefaultHeader[constants.HeaderClientEncryption] = "true"
+		defer delete(ctx.GetClient().GetConfig().DefaultHeader, constants.HeaderClientEncryption)
 	} else {
 		ctx.DebugLog("Client-side encryption disabled")
 	}

@@ -32,12 +32,6 @@ apiKeyVaultById:
         description: Vault Unique ID
         schema:
           type: string
-      - name: X-Enable-Client-Encryption
-        in: header
-        required: false
-        description: Enable client-side encryption (server returns encrypted value)
-        schema:
-          type: string
     responses:
       "200":
         description: Vault details
@@ -58,12 +52,6 @@ apiKeyVaultByName:
         in: path
         required: true
         description: Vault name
-        schema:
-          type: string
-      - name: X-Enable-Client-Encryption
-        in: header
-        required: false
-        description: Enable client-side encryption (server returns encrypted value)
         schema:
           type: string
     responses:
