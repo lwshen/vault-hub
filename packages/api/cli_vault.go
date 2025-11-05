@@ -104,7 +104,11 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientE
 
 		// Get the original API key from the Authorization header to use for key derivation
 		authHeader := c.Get("Authorization")
-		originalAPIKey := authHeader[7:] // Remove "Bearer " prefix
+		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+			slog.Error("Invalid Authorization header format for client-side encryption", "vaultID", vault.ID)
+			return handler.SendError(c, fiber.StatusBadRequest, "invalid authorization header format")
+		}
+		originalAPIKey := authHeader[7:]
 
 		originalValueLen := len(vault.Value)
 		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, encryptSalt)
