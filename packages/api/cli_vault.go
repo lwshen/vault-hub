@@ -39,8 +39,15 @@ func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 }
 
 // GetVaultByAPIKey - Get a single vault by unique ID for a given API key
-func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string, params GetVaultByAPIKeyParams) error {
-	return s.getVaultByAPIKey(c, uniqueId, params.XEnableClientEncryption, func(apiKey *model.APIKey) (*model.Vault, error) {
+func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
+	// Read X-Enable-Client-Encryption header directly
+	headerValue := c.Get("X-Enable-Client-Encryption")
+	var enableClientEncryptionParam *string
+	if headerValue != "" {
+		enableClientEncryptionParam = &headerValue
+	}
+
+	return s.getVaultByAPIKey(c, uniqueId, enableClientEncryptionParam, func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByUniqueID(uniqueId, apiKey.UserID)
 		return &vault, err
@@ -48,8 +55,15 @@ func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string, params GetVaultB
 }
 
 // GetVaultByNameAPIKey - Get a single vault by name for a given API key
-func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string, params GetVaultByNameAPIKeyParams) error {
-	return s.getVaultByAPIKey(c, name, params.XEnableClientEncryption, func(apiKey *model.APIKey) (*model.Vault, error) {
+func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
+	// Read X-Enable-Client-Encryption header directly
+	headerValue := c.Get("X-Enable-Client-Encryption")
+	var enableClientEncryptionParam *string
+	if headerValue != "" {
+		enableClientEncryptionParam = &headerValue
+	}
+
+	return s.getVaultByAPIKey(c, name, enableClientEncryptionParam, func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByName(name, apiKey.UserID)
 		return &vault, err
