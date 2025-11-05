@@ -13,7 +13,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/model"
-	"github.com/lwshen/vault-hub/packages/api/generated_models"
+	"github.com/lwshen/vault-hub/packages/api/generated/models"
 	"golang.org/x/crypto/pbkdf2"
 	"gorm.io/gorm"
 )
@@ -32,7 +32,7 @@ func (c *Container) GetVaultsByAPIKey(ctx echo.Context) error {
 	}
 
 	// Convert to API VaultLite format (no decryption needed)
-	apiVaults := make([]generated_models.VaultLite, 0, len(vaults))
+	apiVaults := make([]models.VaultLite, 0, len(vaults))
 	for i := range vaults {
 		apiVaults = append(apiVaults, convertToGeneratedVaultLite(&vaults[i]))
 	}

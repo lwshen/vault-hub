@@ -2,14 +2,14 @@ package api
 
 import (
 	"github.com/lwshen/vault-hub/model"
-	"github.com/lwshen/vault-hub/packages/api/generated_models"
+	"github.com/lwshen/vault-hub/packages/api/generated/models"
 )
 
 // convertToGeneratedVault converts a model.Vault to a generated.Vault
-func convertToGeneratedVault(vault *model.Vault) generated_models.Vault {
+func convertToGeneratedVault(vault *model.Vault) models.Vault {
 	// #nosec G115
 	userID := int64(vault.UserID)
-	return generated_models.Vault{
+	return models.Vault{
 		UniqueId:    vault.UniqueID,
 		UserId:      userID,
 		Name:        vault.Name,
@@ -22,8 +22,8 @@ func convertToGeneratedVault(vault *model.Vault) generated_models.Vault {
 }
 
 // convertToGeneratedVaultLite converts a model.Vault to a generated.VaultLite
-func convertToGeneratedVaultLite(vault *model.Vault) generated_models.VaultLite {
-	return generated_models.VaultLite{
+func convertToGeneratedVaultLite(vault *model.Vault) models.VaultLite {
+	return models.VaultLite{
 		UniqueId:    vault.UniqueID,
 		Name:        vault.Name,
 		Description: vault.Description,
@@ -33,7 +33,7 @@ func convertToGeneratedVaultLite(vault *model.Vault) generated_models.VaultLite 
 }
 
 // convertToGeneratedAPIKeyWithVaults converts a model.APIKey to a generated.VaultApiKey with vaults
-func convertToGeneratedAPIKeyWithVaults(apiKey *model.APIKey) (*generated_models.VaultApiKey, error) {
+func convertToGeneratedAPIKeyWithVaults(apiKey *model.APIKey) (*models.VaultApiKey, error) {
 	// Get accessible vaults for this API key
 	vaults, err := apiKey.GetAccessibleVaults()
 	if err != nil {
@@ -41,14 +41,14 @@ func convertToGeneratedAPIKeyWithVaults(apiKey *model.APIKey) (*generated_models
 	}
 
 	// Convert vaults to VaultLite
-	apiVaults := make([]generated_models.VaultLite, 0)
+	apiVaults := make([]models.VaultLite, 0)
 	for _, vault := range vaults {
 		apiVaults = append(apiVaults, convertToGeneratedVaultLite(&vault))
 	}
 
 	// #nosec G115
 	id := int64(apiKey.ID)
-	result := generated_models.VaultApiKey{
+	result := models.VaultApiKey{
 		Id:        id,
 		Name:      apiKey.Name,
 		Vaults:    apiVaults,
@@ -70,8 +70,8 @@ func convertToGeneratedAPIKeyWithVaults(apiKey *model.APIKey) (*generated_models
 }
 
 // convertToGeneratedAuditLog converts a model.AuditLog to a generated.AuditLog
-func convertToGeneratedAuditLog(auditLog *model.AuditLog) generated_models.AuditLog {
-	result := generated_models.AuditLog{
+func convertToGeneratedAuditLog(auditLog *model.AuditLog) models.AuditLog {
+	result := models.AuditLog{
 		CreatedAt: auditLog.CreatedAt,
 		Action:    string(auditLog.Action),
 		Source:    string(auditLog.Source),
@@ -91,10 +91,10 @@ func convertToGeneratedAuditLog(auditLog *model.AuditLog) generated_models.Audit
 		// Just basic API key info
 		// #nosec G115
 		id := int64(auditLog.APIKey.ID)
-		apiKeyLite := generated_models.VaultApiKey{
+		apiKeyLite := models.VaultApiKey{
 			Id:        id,
 			Name:      auditLog.APIKey.Name,
-			Vaults:    []generated_models.VaultLite{}, // Empty for audit log display
+			Vaults:    []models.VaultLite{}, // Empty for audit log display
 			IsActive:  !auditLog.APIKey.DeletedAt.Valid,
 			CreatedAt: auditLog.APIKey.CreatedAt,
 			UpdatedAt: &auditLog.APIKey.UpdatedAt,

@@ -8,7 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/model"
-	"github.com/lwshen/vault-hub/packages/api/generated_models"
+	"github.com/lwshen/vault-hub/packages/api/generated/models"
 	"gorm.io/gorm"
 )
 
@@ -66,7 +66,7 @@ func (c *Container) GetAPIKeys(ctx echo.Context) error {
 	}
 
 	// Convert to API format - initialize with empty slice to ensure [] in JSON
-	apiKeyList := make([]generated_models.VaultApiKey, 0)
+	apiKeyList := make([]models.VaultApiKey, 0)
 	for _, apiKey := range apiKeys {
 		apiAPIKey, err := convertToGeneratedAPIKeyWithVaults(&apiKey)
 		if err != nil {
@@ -76,7 +76,7 @@ func (c *Container) GetAPIKeys(ctx echo.Context) error {
 	}
 
 	// #nosec G115
-	response := generated_models.ApiKeysResponse{
+	response := models.ApiKeysResponse{
 		ApiKeys:    apiKeyList,
 		TotalCount: int32(totalCount),
 		PageSize:   int32(pageSize),
@@ -95,7 +95,7 @@ func (c *Container) CreateAPIKey(ctx echo.Context) error {
 	}
 
 	// Parse and validate request
-	var req generated_models.CreateApiKeyRequest
+	var req models.CreateApiKeyRequest
 	if err := ctx.Bind(&req); err != nil {
 		return SendError(ctx, http.StatusBadRequest, "invalid request body")
 	}
@@ -129,7 +129,7 @@ func (c *Container) CreateAPIKey(ctx echo.Context) error {
 	// Log the creation for audit purposes
 	auditAPIKeyOperation(ctx, model.ActionCreateAPIKey, user.ID, apiKey.ID, apiKey.Name)
 
-	response := generated_models.CreateApiKeyResponse{
+	response := models.CreateApiKeyResponse{
 		ApiKey: *apiAPIKey,
 		Key:    plainKey,
 	}
@@ -168,7 +168,7 @@ func findVaultByUniqueID(uniqueID string, userID uint) (*model.Vault, error) {
 }
 
 // buildCreateAPIKeyParams constructs API key creation parameters
-func buildCreateAPIKeyParams(req generated_models.CreateApiKeyRequest, userID uint, vaultIDs []uint) model.CreateAPIKeyParams {
+func buildCreateAPIKeyParams(req models.CreateApiKeyRequest, userID uint, vaultIDs []uint) model.CreateAPIKeyParams {
 	params := model.CreateAPIKeyParams{
 		UserID:   userID,
 		Name:     req.Name,
@@ -205,7 +205,7 @@ func (c *Container) UpdateAPIKey(ctx echo.Context) error {
 	}
 
 	// Parse update request
-	var req generated_models.UpdateApiKeyRequest
+	var req models.UpdateApiKeyRequest
 	if err := ctx.Bind(&req); err != nil {
 		return SendError(ctx, http.StatusBadRequest, "invalid request body")
 	}
@@ -259,7 +259,7 @@ func findAPIKeyByID(id int64, userID uint) (*model.APIKey, error) {
 }
 
 // buildUpdateAPIKeyParams constructs API key update parameters
-func buildUpdateAPIKeyParams(req generated_models.UpdateApiKeyRequest, vaultIDs *[]uint) model.UpdateAPIKeyParams {
+func buildUpdateAPIKeyParams(req models.UpdateApiKeyRequest, vaultIDs *[]uint) model.UpdateAPIKeyParams {
 	params := model.UpdateAPIKeyParams{
 		VaultIDs: vaultIDs,
 	}

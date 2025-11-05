@@ -8,7 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/model"
-	"github.com/lwshen/vault-hub/packages/api/generated_models"
+	"github.com/lwshen/vault-hub/packages/api/generated/models"
 )
 
 // auditLogFilters holds parsed filter parameters
@@ -117,12 +117,12 @@ func (c *Container) GetAuditLogs(ctx echo.Context) error {
 	}
 
 	// Convert to API audit logs
-	apiLogs := make([]generated_models.AuditLog, 0, len(logs))
+	apiLogs := make([]models.AuditLog, 0, len(logs))
 	for i := range logs {
 		apiLogs = append(apiLogs, convertToGeneratedAuditLog(&logs[i]))
 	}
 
-	response := generated_models.AuditLogsResponse{
+	response := models.AuditLogsResponse{
 		AuditLogs:  apiLogs,
 		TotalCount: safeInt64ToInt32(totalCount),
 		PageSize:   int32(filters.pageSize),  // #nosec G115 -- validated max 1000
@@ -146,7 +146,7 @@ func (c *Container) GetAuditMetrics(ctx echo.Context) error {
 		return SendError(ctx, http.StatusInternalServerError, "failed to retrieve audit metrics")
 	}
 
-	response := generated_models.AuditMetricsResponse{
+	response := models.AuditMetricsResponse{
 		TotalEventsLast30Days:  safeInt64ToInt32(metrics.TotalEventsLast30Days),
 		EventsCountLast24Hours: safeInt64ToInt32(metrics.EventsCountLast24Hours),
 		VaultEventsLast30Days:  safeInt64ToInt32(metrics.VaultEventsLast30Days),

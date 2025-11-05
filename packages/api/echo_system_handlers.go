@@ -8,14 +8,14 @@ import (
 	"github.com/lwshen/vault-hub/internal/config"
 	"github.com/lwshen/vault-hub/internal/version"
 	"github.com/lwshen/vault-hub/model"
-	"github.com/lwshen/vault-hub/packages/api/generated_models"
+	"github.com/lwshen/vault-hub/packages/api/generated/models"
 )
 
 // Health handles GET /api/health
 func (c *Container) Health(ctx echo.Context) error {
 	status := "ok"
 	timestamp := time.Now()
-	resp := generated_models.HealthCheckResponse{
+	resp := models.HealthCheckResponse{
 		Status:    status,
 		Timestamp: timestamp,
 	}
@@ -31,7 +31,7 @@ func (c *Container) GetStatus(ctx echo.Context) error {
 	// Check system status based on multiple factors
 	systemStatus := checkSystemHealthEcho(databaseStatus)
 
-	resp := generated_models.StatusResponse{
+	resp := models.StatusResponse{
 		Version:        version.Version,
 		Commit:         version.Commit,
 		SystemStatus:   systemStatus,
@@ -89,7 +89,7 @@ func checkSystemHealthEcho(dbStatus string) string {
 // GetConfig handles GET /api/config
 // Returns public configuration that requires no authentication
 func (c *Container) GetConfig(ctx echo.Context) error {
-	resp := generated_models.ConfigResponse{
+	resp := models.ConfigResponse{
 		OidcEnabled:  config.OidcEnabled,
 		EmailEnabled: config.EmailEnabled,
 	}
@@ -104,7 +104,7 @@ func (c *Container) GetCurrentUser(ctx echo.Context) error {
 		return err
 	}
 
-	resp := generated_models.GetUserResponse{
+	resp := models.GetUserResponse{
 		Email: user.Email,
 	}
 

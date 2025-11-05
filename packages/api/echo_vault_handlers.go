@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/lwshen/vault-hub/model"
-	"github.com/lwshen/vault-hub/packages/api/generated_models"
+	"github.com/lwshen/vault-hub/packages/api/generated/models"
 	"gorm.io/gorm"
 )
 
@@ -50,14 +50,14 @@ func (c *Container) GetVaults(ctx echo.Context) error {
 	}
 
 	// Convert to API VaultLite slice
-	apiVaults := make([]generated_models.VaultLite, 0, len(vaults))
+	apiVaults := make([]models.VaultLite, 0, len(vaults))
 	for i := range vaults {
 		apiVaults = append(apiVaults, convertToGeneratedVaultLite(&vaults[i]))
 	}
 
 	// Safe conversion with bounds checking (these values are already validated)
 	// pageSize is max 1000, pageIndex is validated >= 1, totalCount from DB
-	response := generated_models.VaultsResponse{
+	response := models.VaultsResponse{
 		Vaults:     apiVaults,
 		TotalCount: safeInt64ToInt32(totalCount),
 		PageSize:   int32(pageSize),  // #nosec G115 -- validated max 1000
@@ -101,7 +101,7 @@ func (c *Container) CreateVault(ctx echo.Context) error {
 		return err
 	}
 
-	var input generated_models.CreateVaultRequest
+	var input models.CreateVaultRequest
 	if err := ctx.Bind(&input); err != nil {
 		return SendError(ctx, http.StatusBadRequest, err.Error())
 	}
@@ -156,7 +156,7 @@ func (c *Container) UpdateVault(ctx echo.Context) error {
 		return SendError(ctx, http.StatusInternalServerError, err.Error())
 	}
 
-	var input generated_models.UpdateVaultRequest
+	var input models.UpdateVaultRequest
 	if err := ctx.Bind(&input); err != nil {
 		return SendError(ctx, http.StatusBadRequest, err.Error())
 	}

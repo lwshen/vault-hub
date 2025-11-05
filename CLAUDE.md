@@ -131,18 +131,24 @@ Optional configuration:
 
 ## API Generation
 
-The project uses OpenAPI 3.0 specification (`packages/api/openapi/api.yaml`) with `oapi-codegen` to generate:
+The project uses OpenAPI 3.0 specification (`packages/api/openapi/api.yaml`) with OpenAPI Generator to generate:
 
-- Go server stubs (`packages/api/generated.go`)
+- Go model types (`packages/api/generated_models/`)
 - TypeScript client library (published as npm package)
+
+**Generated code is NOT committed to git** - it is automatically regenerated during:
+- CI builds (via `go generate ./...`)
+- Local development with Air live reload
+- Manual builds (run `go generate ./...`)
 
 **Important**: After modifying files in `packages/api/openapi/*`:
 1. **Bump the API version** in `packages/api/openapi/api.yaml` (update the `version` field in the `info` section)
-2. Run `go generate packages/api/tool.go` to regenerate the Go types and interfaces
+2. Run `go generate ./...` to regenerate the Go types and interfaces
+3. Commit only the OpenAPI spec changes, not the generated code
 
 The API spec uses camelCase naming convention for all properties (e.g., `uniqueId`, `createdAt`, `isActive`).
 
-**NEVER EDIT**: Do not modify `packages/api/generated.go` directly as it is auto-generated code. All API changes must be made in the OpenAPI specification files in `packages/api/openapi/*`.
+**NEVER EDIT**: Do not modify files in `packages/api/generated_models/` directly as they are auto-generated code. All API changes must be made in the OpenAPI specification files in `packages/api/openapi/*`.
 
 ## Authentication & Authorization
 
