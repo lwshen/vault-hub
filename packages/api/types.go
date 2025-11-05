@@ -175,6 +175,7 @@ type (
 )
 
 const (
+	// #nosec G101 -- These values are audit action identifiers, not credentials.
 	AuditLogActionCreateApiKey AuditLogAction = "create_api_key"
 	AuditLogActionCreateVault  AuditLogAction = "create_vault"
 	AuditLogActionDeleteApiKey AuditLogAction = "delete_api_key"
@@ -183,7 +184,7 @@ const (
 	AuditLogActionLogoutUser   AuditLogAction = "logout_user"
 	AuditLogActionReadVault    AuditLogAction = "read_vault"
 	AuditLogActionRegisterUser AuditLogAction = "register_user"
-	AuditLogActionUpdateApiKey AuditLogAction = "update_api_key"
+	AuditLogActionUpdateApiKey AuditLogAction = "update_api_key" // #nosec G101 -- action identifier, not a credential
 	AuditLogActionUpdateVault  AuditLogAction = "update_vault"
 )
 

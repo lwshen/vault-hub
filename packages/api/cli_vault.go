@@ -84,15 +84,15 @@ func GetVaultByAPIKeyWithLookup(apiKey *model.APIKey, lookup func(*model.APIKey)
 
 func deriveAPIKeyFromAuthorization(header string) (string, error) {
 	if header == "" {
-		return "", fmt.Errorf("Authorization header required for client encryption")
+		return "", fmt.Errorf("authorization header required for client encryption")
 	}
 
 	parts := strings.SplitN(header, " ", 2)
 	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-		return "", fmt.Errorf("invalid Authorization header format")
+		return "", fmt.Errorf("invalid authorization header format")
 	}
 	if !strings.HasPrefix(parts[1], "vhub_") {
-		return "", fmt.Errorf("API key required for client encryption")
+		return "", fmt.Errorf("api key required for client encryption")
 	}
 
 	return parts[1], nil
