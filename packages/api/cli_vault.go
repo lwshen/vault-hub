@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
+	"github.com/lwshen/vault-hub/internal/constants"
 	"github.com/lwshen/vault-hub/model"
 	"golang.org/x/crypto/pbkdf2"
 	"gorm.io/gorm"
@@ -41,7 +42,7 @@ func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 // GetVaultByAPIKey - Get a single vault by unique ID for a given API key
 func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 	// Read X-Enable-Client-Encryption header directly
-	headerValue := c.Get("X-Enable-Client-Encryption")
+	headerValue := c.Get(constants.HeaderClientEncryption)
 	var enableClientEncryptionParam *string
 	if headerValue != "" {
 		enableClientEncryptionParam = &headerValue
@@ -57,7 +58,7 @@ func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 // GetVaultByNameAPIKey - Get a single vault by name for a given API key
 func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
 	// Read X-Enable-Client-Encryption header directly
-	headerValue := c.Get("X-Enable-Client-Encryption")
+	headerValue := c.Get(constants.HeaderClientEncryption)
 	var enableClientEncryptionParam *string
 	if headerValue != "" {
 		enableClientEncryptionParam = &headerValue
