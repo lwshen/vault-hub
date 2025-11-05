@@ -25,6 +25,8 @@ jobs:
         run: go mod download
       - name: Verify dependencies
         run: go mod verify
+      - name: Generate API code
+        run: go generate ./...
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:

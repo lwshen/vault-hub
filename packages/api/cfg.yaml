@@ -1,6 +1,6 @@
 package: api
 generate:
   models: true
-  fiber-server: true
+  echo-server: true
   strict-server: true
 output: generated.go
