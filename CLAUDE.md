@@ -8,14 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Build**: `go build -o tmp/main ./apps/server/main.go`
 - **Build with version**: `go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') -X github.com/lwshen/vault-hub/internal/version.Commit=$(git rev-parse --short HEAD)" -o tmp/main ./apps/server/main.go`
-- **Run**: `go run ./apps/server/main.go`
+- **Run**: `go run ./apps/server/main.go` (launches API at http://localhost:3000 for local dev)
 - **Test**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` (run all tests with required env vars)
 - **Test specific package**: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./model -v`
 - **Generate API code**: `go generate packages/api/tool.go` (run after modifying files in `packages/api/openapi/*`)
 
 ### Go CLI (apps/cli/)
 
-- **Build**: `go build -o tmp/vault-hub-cli ./apps/cli/main.go`
+- **Build**: `go build -o tmp/vault-hub-cli ./apps/cli/main.go` or `go build -o vault-hub-cli ./apps/cli/main.go`
 - **Build with version**: `go build -ldflags="-X github.com/lwshen/vault-hub/internal/version.Version=$(git describe --tags --abbrev=0 2>/dev/null || echo 'dev') -X github.com/lwshen/vault-hub/internal/version.Commit=$(git rev-parse --short HEAD)" -o tmp/vault-hub-cli ./apps/cli/main.go`
 - **Run**: `go run ./apps/cli/main.go`
 - **Commands**:
@@ -122,6 +122,14 @@ Optional configuration:
 - `DATABASE_URL` (default: data.db)
 - OIDC settings: `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_ISSUER`
 
+### Security & Configuration Tips
+
+- **Keep secrets secure**: Store `JWT_SECRET`, `ENCRYPTION_KEY`, and database credentials in environment variables or secret storage systems
+- **Never commit sensitive data**: Avoid committing real credentials, `data.db`, or any files containing secrets
+- **Document configuration changes**: When adding new OIDC/database variables, document them in PRs
+- **Sanitize shared snapshots**: Scrub sensitive rows from shared `data.db` snapshots
+- **Use ephemeral test secrets**: Ensure secrets used in tests are ephemeral (e.g., `openssl rand`)
+
 ## Database Models
 
 - **User**: User accounts with email/password or OIDC
@@ -137,12 +145,16 @@ The project uses OpenAPI 3.0 specification (`packages/api/openapi/api.yaml`) wit
 - TypeScript client library (published as npm package)
 
 **Important**: After modifying files in `packages/api/openapi/*`:
-1. **Bump the API version** in `packages/api/openapi/api.yaml` (update the `version` field in the `info` section)
+1. **Bump the API version** in `packages/api/openapi/api.yaml` (update the `version` field in the `info` section) unless this branch has already updated the version relative to `main`
 2. Run `go generate packages/api/tool.go` to regenerate the Go types and interfaces
 
 The API spec uses camelCase naming convention for all properties (e.g., `uniqueId`, `createdAt`, `isActive`).
 
+<<<<<<< HEAD
 **NEVER EDIT**: Do not modify files under `packages/api/openapi/server` or `packages/api/openapi/client` directly; they are generated. Make API changes in the OpenAPI specification files under `packages/api/openapi/*` and re-run `go generate ./packages/api/...`.
+=======
+**NEVER EDIT**: Do not modify `packages/api/generated.go` or `packages/api/api.bundled.yaml` directly as they are auto-generated code. All API changes must be made in the OpenAPI specification files in `packages/api/openapi/*`.
+>>>>>>> fb738fd (docs: merge AGENTS documentation into CLAUDE file (#328))
 
 ## Authentication & Authorization
 
@@ -201,10 +213,21 @@ The application enforces strict authentication rules via middleware (`route/midd
 
 ## Testing Strategy
 
-- Go unit tests for encryption (`internal/encryption/encryption_test.go`)
-- Database model tests (`model/db_test.go`)
-- Configuration tests (`internal/config/config_test.go`)
-- Frontend uses standard React testing patterns
+### Backend Testing
+
+- **Test files**: Place Go tests in `*_test.go` files next to their implementations
+- **Coverage areas**: Config, encryption, and database flows must be tested
+- **Go unit tests**:
+  - Encryption tests: `internal/encryption/encryption_test.go`
+  - Database model tests: `model/db_test.go`
+  - Configuration tests: `internal/config/config_test.go`
+- **Test secrets**: Ensure secrets used in tests are ephemeral (`openssl rand`); never commit real credentials or `data.db`
+- **Environment variables**: All tests require `JWT_SECRET` and `ENCRYPTION_KEY` to be set
+
+### Frontend Testing
+
+- **Current**: Standard React testing patterns
+- **Future**: Add Vitest + Testing Library with a `pnpm run test` script when introducing UI coverage
 
 ## Documentation System
 
@@ -244,9 +267,24 @@ The frontend uses Zustand for component-level state management:
 - **API integration**: Stores directly use generated API clients with proper error handling
 - **React Context**: Still used for global auth and theme state
 
-## Frontend Code Style
+## Coding Style & Naming Conventions
 
-ESLint configuration enforces:
+### Go Code Style
+
+- **Formatting**: Always format Go code with `gofmt -w <files>` before committing
+- **Exported types**: Use PascalCase for exported types and functions
+- **Internal helpers**: Keep internal/private functions and types unexported (lowercase first letter)
+- **Linting**: Run `golangci-lint run ./...` after editing Go code to ensure quality standards
+
+### CLI Code Style
+
+- **File naming**: CLI command files adopt hyphenated filenames (e.g., `list.go`)
+- **Flag naming**: Use snake_case for flags
+- **Implementation**: Logic resides in `internal/cli` with encryption utilities in `internal/encryption`
+
+### Frontend Code Style
+
+**ESLint configuration** enforces:
 
 - 2-space indentation
 - Single quotes
@@ -254,6 +292,18 @@ ESLint configuration enforces:
 - Stylistic rules from `@stylistic/eslint-plugin`
 - React-specific rules and hooks validation
 - TypeScript strict mode
+
+**Component conventions**:
+
+- **Components**: Use PascalCase for React components
+- **Hooks/utilities**: Use camelCase for hooks and utility functions
+- **CSS**: Apply Tailwind classes inline; keep global CSS minimal
+- **Location**: Components organized in `src/pages`, `src/components`, `src/stores`
+
+### Generated Code
+
+- **Commit policy**: Only commit generated artifacts when necessary
+- **Regeneration**: Regenerate `packages/api` outputs after spec edits using `go generate packages/api/tool.go`
 
 ## Tailwind CSS 4.x Configuration
 
@@ -373,6 +423,81 @@ The vault viewing and editing experience was significantly improved by replacing
 - **Created**: `vault-detail.tsx`, `vault-detail-content.tsx`
 
 This implementation provides a much better user experience with proper responsive design and eliminates the cramped modal limitations.
+
+## Commit & Pull Request Guidelines
+
+### Commit Message Format
+
+- **Follow Conventional Commits**: Use prefixes like `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, etc.
+- **Scope**: Optional but recommended for clarity (e.g., `chore(deps):`, `feat(cli):`, `fix(auth):`)
+- **Examples**:
+  - `feat(cli): add vault export command`
+  - `fix(auth): resolve JWT token expiration issue`
+  - `chore(deps): bump github.com/gofiber/fiber to v2.52.0`
+  - `docs: update API reference with new endpoints`
+
+### Pull Request Process
+
+1. **Rebase**: Rebase onto `main` before opening a PR
+2. **CI verification**: Ensure `.github/workflows/ci.yml` passes (all checks green)
+3. **PR content**: Include:
+   - Clear summary of changes and scope
+   - Notes on schema or environment variable changes
+   - Links to related tracking issues
+   - CLI output or screenshots for UI updates
+4. **Code quality**: Verify linting and tests pass before submitting
+
+### Pre-PR Checklist
+
+- [ ] Code follows conventional commit format
+- [ ] All tests pass (`go test ./...`)
+- [ ] Go linting passes (`golangci-lint run ./...`)
+- [ ] Frontend linting passes (`pnpm --dir apps/web run lint`)
+- [ ] Frontend type checking passes (`pnpm --dir apps/web run typecheck`)
+- [ ] API version bumped if OpenAPI spec modified
+- [ ] Documentation updated for new features/changes
+- [ ] No sensitive data (credentials, `data.db`) committed
+
+## Post-change Checklist
+
+After making code changes, ensure you complete these steps:
+
+### API Changes
+
+- [ ] When modifying `packages/api/openapi/api.yaml`, bump the version in the `info.version` field (unless this branch has already updated it relative to `main`)
+- [ ] After editing files in `packages/api/openapi/*`, run `go generate packages/api/tool.go` to regenerate code
+- [ ] Do not manually modify `packages/api/api.bundled.yaml` or `packages/api/generated.go`
+
+### Backend Changes
+
+- [ ] Run `golangci-lint run ./...` after Go code changes
+- [ ] Run `gofmt -w <files>` to format Go files
+- [ ] Verify all tests pass: `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...`
+
+### Frontend Changes
+
+- [ ] Run `pnpm --dir apps/web run typecheck` to catch TypeScript issues
+- [ ] Run `pnpm --dir apps/web run lint` to catch lint issues
+- [ ] Sync frontend if needed: `git submodule update --init --remote apps/web`
+
+### Pre-commit Verification
+
+- [ ] No `data.db` or sensitive files staged for commit
+- [ ] Conventional commit message format used
+- [ ] All relevant tests and quality checks pass
+
+## Module Organization
+
+### Project Component Locations
+
+- **Backend API**: `apps/server/` - Go Fiber API with routes in `handler/`, middleware in `route/`, and shared config in `internal/`
+- **CLI**: `apps/cli/` - Cobra CLI backed by `internal/cli` logic and `internal/encryption` utilities
+- **Frontend**: `apps/web/` - Vite + React UI (`src/pages`, `src/components`, `src/stores`); run UI assets through `pnpm`
+  - **Important**: Do not edit files under `apps/web`; managed as an external codebase
+- **Scheduled Jobs**: `apps/cron/` and `scripts/` - Supply scheduled jobs and release chores; keep them idempotent
+- **API Specification**: `packages/api/` - Shared OpenAPI specs; regenerate clients with `go generate packages/api/tool.go`
+- **Database Models**: `model/` - Reusable GORM models
+- **Container Assets**: `docker/` - Docker build files
 
 ## Project Structure
 
