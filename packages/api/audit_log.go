@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	"gorm.io/gorm"
 )
@@ -58,21 +56,6 @@ func GetAuditLogsForUser(user *model.User, params GetAuditLogsParams) (AuditLogs
 
 	response := buildAuditLogsResponse(logs, totalCount, params)
 	return response, nil
-}
-
-// GetAuditLogs retains the Fiber handler by delegating to GetAuditLogsForUser.
-func (Server) GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error {
-	user, err := getUserFromContext(c)
-	if err != nil {
-		return err
-	}
-
-	resp, apiErr := GetAuditLogsForUser(user, params)
-	if apiErr != nil {
-		return handler.SendError(c, apiErr.Status, apiErr.Message)
-	}
-
-	return c.Status(http.StatusOK).JSON(resp)
 }
 
 // validateAuditLogParams validates pagination and other request parameters
@@ -177,19 +160,4 @@ func GetAuditMetricsForUser(user *model.User) (AuditMetricsResponse, *APIError) 
 	}
 
 	return response, nil
-}
-
-// GetAuditMetrics keeps the Fiber handler delegating to the helper for reuse.
-func (Server) GetAuditMetrics(c *fiber.Ctx) error {
-	user, err := getUserFromContext(c)
-	if err != nil {
-		return err
-	}
-
-	resp, apiErr := GetAuditMetricsForUser(user)
-	if apiErr != nil {
-		return handler.SendError(c, apiErr.Status, apiErr.Message)
-	}
-
-	return c.Status(http.StatusOK).JSON(resp)
 }

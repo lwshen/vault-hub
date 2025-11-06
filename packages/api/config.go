@@ -1,9 +1,6 @@
 package api
 
 import (
-	"net/http"
-
-	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/internal/config"
 )
 
@@ -15,11 +12,4 @@ func PublicConfig() ConfigResponse {
 	}
 }
 
-// GetConfig returns public configuration that requires no authentication
-// This endpoint performs NO database operations and is safe for public access
-func (s Server) GetConfig(ctx *fiber.Ctx) error {
-	resp := PublicConfig()
-	return ctx.
-		Status(http.StatusOK).
-		JSON(resp)
-}
+// Additional HTTP wiring occurs in the Echo router; this package remains framework-agnostic.

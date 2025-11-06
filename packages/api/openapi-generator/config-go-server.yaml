@@ -4,22 +4,20 @@
 #     -g go-server \
 #     -c packages/api/openapi-generator/config-go-server.yaml
 #
-# The output directory intentionally lives under .openapi-generator/server so we
-# can review artifacts without overwriting the current oapi-codegen outputs.
+# The output directory intentionally lives under openapi/server so we can review
+# artifacts alongside our domain helpers.
 generatorName: go-server
-inputSpec: ../api.bundled.yaml
-outputDir: ../.openapi-generator/server
+inputSpec: api.bundled.yaml
+outputDir: openapi/server
 
 additionalProperties:
-  packageName: api
-  moduleName: github.com/lwshen/vault-hub/packages/api
+  packageName: openapisrv
+  moduleName: github.com/lwshen/vault-hub/packages/api/openapi/server
   apiNameSuffix: Handler
-  sourceFolder: internal
-  featureCORS: true
-  featureMetrics: false
-  featureGoVersion: "1.24"
   withGoCodegenComment: true
-# TODO: Evaluate whether strict interface parity requires custom templates.
+  gitHost: github.com
+  gitUserId: lwshen
+  gitRepoId: vault-hub
 
 globalProperties:
   apiTests: false

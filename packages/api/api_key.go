@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	"gorm.io/gorm"
 )
@@ -204,49 +202,6 @@ func DeleteAPIKeyForUser(user *model.User, id int64, clientInfo ClientInfo) *API
 	return nil
 }
 
-// GetAPIKeys - Get API keys for the current user with pagination
-func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
-	user, err := getUserFromContext(c)
-	if err != nil {
-		return err
-	}
-
-	response, apiErr := GetAPIKeysForUser(user, params)
-	if apiErr != nil {
-		return handler.SendError(c, apiErr.Status, apiErr.Message)
-	}
-
-	return c.Status(fiber.StatusOK).JSON(response)
-}
-
-// CreateAPIKey handles the creation of a new API key
-// It validates the request, converts vault IDs, creates the key, and returns the response
-func (s Server) CreateAPIKey(c *fiber.Ctx) error {
-	user, err := getUserFromContext(c)
-	if err != nil {
-		return err
-	}
-
-	req, err := parseCreateAPIKeyRequest(c)
-	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, "invalid request body")
-	}
-
-	resp, apiErr := CreateAPIKeyForUser(user, req, getClientInfoDetails(c))
-	if apiErr != nil {
-		return handler.SendError(c, apiErr.Status, apiErr.Message)
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(resp)
-}
-
-// parseCreateAPIKeyRequest parses the request body for API key creation
-func parseCreateAPIKeyRequest(c *fiber.Ctx) (CreateAPIKeyRequest, error) {
-	var req CreateAPIKeyRequest
-	err := c.BodyParser(&req)
-	return req, err
-}
-
 // convertVaultUniqueIDs converts vault unique IDs to database IDs
 func convertVaultUniqueIDs(vaultUniqueIds *[]string, userID uint) ([]uint, error) {
 	if vaultUniqueIds == nil || len(*vaultUniqueIds) == 0 {
@@ -305,27 +260,6 @@ func createAPIKey(params model.CreateAPIKeyParams) (*model.APIKey, string, error
 	return params.Create()
 }
 
-// UpdateAPIKey handles updating an existing API key's properties
-// It validates ownership, processes the update request, and returns the updated key
-func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
-	user, err := getUserFromContext(c)
-	if err != nil {
-		return err
-	}
-
-	req, err := parseUpdateAPIKeyRequest(c)
-	if err != nil {
-		return handler.SendError(c, fiber.StatusBadRequest, "invalid request body")
-	}
-
-	resp, apiErr := UpdateAPIKeyForUser(user, id, req, getClientInfoDetails(c))
-	if apiErr != nil {
-		return handler.SendError(c, apiErr.Status, apiErr.Message)
-	}
-
-	return c.Status(fiber.StatusOK).JSON(resp)
-}
-
 // findAPIKeyByID finds an API key by ID and validates user ownership
 func findAPIKeyByID(id int64, userID uint) (*model.APIKey, *APIError) {
 	var apiKey model.APIKey
@@ -337,13 +271,6 @@ func findAPIKeyByID(id int64, userID uint) (*model.APIKey, *APIError) {
 		return nil, newAPIError(http.StatusInternalServerError, "failed to get API key")
 	}
 	return &apiKey, nil
-}
-
-// parseUpdateAPIKeyRequest parses the request body for API key updates
-func parseUpdateAPIKeyRequest(c *fiber.Ctx) (UpdateAPIKeyRequest, error) {
-	var req UpdateAPIKeyRequest
-	err := c.BodyParser(&req)
-	return req, err
 }
 
 // convertOptionalVaultUniqueIDs converts optional vault unique IDs to database IDs
@@ -383,18 +310,4 @@ func validateUpdateAPIKeyParams(params model.UpdateAPIKeyParams, userID uint, ap
 // updateAPIKey performs the actual API key update
 func updateAPIKey(apiKey *model.APIKey, params model.UpdateAPIKeyParams) error {
 	return apiKey.Update(params)
-}
-
-// DeleteAPIKey - Delete an API key
-func (s Server) DeleteAPIKey(c *fiber.Ctx, id int64) error {
-	user, err := getUserFromContext(c)
-	if err != nil {
-		return err
-	}
-
-	if apiErr := DeleteAPIKeyForUser(user, id, getClientInfoDetails(c)); apiErr != nil {
-		return handler.SendError(c, apiErr.Status, apiErr.Message)
-	}
-
-	return c.SendStatus(fiber.StatusNoContent)
 }

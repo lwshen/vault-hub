@@ -12,8 +12,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	"golang.org/x/crypto/pbkdf2"
 	"gorm.io/gorm"
@@ -98,56 +96,6 @@ func deriveAPIKeyFromAuthorization(header string) (string, error) {
 	}
 
 	return parts[1], nil
-}
-
-// GetVaultsByAPIKey - Get all vaults for a given API key
-func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
-	apiKey, ok := c.Locals("api_key").(*model.APIKey)
-	if !ok {
-		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
-	}
-
-	resp, apiErr := GetVaultsForAPIKey(apiKey)
-	if apiErr != nil {
-		return handler.SendError(c, apiErr.Status, apiErr.Message)
-	}
-
-	return c.Status(http.StatusOK).JSON(resp)
-}
-
-// GetVaultByAPIKey - Get a single vault by unique ID for a given API key
-func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string, params GetVaultByAPIKeyParams) error {
-	return s.getVaultByAPIKey(c, uniqueId, params.XEnableClientEncryption, func(apiKey *model.APIKey) (*model.Vault, error) {
-		var vault model.Vault
-		err := vault.GetByUniqueID(uniqueId, apiKey.UserID)
-		return &vault, err
-	})
-}
-
-// GetVaultByNameAPIKey - Get a single vault by name for a given API key
-func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string, params GetVaultByNameAPIKeyParams) error {
-	return s.getVaultByAPIKey(c, name, params.XEnableClientEncryption, func(apiKey *model.APIKey) (*model.Vault, error) {
-		var vault model.Vault
-		err := vault.GetByName(name, apiKey.UserID)
-		return &vault, err
-	})
-}
-
-// getVaultByAPIKey - Common logic for getting a vault via API key
-func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientEncryptionParam *string, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
-	apiKey, ok := c.Locals("api_key").(*model.APIKey)
-	if !ok {
-		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
-	}
-
-	clientInfo := getClientInfoDetails(c)
-	enableClientEncryption := enableClientEncryptionParam != nil && *enableClientEncryptionParam == "true"
-	resp, apiErr := GetVaultByAPIKeyWithLookup(apiKey, vaultGetter, encryptSalt, enableClientEncryption, clientInfo, c.Get("Authorization"), enableClientEncryptionParam != nil)
-	if apiErr != nil {
-		return handler.SendError(c, apiErr.Status, apiErr.Message)
-	}
-
-	return c.Status(http.StatusOK).JSON(resp)
 }
 
 // encryptForClientWithDerivedKey encrypts the vault value using a key derived from the API key

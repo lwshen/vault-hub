@@ -38,9 +38,9 @@ data.db
 .serena
 
 # Generated OpenAPI bundle
-api/api.bundled.yaml
+packages/api/api.bundled.yaml
 
-packages/api/.openapi-generator/
+packages/api/openapi/**/.openapi-generator/
 
 internal/embed/dist/*
 !internal/embed/dist/.gitkeep

@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"time"
 
-	openapi "github.com/lwshen/vault-hub-go-client"
+	openapi "github.com/lwshen/vault-hub/packages/api/openapi/client"
 	"github.com/spf13/cobra"
 
 	"github.com/lwshen/vault-hub/internal/cli/encryption"

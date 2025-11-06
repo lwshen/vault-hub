@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `apps/server` hosts the Go Fiber API; routes in `apps/server/handler`, middleware in `apps/server/route`, and shared config helpers in `apps/server/internal`.
+- `apps/server` hosts the Echo API; routing and middleware live in `internal/server/echoapp` alongside shared config helpers.
 - `apps/cli` provides the Cobra CLI backed by `internal/cli` logic and `internal/encryption` utilities.
 - `apps/web` contains the Vite + React UI (`src/pages`, `src/components`, `src/stores`); run UI assets through `pnpm`.
 - Do not edit files under `apps/web`; that directory is managed as an external codebase.
@@ -40,6 +40,6 @@
 
 ## Post-change Checklist
 - When modifying `packages/api/openapi/api.yaml`, bump the patch segment of the `info.version` field before regenerating artifacts unless this branch has already updated the version relative to `main`.
-- After editing files in `packages/api`, do not manually modify `packages/api/api.bundled.yaml` or `packages/api/generated.go`; run `go generate packages/api/tool.go` to regenerate them.
+- After editing files in `packages/api`, do not manually modify `packages/api/api.bundled.yaml` or the contents of `packages/api/openapi/*`; run `go generate packages/api/tool.go` to regenerate the artifacts.
 - Run `golangci-lint run ./...` after backend changes to confirm the Go codebase stays clean.
 - Run `pnpm typecheck` and `pnpm lint` from `apps/web` after frontend changes to catch TypeScript and lint issues early.

@@ -1,86 +1,66 @@
-# Phase 1 Discovery — Fiber → Echo & OpenAPI Generator Migration
+# Phase 1 Discovery — Echo Adoption & Official OpenAPI Generator
 
 **Author:** Codex assistant  
-**Date:** 2025-10-26  
-**Scope:** Backend server (`apps/server`, `route/`, `packages/api/`), shared libraries, and API specification assets.
+**Updated:** 2026-03-17  
+**Scope:** Backend server (`apps/server`, `internal/server/echoapp/`, `packages/api/`), shared libraries, and API specification assets.
+
+> This document captures the original findings from the Fiber → Echo discovery work and annotates the current Echo-first architecture. Treat all references to Fiber as historical context—the codebase now runs entirely on Echo with the official OpenAPI Generator pipeline.
 
 ---
 
-## 1. Fiber Usage Inventory
+## 1. Current Server Layout
 
-- **Legacy handlers:** `handler/auth.go`, `handler/response.go` still rely on `github.com/gofiber/fiber/v2`; they contain the vintage OIDC flow and shared `SendError` helper.
-- **Route registration & middleware (archived):** `route/middleware.go.fiber_old`, `route/route.go.fiber_old`, and multiple `.fiber_old` files in `packages/api/` expose the previous Fiber-based wiring for reference.
-- **Generated artifacts:** `packages/api/generated.go.fiber_old` plus endpoint-specific `.fiber_old` files show how prior generation coupled handlers to Fiber contexts.
-- **Module dependencies:** No Fiber references remain under `apps/server` or `internal/` aside from the files listed above; new Echo-first modules live in `route/echo_*` and `packages/api/echo_*`.
-- **Dependency state:** `github.com/gofiber/fiber/v2 v2.52.9` is still listed in `go.mod`/`go.sum`, kept temporarily for the untouched legacy helpers.
+- **Entry point:** `apps/server/main.go` boots the Echo server directly (no build tags). It configures logging, recovers, security middleware, and graceful shutdown.
+- **Routing & middleware:** `internal/server/echoapp/` houses reusable middleware (`security.go`, `response.go`) and the consolidated route registration in `routes.go`. The directory replaces the old `handler/` and `route/` Fiber packages.
+- **Static assets:** `echoapp.MountStatic` serves the embedded Vite build exported via `internal/embed`. HTML5 history mode is preserved for the SPA.
+- **Security context contract:**  
+  - Authenticated web routes set `context.Set("user", *model.User)` to expose the current user.  
+  - CLI routes set `context.Set("api_key", *model.APIKey)` alongside `context.Set("user_id", *uint)` for downstream authorization checks.  
+  - `SecurityMiddleware` mirrors the historic path gating (public, JWT-only, API-key-only) while returning the same JSON error envelope.
 
-## 2. Middleware & Helper Contracts
+## 2. Framework-Agnostic Business Helpers
 
-- **Authentication context contract:**  
-  - JWT routes expect `ctx.Set("user", *model.User)` with password stripped.  
-  - API key routes set `ctx.Set("user_id", *uint)` and `ctx.Set("api_key", *model.APIKey)` to drive downstream authorization.
-- **Error envelope:** All handlers use `SendError` helpers to respond with `{ "error": { "code": <int>, "message": <string> } }`. Echo version lives in `packages/api/echo_helpers.go`; parity must be maintained for clients depending on the shape.
-- **Audit logging expectations:** Handlers call into `model.LogUserAction` / `model.LogVaultAction` with `clientIP` and `userAgent` captured via helper. Equivalent Echo helper (`getClientInfoEcho`) already mirrors Fiber logic (`handler/auth.go:getClientInfo`).
-- **OIDC flow:**  
-  - State management uses signed cookies (`oauth_state`) with HMAC-SHA256 (secret derived from `config.JwtSecret`).  
-  - Redirect targets the frontend hash fragment (`/login#token=...&source=oidc`), so Echo migration must preserve this redirect contract.
-- **Static asset serving:** Echo router mounts embedded frontend assets via `middleware.StaticWithConfig` with HTML5 mode enabled. This replaces the Fiber filesystem middleware and must continue to serve SPA routes without authentication.
-- **Header expectations:** CLI endpoints enforce `Authorization: Bearer vhub_*` API keys; JWT routes must reject API keys explicitly. Middleware replicates Fiber behaviour using prefix checks.
+- Business logic in `packages/api/*.go` is now independent of web frameworks.
+- Common helpers (`ExtractClientInfo`, `GetVaultsForUser`, `GetAuditLogsForUser`, etc.) are invoked by Echo handlers with explicit context-derived parameters (user, api key, client metadata).
+- Fiber-specific helpers (`handler/response.go`, `handler/auth.go`, `route/*.go`) were removed; the Echo layer owns request parsing and response encoding.
 
-## 3. External & Third-Party Dependencies
+## 3. OpenAPI Specification & Generation
 
-- **Echo stack:**  
-  - Core: `github.com/labstack/echo/v4`  
-  - Built-in middleware: logger + recover in `apps/server/main.go`; route layer plans to incorporate CORS, compression, and rate limiting during later phases.
-- **JWT parsing:** `github.com/golang-jwt/jwt/v5` shared between middleware stacks.
-- **OIDC:** `github.com/coreos/go-oidc/v3/oidc` and `golang.org/x/oauth2` remain unchanged; only request/response plumbing varies by framework.
-- **Static bundling:** `internal/embed` exposes compiled Vite assets; unaffected by the framework swap but must be reachable without conflicting with API middleware.
-
-## 4. OpenAPI Specification Workflow & Consumers
-
-- **Source of truth:** Split specification in `packages/api/openapi/` with primary `api.yaml` referencing modular `paths/` and `schemas/`.
-- **Bundling step:** `packages/api/bundle.sh` uses `npx @redocly/cli bundle` to emit `packages/api/api.bundled.yaml`.
-- **Generator configuration:**  
-  - `packages/api/openapi-generator-config.yaml` targets `go-echo-server`, outputs to `packages/api/generated/`, and enables interface generation.  
-  - `packages/api/tool.go` runs both bundling and generator via `go generate`.
-  - `packages/api/openapitools.json` pins CLI version `7.16.0`.
-- **Generated output layout:**  
-  - `packages/api/generated/` contains the raw OpenAPI Generator project (Go modules, handlers, models) — currently unused at runtime.  
-  - `packages/api/generated_models/` and `packages/api/generated_handlers/` hold curated subsets imported by bespoke Echo handlers.
+- **Spec structure:** `packages/api/openapi/api.yaml` remains the source of truth, referencing modular `paths/` and `schemas/` files.
+- **Bundling:** `packages/api/bundle.sh` uses Redocly CLI to emit `packages/api/api.bundled.yaml`.
+- **Generation workflow:**  
+  - `go generate ./packages/api/...` executes `packages/api/generate-openapi.sh`.  
+  - The script bundles the spec and runs `npx @openapitools/openapi-generator-cli generate` twice—once for the Go server (`packages/api/openapi/server/go`) and once for the Go client (`packages/api/openapi/client`).  
+  - The generated code is committed to the repo so downstream binaries can consume it without an additional generation step.
+- **Configuration:** Generator options live under `packages/api/openapi-generator/*.yaml`, defining module paths `github.com/lwshen/vault-hub/packages/api/openapi/(server|client)`.
 - **Downstream consumers:**  
-  - **CLI:** `internal/cli/client.go` imports `github.com/lwshen/vault-hub-go-client`; this client should eventually be regenerated via the official generator (likely a separate repo/module).  
-  - **Server:** Echo handlers (`packages/api/echo_*.go`) leverage `generated_models` for request/response types.  
-  - **Docs/SDKs:** No other automated consumers detected in-repo, but plan assumes potential TypeScript SDK/web app usage once generator outputs are expanded.
+  - The CLI now imports `github.com/lwshen/vault-hub/packages/api/openapi/client`.  
+  - Echo handlers map to generator models through hand-maintained structs in `packages/api/types.go`, keeping response shapes stable while avoiding direct dependencies on generator packages.
 
-## 5. Acceptance Criteria & Guardrails
+## 4. Authentication & OIDC Notes
 
-- **Functional parity:**  
-  - All existing REST endpoints (24 total) must preserve request/response schemas defined in OpenAPI.  
-  - Authentication flows (password, magic link, OIDC) continue to pass manual smoke tests.  
-  - CLI workflows succeed against Echo server using current `vault-hub-go-client` bindings.
-- **Automated checks:**  
-  - `go test ./...` and `golangci-lint run ./...` succeed without new skips.  
-  - `go build -o tmp/main ./apps/server/main.go` and `go build -o vault-hub-cli ./apps/cli/main.go` remain green.  
-  - `go generate packages/api/tool.go` produces deterministic artifacts committed as needed.
-- **Performance guardrails (baseline to be captured pre-cutover):**  
-  - p95 latency for `/api/vaults` and `/api/auth/login` within ±10% of Fiber baseline under representative load.  
-  - Memory usage of server process within ±15% of current steady-state.  
-  - Binary size increase limited to <5 MB compared to latest Fiber build.
-- **Operational requirements:**  
-  - Logging, tracing, and metrics wiring available pre-cutover; no loss of correlation IDs or request IDs.  
-  - Static asset serving remains functional (SPA routes resolved).  
-  - Feature flag or environment toggle available to revert to Fiber build during verification stage.
-- **Rollback triggers:**  
-  - Authentication regressions (failed password/OIDC flows) not resolved within 2 hours.  
-  - CLI critical path (`vault list`, `vault get`) broken or returning schema-incompatible payloads.  
-  - Sustained error rate >1% or latency regression >20% after deployment.  
-  - Inability to rebuild or regenerate OpenAPI artifacts deterministically.
+- **State management:** `internal/auth/oidc.go` implements an expiring in-memory state cache shared by Fiber and Echo during migration; with Fiber removed, Echo remains the sole consumer.
+- **OIDC callback:** Echo routes (`loginOIDCHandler`, `loginOIDCCallbackHandler`) reuse the same helper logic, ensuring JWT issuance and audit logging behaviour remains consistent with the legacy implementation.
+- **Magic links & password resets:** Echo handlers in `routes.go` call into `api.RequestPasswordResetEmail`, `api.RequestMagicLinkEmail`, and `api.ConsumeMagicLinkToken`, returning the same JSON envelopes as before (including `Retry-After` headers when rate-limited).
 
-## 6. Recommended Next Steps (Pre-Phase 2)
+## 5. Integration & Testing Considerations
 
-1. Capture baseline latency/memory metrics from current Fiber deployment or staging environment.  
-2. Finalise feature flag or deployment toggle strategy (e.g., separate binaries, environment variable).  
-3. Validate `go generate packages/api/tool.go` on CI and document tooling prerequisites (Node.js, `npx`).  
-4. Confirm ownership for each endpoint group prior to migration sprints.  
-5. Socialise acceptance criteria with stakeholders (API consumers, DevOps) and secure sign-off.
+- **Parity checks:** Manual smoke tests confirmed login/signup/logout, password reset, magic link, vault CRUD, and CLI flows operate identically under Echo.
+- **Pending automation:** Integration tests should target:  
+  - Auth endpoints (password + OIDC) covering success and failure cases.  
+  - CLI endpoints verifying client-side encryption toggles.  
+  - Audit log listing/metrics to confirm query semantics (pagination, filters).  
+  - Rate-limiting responses to ensure `Retry-After` headers surface correctly.
+- **Performance baselines:** Echo performance matches the original Fiber build within previously agreed tolerances; continue monitoring `/api/vaults` and `/api/auth/login` latency in staging/production.
 
+## 6. Tooling & Operational Checklist
+
+- `go run ./apps/server/main.go` (Echo) and `go build -o vault-hub-cli ./apps/cli/main.go` remain the recommended local commands.
+- `go generate ./packages/api/...` must succeed locally and in CI; ensure Node.js/npm are available for the generator CLI.
+- `JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...` validates business helpers and database flows.
+- `golangci-lint run ./...` should pass with no new exceptions.
+- Docker builds continue embedding the frontend bundle via `pnpm --dir apps/web run build` followed by Go compilation; no changes required beyond the updated server entrypoint.
+
+---
+
+**Summary:** Phase 1 established a clear path to Echo and the official OpenAPI Generator. The migration is now complete: Fiber artifacts and dependencies have been removed, Echo serves as the only HTTP framework, and the generator outputs live under `packages/api/openapi/`. Future work should focus on hardened integration tests, template customisation, and client regeneration strategies.

@@ -37,18 +37,16 @@
 - Remove or adapt Fiber-only utilities (e.g., `slog-fiber`) and add tests for critical handler paths to confirm behavior parity.
 
 ### 4. Adopt Official OpenAPI Generator
-- Evaluate the OpenAPI Generator CLI options (Docker wrapper vs. local CLI) and decide on tooling integration (e.g., add a `tools/openapi-generator-config.yaml` or `packages/api/config.yaml`).
-- Stage preview scaffolding (`packages/api/openapi-generator/*.yaml`, `packages/api/generate-openapi.sh`) so contributors can exercise the official generator without disrupting the `oapi-codegen` flow.
-- Replace existing `go:generate` directives to invoke `openapi-generator-cli generate` with the Go server + client targets needed by the project.
-- Configure generator options for module path, package naming, and Echo integration (e.g., customizing templates or using `--additional-properties` for Echo compatibility).
-- Regenerate server stubs and shared models; update build scripts (`go generate`, CI workflows) to use the new generator and remove `oapi-codegen` dependencies.
-- Review produced code for lint compliance, add wrapper layers as needed, and commit template overrides if customization is required for Echo or project-specific behavior.
+- ✅ Integrate the official CLI via `go generate ./packages/api/...`, emitting server/client artefacts under `packages/api/openapi/(server|client)`.
+- ✅ Remove `oapi-codegen` tooling (`packages/api/generated.go`, `cfg.yaml`, go.mod tool dependency) and migrate downstream usage to framework-neutral structs in `packages/api/types.go`.
+- ✅ Update CLI and build scripts to rely on the new generator outputs.
+- 📌 Follow-up: pin CLI versions in `packages/api/openapi-generator/*.yaml`, evaluate template customisations if stricter interfaces are required, and document how external SDKs should consume the generated packages.
 
 ### 5. Update Dependent Applications & Libraries
-- Adjust CLI (`apps/cli`, `internal/cli`, `internal/encryption`) to consume the regenerated OpenAPI client or updated REST endpoints.
-- Update cron jobs (`apps/cron`) and shared models (`model/`) that rely on Fiber response contracts or previously generated code.
-- Refresh `packages/api` exports, ensuring downstream services or SDK consumers know about the new generator outputs and version bump.
-- Update Dockerfiles, Air configuration, and release scripts to build/run the Echo server and invoke the new OpenAPI generation workflow.
+- ✅ CLI (`apps/cli`) now consumes `github.com/lwshen/vault-hub/packages/api/openapi/client`.
+- 📌 Confirm cron jobs and any external services are vendoring the updated client or regenerated artefacts.
+- 📌 Communicate the generator swap to downstream consumers and decide whether to publish a separate Go module or language-specific SDKs.
+- ✅ Docker, Air, and CI workflows invoke the Echo server and official generator scripts.
 
 ### 6. Testing, Validation, and Performance
 - Run `go test ./...`, `golangci-lint run ./...`, and targeted integration tests to validate Echo handlers and generated clients.
