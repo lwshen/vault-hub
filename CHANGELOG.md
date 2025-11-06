@@ -1,3 +1,16 @@
+## [1.4.6] - 2025-11-06
+
+### 🐛 Bug Fixes
+
+- Inline X-Enable-Client-Encryption header handling (#325)
+
+### 🚜 Refactor
+
+- Simplify update-web.sh (#324)
+
+### ⚙️ Miscellaneous Tasks
+
+- Change model from gpt-5 to composer-1 in workflow (#326)
 ## [1.4.5] - 2025-10-24
 
 ### 🚀 Features
