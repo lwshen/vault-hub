@@ -1,0 +1,26 @@
+# OpenAPI Generator configuration for the upcoming go-server swap.
+# This file is consumed by openapi-generator-cli via:
+#   npx @openapitools/openapi-generator-cli generate \
+#     -g go-server \
+#     -c packages/api/openapi-generator/config-go-server.yaml
+#
+# The output directory intentionally lives under openapi/server so we can review
+# artifacts alongside our domain helpers.
+generatorName: go-server
+inputSpec: api.bundled.yaml
+outputDir: openapi/server
+
+additionalProperties:
+  packageName: openapisrv
+  moduleName: github.com/lwshen/vault-hub/packages/api/openapi/server
+  apiNameSuffix: Handler
+  withGoCodegenComment: true
+  gitHost: github.com
+  gitUserId: lwshen
+  gitRepoId: vault-hub
+
+globalProperties:
+  apiTests: false
+  modelTests: false
+  modelDocs: false
+  apiDocs: false

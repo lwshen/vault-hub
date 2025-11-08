@@ -1,0 +1,22 @@
+# OpenAPI Generator configuration for producing the Go API client that replaces
+# the current oapi-codegen + vault-hub-go-client pipeline. The config writes to
+# openapi/client so the generated module can be imported directly.
+generatorName: go
+inputSpec: api.bundled.yaml
+outputDir: openapi/client
+
+additionalProperties:
+  packageName: openapiclient
+  moduleName: github.com/lwshen/vault-hub/packages/api/openapi/client
+  enumClassPrefix: true
+  structPrefix: true
+  disallowAdditionalPropertiesIfNotPresent: true
+  withGoCodegenComment: true
+  gitHost: github.com
+  gitUserId: lwshen
+  gitRepoId: vault-hub
+
+globalProperties:
+  apiTests: false
+  apiDocs: false
+  modelTests: false

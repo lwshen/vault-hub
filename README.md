@@ -155,7 +155,7 @@ air -c .air.toml
 ```
 vault-hub/
 ├── apps/
-│   ├── server/           # Go backend (Fiber web server)
+│   ├── server/           # Go backend (Echo web server)
 │   ├── cli/              # Go CLI (Cobra commands)
 │   ├── web/              # React frontend (Vite + TypeScript)
 │   └── cron/             # Go cron service for scheduled CLI execution
@@ -166,8 +166,7 @@ vault-hub/
 │   ├── config/          # Configuration management
 │   └── version/         # Version information
 ├── model/               # GORM database models
-├── handler/             # HTTP request handlers
-├── route/               # Routing and middleware
+├── internal/server/echoapp/  # Echo bootstrap, middleware, routes
 └── .github/workflows/   # CI/CD pipelines
 ```
 > The `apps/web` directory is managed as an external package; avoid editing those sources directly and regenerate embedded assets via the documented build commands instead.

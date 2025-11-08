@@ -51,10 +51,10 @@ VaultHub is a comprehensive secure environment variable and API key management s
 
 - **Entry point**: `apps/server/main.go` - Sets up Fiber web server
 - **Database**: GORM with support for SQLite, MySQL, PostgreSQL
-- **API**: OpenAPI 3.0 spec in `packages/api/openapi/api.yaml`, generated code in `packages/api/generated.go`
+- **API**: OpenAPI 3.0 spec in `packages/api/openapi/api.yaml`, generated previews in `packages/api/openapi/server` and `packages/api/openapi/client`
 - **Models**: `model/` - Database entities (User, Vault, AuditLog, APIKey)
 - **Routes**: `route/` - HTTP routing and middleware
-- **Handlers**: `handler/` - Request/response handling
+- **Server**: `internal/server/echoapp/` - Echo routing, middleware, and response helpers
 - **Internal packages**:
   - `internal/config/` - Environment configuration
   - `internal/auth/` - JWT and OIDC authentication
@@ -141,7 +141,7 @@ Optional configuration:
 
 The project uses OpenAPI 3.0 specification (`packages/api/openapi/api.yaml`) with `oapi-codegen` to generate:
 
-- Go server stubs (`packages/api/generated.go`)
+- Go server stubs (`packages/api/openapi/server/go`)
 - TypeScript client library (published as npm package)
 
 **Important**: After modifying files in `packages/api/openapi/*`:
@@ -150,7 +150,7 @@ The project uses OpenAPI 3.0 specification (`packages/api/openapi/api.yaml`) wit
 
 The API spec uses camelCase naming convention for all properties (e.g., `uniqueId`, `createdAt`, `isActive`).
 
-**NEVER EDIT**: Do not modify `packages/api/generated.go` or `packages/api/api.bundled.yaml` directly as they are auto-generated code. All API changes must be made in the OpenAPI specification files in `packages/api/openapi/*`.
+**NEVER EDIT**: Do not modify files under `packages/api/openapi/server` or `packages/api/openapi/client`, nor `packages/api/api.bundled.yaml`, directly; they are generated. Make API changes in the OpenAPI specification files under `packages/api/openapi/*` and re-run `go generate ./packages/api/...`.
 
 ## Authentication & Authorization
 
@@ -531,12 +531,11 @@ vault-hub/
 │       │   ├── api.yaml  # Main specification
 │       │   ├── paths/    # Endpoint definitions
 │       │   └── schemas/  # Data model schemas
-│       ├── generated.go  # Auto-generated Go server code
+│       ├── openapi/      # Auto-generated OpenAPI server/client code
 │       ├── tool.go       # Code generation tool
 │       └── *.go         # API implementation files
 ├── model/               # Database models (GORM)
-├── handler/             # HTTP request handlers
-├── route/               # Routing and middleware
+├── internal/server/echoapp/  # Echo bootstrap, middleware, routes
 ├── internal/            # Internal packages
 │   ├── auth/           # Authentication (JWT, OIDC)
 │   ├── cli/            # CLI command implementations

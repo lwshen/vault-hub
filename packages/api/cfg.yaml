@@ -1,6 +1,0 @@
-package: api
-generate:
-  models: true
-  fiber-server: true
-  strict-server: true
-output: generated.go

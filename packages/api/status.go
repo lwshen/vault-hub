@@ -1,31 +1,23 @@
 package api
 
 import (
-	"net/http"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/internal/version"
 	"github.com/lwshen/vault-hub/model"
 )
 
-func (s Server) GetStatus(ctx *fiber.Ctx) error {
-	// Check database status with multiple health indicators
+// BuildStatusResponse aggregates health indicators into the API response shape.
+func BuildStatusResponse() StatusResponse {
 	databaseStatus, dbConnections, dbResponseTime := checkDatabaseHealth()
-
-	// Check system status based on multiple factors
 	systemStatus := checkSystemHealth(databaseStatus, dbConnections, dbResponseTime)
 
-	resp := StatusResponse{
+	return StatusResponse{
 		Version:        version.Version,
 		Commit:         version.Commit,
 		SystemStatus:   systemStatus,
 		DatabaseStatus: databaseStatus,
 	}
-
-	return ctx.
-		Status(http.StatusOK).
-		JSON(resp)
 }
 
 // checkDatabaseHealth performs comprehensive database health checks

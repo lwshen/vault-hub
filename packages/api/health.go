@@ -1,21 +1,13 @@
 package api
 
-import (
-	"net/http"
-	"time"
+import "time"
 
-	"github.com/gofiber/fiber/v2"
-)
-
-func (Server) Health(ctx *fiber.Ctx) error {
+// HealthCheck builds the response payload used by health endpoints.
+func HealthCheck() HealthCheckResponse {
 	status := "ok"
-	time := time.Now()
-	resp := HealthCheckResponse{
+	now := time.Now()
+	return HealthCheckResponse{
 		Status:    &status,
-		Timestamp: &time,
+		Timestamp: &now,
 	}
-
-	return ctx.
-		Status(http.StatusOK).
-		JSON(resp)
 }
