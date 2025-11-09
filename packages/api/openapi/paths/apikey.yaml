@@ -92,3 +92,28 @@ apiKeyById:
     responses:
       "204":
         description: API key deleted successfully
+apiKeyUsage:
+  get:
+    description: Get usage statistics for a specific API key
+    tags:
+      - APIKey
+    operationId: getAPIKeyUsage
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: API Key ID
+        schema:
+          type: integer
+          format: int64
+    responses:
+      "200":
+        description: API key usage statistics
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/apikey.yaml#/APIKeyUsageResponse
+      "404":
+        description: API key not found
+      "403":
+        description: Forbidden - API key does not belong to the user

@@ -59,6 +59,30 @@ const (
 	StatusResponseSystemStatusUnavailable StatusResponseSystemStatus = "unavailable"
 )
 
+// APIKeyUsageResponse defines model for APIKeyUsageResponse.
+type APIKeyUsageResponse struct {
+	// Last24Hours Number of requests in the last 24 hours
+	Last24Hours int64 `json:"last24Hours"`
+
+	// Last30Days Number of requests in the last 30 days
+	Last30Days int64 `json:"last30Days"`
+
+	// Last7Days Number of requests in the last 7 days
+	Last7Days int64 `json:"last7Days"`
+
+	// LastUsedAt Timestamp when the API key was last used
+	LastUsedAt *time.Time `json:"lastUsedAt"`
+
+	// TotalRequests Total number of requests made with this API key (all time)
+	TotalRequests int64 `json:"totalRequests"`
+
+	// VaultAccessCount Total number of vault access requests (all time)
+	VaultAccessCount int64 `json:"vaultAccessCount"`
+
+	// VaultBreakdown Breakdown of vault access by individual vault
+	VaultBreakdown []VaultUsageBreakdown `json:"vaultBreakdown"`
+}
+
 // APIKeysResponse defines model for APIKeysResponse.
 type APIKeysResponse struct {
 	ApiKeys []VaultAPIKey `json:"apiKeys"`
@@ -350,6 +374,21 @@ type VaultLite struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
+// VaultUsageBreakdown defines model for VaultUsageBreakdown.
+type VaultUsageBreakdown struct {
+	// AccessCount Number of times this vault was accessed
+	AccessCount int64 `json:"accessCount"`
+
+	// VaultId Vault ID
+	VaultId int64 `json:"vaultId"`
+
+	// VaultName Vault name
+	VaultName string `json:"vaultName"`
+
+	// VaultUniqueId Vault unique identifier
+	VaultUniqueId string `json:"vaultUniqueId"`
+}
+
 // VaultsResponse defines model for VaultsResponse.
 type VaultsResponse struct {
 	// PageIndex Current page index (starting from 1)
@@ -447,6 +486,9 @@ type ServerInterface interface {
 
 	// (PATCH /api/api-keys/{id})
 	UpdateAPIKey(c *fiber.Ctx, id int64) error
+
+	// (GET /api/api-keys/{id}/usage)
+	GetAPIKeyUsage(c *fiber.Ctx, id int64) error
 
 	// (GET /api/audit-logs)
 	GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error
@@ -602,6 +644,22 @@ func (siw *ServerInterfaceWrapper) UpdateAPIKey(c *fiber.Ctx) error {
 	}
 
 	return siw.Handler.UpdateAPIKey(c, id)
+}
+
+// GetAPIKeyUsage operation middleware
+func (siw *ServerInterfaceWrapper) GetAPIKeyUsage(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	return siw.Handler.GetAPIKeyUsage(c, id)
 }
 
 // GetAuditLogs operation middleware
@@ -928,6 +986,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Patch(options.BaseURL+"/api/api-keys/:id", wrapper.UpdateAPIKey)
 
+	router.Get(options.BaseURL+"/api/api-keys/:id/usage", wrapper.GetAPIKeyUsage)
+
 	router.Get(options.BaseURL+"/api/audit-logs", wrapper.GetAuditLogs)
 
 	router.Get(options.BaseURL+"/api/audit-logs/metrics", wrapper.GetAuditMetrics)
@@ -1038,6 +1098,39 @@ func (response UpdateAPIKey200JSONResponse) VisitUpdateAPIKeyResponse(ctx *fiber
 	ctx.Status(200)
 
 	return ctx.JSON(&response)
+}
+
+type GetAPIKeyUsageRequestObject struct {
+	Id int64 `json:"id"`
+}
+
+type GetAPIKeyUsageResponseObject interface {
+	VisitGetAPIKeyUsageResponse(ctx *fiber.Ctx) error
+}
+
+type GetAPIKeyUsage200JSONResponse APIKeyUsageResponse
+
+func (response GetAPIKeyUsage200JSONResponse) VisitGetAPIKeyUsageResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type GetAPIKeyUsage403Response struct {
+}
+
+func (response GetAPIKeyUsage403Response) VisitGetAPIKeyUsageResponse(ctx *fiber.Ctx) error {
+	ctx.Status(403)
+	return nil
+}
+
+type GetAPIKeyUsage404Response struct {
+}
+
+func (response GetAPIKeyUsage404Response) VisitGetAPIKeyUsageResponse(ctx *fiber.Ctx) error {
+	ctx.Status(404)
+	return nil
 }
 
 type GetAuditLogsRequestObject struct {
@@ -1454,6 +1547,9 @@ type StrictServerInterface interface {
 	// (PATCH /api/api-keys/{id})
 	UpdateAPIKey(ctx context.Context, request UpdateAPIKeyRequestObject) (UpdateAPIKeyResponseObject, error)
 
+	// (GET /api/api-keys/{id}/usage)
+	GetAPIKeyUsage(ctx context.Context, request GetAPIKeyUsageRequestObject) (GetAPIKeyUsageResponseObject, error)
+
 	// (GET /api/audit-logs)
 	GetAuditLogs(ctx context.Context, request GetAuditLogsRequestObject) (GetAuditLogsResponseObject, error)
 
@@ -1641,6 +1737,33 @@ func (sh *strictHandler) UpdateAPIKey(ctx *fiber.Ctx, id int64) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(UpdateAPIKeyResponseObject); ok {
 		if err := validResponse.VisitUpdateAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetAPIKeyUsage operation middleware
+func (sh *strictHandler) GetAPIKeyUsage(ctx *fiber.Ctx, id int64) error {
+	var request GetAPIKeyUsageRequestObject
+
+	request.Id = id
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAPIKeyUsage(ctx.UserContext(), request.(GetAPIKeyUsageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAPIKeyUsage")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetAPIKeyUsageResponseObject); ok {
+		if err := validResponse.VisitGetAPIKeyUsageResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

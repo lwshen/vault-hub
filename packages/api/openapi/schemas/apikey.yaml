@@ -105,3 +105,65 @@ UpdateAPIKeyRequest:
       type: string
       format: date-time
       description: Optional expiration date
+APIKeyUsageResponse:
+  type: object
+  required:
+    - totalRequests
+    - last24Hours
+    - last7Days
+    - last30Days
+    - vaultAccessCount
+    - vaultBreakdown
+  properties:
+    totalRequests:
+      type: integer
+      format: int64
+      description: Total number of requests made with this API key (all time)
+    last24Hours:
+      type: integer
+      format: int64
+      description: Number of requests in the last 24 hours
+    last7Days:
+      type: integer
+      format: int64
+      description: Number of requests in the last 7 days
+    last30Days:
+      type: integer
+      format: int64
+      description: Number of requests in the last 30 days
+    lastUsedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Timestamp when the API key was last used
+    vaultAccessCount:
+      type: integer
+      format: int64
+      description: Total number of vault access requests (all time)
+    vaultBreakdown:
+      type: array
+      items:
+        $ref: "#/VaultUsageBreakdown"
+      description: Breakdown of vault access by individual vault
+VaultUsageBreakdown:
+  type: object
+  required:
+    - vaultId
+    - vaultName
+    - vaultUniqueId
+    - accessCount
+  properties:
+    vaultId:
+      type: integer
+      format: int64
+      description: Vault ID
+    vaultName:
+      type: string
+      description: Vault name
+    vaultUniqueId:
+      type: string
+      description: Vault unique identifier
+    accessCount:
+      type: integer
+      format: int64
+      description: Number of times this vault was accessed

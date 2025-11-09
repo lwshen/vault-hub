@@ -375,3 +375,55 @@ func (s Server) DeleteAPIKey(c *fiber.Ctx, id int64) error {
 
 	return c.SendStatus(fiber.StatusNoContent)
 }
+
+// GetAPIKeyUsage - Get usage statistics for a specific API key
+func (s Server) GetAPIKeyUsage(c *fiber.Ctx, id int64) error {
+	// Get authenticated user
+	user, err := getUserFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	// Find and validate API key ownership
+	apiKey, err := findAPIKeyByID(id, user.ID)
+	if err != nil {
+		if err.Error() == "API key not found" {
+			return handler.SendError(c, fiber.StatusNotFound, "API key not found")
+		}
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to get API key")
+	}
+
+	// Get usage statistics
+	stats, err := model.GetAPIKeyUsageStats(apiKey.ID)
+	if err != nil {
+		slog.Error("Failed to get API key usage statistics",
+			"api_key_id", apiKey.ID,
+			"user_id", user.ID,
+			"error", err)
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to get usage statistics")
+	}
+
+	// Convert vault breakdown to API format
+	vaultBreakdown := make([]VaultUsageBreakdown, 0)
+	for _, vb := range stats.VaultBreakdown {
+		// #nosec G115
+		vaultBreakdown = append(vaultBreakdown, VaultUsageBreakdown{
+			VaultId:       int64(vb.VaultID),
+			VaultName:     vb.VaultName,
+			VaultUniqueId: vb.VaultUniqueID,
+			AccessCount:   vb.AccessCount,
+		})
+	}
+
+	response := APIKeyUsageResponse{
+		TotalRequests:    stats.TotalRequests,
+		Last24Hours:      stats.Last24Hours,
+		Last7Days:        stats.Last7Days,
+		Last30Days:       stats.Last30Days,
+		LastUsedAt:       stats.LastUsedAt,
+		VaultAccessCount: stats.VaultAccessCount,
+		VaultBreakdown:   vaultBreakdown,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
+}

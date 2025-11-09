@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.6
+  version: 1.0.7
   title: Vault Hub Server
 # Merge path definitions from separate files
 paths:
@@ -46,6 +46,8 @@ paths:
     $ref: ./paths/apikey.yaml#/apiKeys
   /api/api-keys/{id}:
     $ref: ./paths/apikey.yaml#/apiKeyById
+  /api/api-keys/{id}/usage:
+    $ref: ./paths/apikey.yaml#/apiKeyUsage
   /api/cli/vaults:
     $ref: ./paths/apikey-vault.yaml#/apiKeyVaults
   /api/cli/vault/{uniqueId}:
@@ -115,6 +117,10 @@ components:
       $ref: ./schemas/apikey.yaml#/CreateAPIKeyResponse
     UpdateAPIKeyRequest:
       $ref: ./schemas/apikey.yaml#/UpdateAPIKeyRequest
+    APIKeyUsageResponse:
+      $ref: ./schemas/apikey.yaml#/APIKeyUsageResponse
+    VaultUsageBreakdown:
+      $ref: ./schemas/apikey.yaml#/VaultUsageBreakdown
     # Status schemas
     StatusResponse:
       $ref: ./schemas/status.yaml#/StatusResponse
