@@ -251,6 +251,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Vault'
+  /api/vaults/filter-options:
+    get:
+      description: Get minimal vault list for filter dropdowns (uniqueId and name only)
+      tags:
+        - Vault
+      operationId: getVaultFilterOptions
+      responses:
+        '200':
+          description: List of vaults for filter dropdowns
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VaultFilterOptionsResponse'
   /api/vaults/{uniqueId}:
     get:
       description: Get a specific vault by Unique ID
@@ -749,6 +762,28 @@ components:
           type: string
           description: Category/type of vault
           maxLength: 100
+    VaultFilterOption:
+      type: object
+      required:
+        - uniqueId
+        - name
+      properties:
+        uniqueId:
+          type: string
+          description: Unique identifier for the vault
+        name:
+          type: string
+          description: Human-readable name
+    VaultFilterOptionsResponse:
+      type: object
+      required:
+        - vaults
+      properties:
+        vaults:
+          type: array
+          description: List of vaults for filter dropdowns
+          items:
+            $ref: '#/components/schemas/VaultFilterOption'
     AuditLogsResponse:
       type: object
       required:

@@ -107,3 +107,16 @@ vaultById:
     responses:
       "204":
         description: Vault deleted successfully
+vaultFilterOptions:
+  get:
+    description: Get minimal vault list for filter dropdowns (uniqueId and name only)
+    tags:
+      - Vault
+    operationId: getVaultFilterOptions
+    responses:
+      "200":
+        description: List of vaults for filter dropdowns
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/vault.yaml#/VaultFilterOptionsResponse

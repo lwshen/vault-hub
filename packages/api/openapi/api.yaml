@@ -34,6 +34,8 @@ paths:
   # Vault endpoints
   /api/vaults:
     $ref: ./paths/vault.yaml#/vaults
+  /api/vaults/filter-options:
+    $ref: ./paths/vault.yaml#/vaultFilterOptions
   /api/vaults/{uniqueId}:
     $ref: ./paths/vault.yaml#/vaultById
   # Audit endpoints
@@ -97,6 +99,10 @@ components:
       $ref: ./schemas/vault.yaml#/CreateVaultRequest
     UpdateVaultRequest:
       $ref: ./schemas/vault.yaml#/UpdateVaultRequest
+    VaultFilterOption:
+      $ref: ./schemas/vault.yaml#/VaultFilterOption
+    VaultFilterOptionsResponse:
+      $ref: ./schemas/vault.yaml#/VaultFilterOptionsResponse
     # Audit log schemas
     AuditLogsResponse:
       $ref: ./schemas/audit.yaml#/AuditLogsResponse

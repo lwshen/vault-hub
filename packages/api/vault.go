@@ -275,3 +275,42 @@ func getStringValue(s *string) string {
 	}
 	return *s
 }
+
+// convertToApiVaultFilterOption converts a model.Vault to an api.VaultFilterOption
+func convertToApiVaultFilterOption(vault *model.Vault) VaultFilterOption {
+	return VaultFilterOption{
+		UniqueId: vault.UniqueID,
+		Name:     vault.Name,
+	}
+}
+
+// GetVaultFilterOptions handles GET /api/vaults/filter-options
+// Returns a minimal list of vaults (uniqueId and name only) for filter dropdowns
+func (Server) GetVaultFilterOptions(c *fiber.Ctx) error {
+	user, err := getUserFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	// Query all vaults for the user, selecting only needed fields
+	var vaults []model.Vault
+	err = model.DB.Where("user_id = ? AND deleted_at IS NULL", user.ID).
+		Select("unique_id", "name").
+		Order("name ASC").
+		Find(&vaults).Error
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Convert to API VaultFilterOption slice
+	apiVaults := make([]VaultFilterOption, 0, len(vaults))
+	for i := range vaults {
+		apiVaults = append(apiVaults, convertToApiVaultFilterOption(&vaults[i]))
+	}
+
+	response := VaultFilterOptionsResponse{
+		Vaults: apiVaults,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
+}
