@@ -34,8 +34,8 @@ const (
 
 // Defines values for AuditLogSource.
 const (
-	Cli AuditLogSource = "cli"
-	Web AuditLogSource = "web"
+	AuditLogSourceCli AuditLogSource = "cli"
+	AuditLogSourceWeb AuditLogSource = "web"
 )
 
 // Defines values for EmailTokenResponseCode.
@@ -57,6 +57,12 @@ const (
 	StatusResponseSystemStatusDegraded    StatusResponseSystemStatus = "degraded"
 	StatusResponseSystemStatusHealthy     StatusResponseSystemStatus = "healthy"
 	StatusResponseSystemStatusUnavailable StatusResponseSystemStatus = "unavailable"
+)
+
+// Defines values for GetAuditLogsParamsSource.
+const (
+	GetAuditLogsParamsSourceCli GetAuditLogsParamsSource = "cli"
+	GetAuditLogsParamsSourceWeb GetAuditLogsParamsSource = "web"
 )
 
 // APIKeysResponse defines model for APIKeysResponse.
@@ -385,12 +391,18 @@ type GetAuditLogsParams struct {
 	// VaultUniqueId Filter logs by vault unique ID
 	VaultUniqueId *string `form:"vaultUniqueId,omitempty" json:"vaultUniqueId,omitempty"`
 
+	// Source Filter logs by source (web interface or CLI)
+	Source *GetAuditLogsParamsSource `form:"source,omitempty" json:"source,omitempty"`
+
 	// PageSize Number of logs per page (default 100, max 1000)
 	PageSize int `form:"pageSize" json:"pageSize"`
 
 	// PageIndex Page index, starting from 0 (default 0)
 	PageIndex int `form:"pageIndex" json:"pageIndex"`
 }
+
+// GetAuditLogsParamsSource defines parameters for GetAuditLogs.
+type GetAuditLogsParamsSource string
 
 // ConsumeMagicLinkParams defines parameters for ConsumeMagicLink.
 type ConsumeMagicLinkParams struct {
@@ -637,6 +649,13 @@ func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
 	err = runtime.BindQueryParameter("form", true, false, "vaultUniqueId", query, &params.VaultUniqueId)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter vaultUniqueId: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "source" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "source", query, &params.Source)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter source: %w", err).Error())
 	}
 
 	// ------------- Required query parameter "pageSize" -------------

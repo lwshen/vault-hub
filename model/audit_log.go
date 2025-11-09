@@ -130,6 +130,7 @@ func LogAPIKeyAction(apiKeyID uint, action ActionType, userID uint, source Sourc
 type GetAuditLogsWithFiltersParams struct {
 	UserID    uint
 	VaultID   *uint
+	Source    *SourceType
 	StartDate *time.Time
 	EndDate   *time.Time
 	Limit     int
@@ -152,6 +153,11 @@ func GetAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) ([]AuditLog, 
 	// Add vault filter if specified
 	if params.VaultID != nil {
 		query = query.Where("vault_id = ?", *params.VaultID)
+	}
+
+	// Add source filter if specified
+	if params.Source != nil {
+		query = query.Where("source = ?", *params.Source)
 	}
 
 	// Add date range filter if specified
@@ -186,6 +192,11 @@ func CountAuditLogsWithFilters(params GetAuditLogsWithFiltersParams) (int64, err
 	// Add vault filter if specified
 	if params.VaultID != nil {
 		query = query.Where("vault_id = ?", *params.VaultID)
+	}
+
+	// Add source filter if specified
+	if params.Source != nil {
+		query = query.Where("source = ?", *params.Source)
 	}
 
 	// Add date range filter if specified

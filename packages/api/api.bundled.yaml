@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.6
+  version: 1.0.7
   title: Vault Hub Server
 paths:
   /api/health:
@@ -338,6 +338,15 @@ paths:
           description: Filter logs by vault unique ID
           schema:
             type: string
+        - name: source
+          in: query
+          required: false
+          description: Filter logs by source (web interface or CLI)
+          schema:
+            type: string
+            enum:
+              - web
+              - cli
         - name: pageSize
           in: query
           required: true
