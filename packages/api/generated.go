@@ -75,12 +75,6 @@ type APIKeyUsageResponse struct {
 
 	// TotalRequests Total number of requests made with this API key (all time)
 	TotalRequests int64 `json:"totalRequests"`
-
-	// VaultAccessCount Total number of vault access requests (all time)
-	VaultAccessCount int64 `json:"vaultAccessCount"`
-
-	// VaultBreakdown Breakdown of vault access by individual vault
-	VaultBreakdown []VaultUsageBreakdown `json:"vaultBreakdown"`
 }
 
 // APIKeysResponse defines model for APIKeysResponse.
@@ -372,21 +366,6 @@ type VaultLite struct {
 	// UniqueId Unique identifier for the vault
 	UniqueId  string     `json:"uniqueId"`
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
-}
-
-// VaultUsageBreakdown defines model for VaultUsageBreakdown.
-type VaultUsageBreakdown struct {
-	// AccessCount Number of times this vault was accessed
-	AccessCount int64 `json:"accessCount"`
-
-	// VaultId Vault ID
-	VaultId int64 `json:"vaultId"`
-
-	// VaultName Vault name
-	VaultName string `json:"vaultName"`
-
-	// VaultUniqueId Vault unique identifier
-	VaultUniqueId string `json:"vaultUniqueId"`
 }
 
 // VaultsResponse defines model for VaultsResponse.

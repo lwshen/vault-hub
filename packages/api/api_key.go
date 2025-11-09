@@ -403,26 +403,12 @@ func (s Server) GetAPIKeyUsage(c *fiber.Ctx, id int64) error {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to get usage statistics")
 	}
 
-	// Convert vault breakdown to API format
-	vaultBreakdown := make([]VaultUsageBreakdown, 0)
-	for _, vb := range stats.VaultBreakdown {
-		// #nosec G115
-		vaultBreakdown = append(vaultBreakdown, VaultUsageBreakdown{
-			VaultId:       int64(vb.VaultID),
-			VaultName:     vb.VaultName,
-			VaultUniqueId: vb.VaultUniqueID,
-			AccessCount:   vb.AccessCount,
-		})
-	}
-
 	response := APIKeyUsageResponse{
-		TotalRequests:    stats.TotalRequests,
-		Last24Hours:      stats.Last24Hours,
-		Last7Days:        stats.Last7Days,
-		Last30Days:       stats.Last30Days,
-		LastUsedAt:       stats.LastUsedAt,
-		VaultAccessCount: stats.VaultAccessCount,
-		VaultBreakdown:   vaultBreakdown,
+		TotalRequests: stats.TotalRequests,
+		Last24Hours:   stats.Last24Hours,
+		Last7Days:     stats.Last7Days,
+		Last30Days:    stats.Last30Days,
+		LastUsedAt:    stats.LastUsedAt,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response)

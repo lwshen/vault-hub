@@ -112,8 +112,6 @@ APIKeyUsageResponse:
     - last24Hours
     - last7Days
     - last30Days
-    - vaultAccessCount
-    - vaultBreakdown
   properties:
     totalRequests:
       type: integer
@@ -136,34 +134,3 @@ APIKeyUsageResponse:
       format: date-time
       nullable: true
       description: Timestamp when the API key was last used
-    vaultAccessCount:
-      type: integer
-      format: int64
-      description: Total number of vault access requests (all time)
-    vaultBreakdown:
-      type: array
-      items:
-        $ref: "#/VaultUsageBreakdown"
-      description: Breakdown of vault access by individual vault
-VaultUsageBreakdown:
-  type: object
-  required:
-    - vaultId
-    - vaultName
-    - vaultUniqueId
-    - accessCount
-  properties:
-    vaultId:
-      type: integer
-      format: int64
-      description: Vault ID
-    vaultName:
-      type: string
-      description: Vault name
-    vaultUniqueId:
-      type: string
-      description: Vault unique identifier
-    accessCount:
-      type: integer
-      format: int64
-      description: Number of times this vault was accessed

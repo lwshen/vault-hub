@@ -119,8 +119,6 @@ components:
       $ref: ./schemas/apikey.yaml#/UpdateAPIKeyRequest
     APIKeyUsageResponse:
       $ref: ./schemas/apikey.yaml#/APIKeyUsageResponse
-    VaultUsageBreakdown:
-      $ref: ./schemas/apikey.yaml#/VaultUsageBreakdown
     # Status schemas
     StatusResponse:
       $ref: ./schemas/status.yaml#/StatusResponse

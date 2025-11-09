@@ -133,11 +133,6 @@ func TestGetAPIKeyUsageStats(t *testing.T) {
 		t.Errorf("Expected TotalRequests to be 4, got %d", stats.TotalRequests)
 	}
 
-	// Check vault access count (should be 3)
-	if stats.VaultAccessCount != 3 {
-		t.Errorf("Expected VaultAccessCount to be 3, got %d", stats.VaultAccessCount)
-	}
-
 	// Check last24Hours (all 4 logs are within 24 hours)
 	if stats.Last24Hours != 4 {
 		t.Errorf("Expected Last24Hours to be 4, got %d", stats.Last24Hours)
@@ -158,25 +153,6 @@ func TestGetAPIKeyUsageStats(t *testing.T) {
 		t.Error("Expected LastUsedAt to be non-nil")
 	} else if !stats.LastUsedAt.Equal(lastUsedAt) {
 		t.Errorf("Expected LastUsedAt to be %v, got %v", lastUsedAt, *stats.LastUsedAt)
-	}
-
-	// Check vault breakdown (should have 1 vault with 3 accesses)
-	if len(stats.VaultBreakdown) != 1 {
-		t.Errorf("Expected VaultBreakdown to have 1 entry, got %d", len(stats.VaultBreakdown))
-	} else {
-		breakdown := stats.VaultBreakdown[0]
-		if breakdown.VaultID != vault.ID {
-			t.Errorf("Expected VaultID to be %d, got %d", vault.ID, breakdown.VaultID)
-		}
-		if breakdown.VaultName != vault.Name {
-			t.Errorf("Expected VaultName to be %s, got %s", vault.Name, breakdown.VaultName)
-		}
-		if breakdown.VaultUniqueID != vault.UniqueID {
-			t.Errorf("Expected VaultUniqueID to be %s, got %s", vault.UniqueID, breakdown.VaultUniqueID)
-		}
-		if breakdown.AccessCount != 3 {
-			t.Errorf("Expected AccessCount to be 3, got %d", breakdown.AccessCount)
-		}
 	}
 }
 
@@ -224,14 +200,8 @@ func TestGetAPIKeyUsageStatsNoUsage(t *testing.T) {
 	if stats.Last30Days != 0 {
 		t.Errorf("Expected Last30Days to be 0, got %d", stats.Last30Days)
 	}
-	if stats.VaultAccessCount != 0 {
-		t.Errorf("Expected VaultAccessCount to be 0, got %d", stats.VaultAccessCount)
-	}
 	if stats.LastUsedAt != nil {
 		t.Errorf("Expected LastUsedAt to be nil, got %v", *stats.LastUsedAt)
-	}
-	if len(stats.VaultBreakdown) != 0 {
-		t.Errorf("Expected VaultBreakdown to be empty, got %d entries", len(stats.VaultBreakdown))
 	}
 }
 

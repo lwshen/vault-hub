@@ -326,21 +326,11 @@ func (k *APIKey) Delete() error {
 
 // APIKeyUsageStats holds usage statistics for an API key
 type APIKeyUsageStats struct {
-	TotalRequests    int64
-	Last24Hours      int64
-	Last7Days        int64
-	Last30Days       int64
-	LastUsedAt       *time.Time
-	VaultAccessCount int64
-	VaultBreakdown   []VaultUsageBreakdown
-}
-
-// VaultUsageBreakdown holds per-vault access statistics
-type VaultUsageBreakdown struct {
-	VaultID       uint
-	VaultName     string
-	VaultUniqueID string
-	AccessCount   int64
+	TotalRequests int64
+	Last24Hours   int64
+	Last7Days     int64
+	Last30Days    int64
+	LastUsedAt    *time.Time
 }
 
 // GetAPIKeyUsageStats retrieves comprehensive usage statistics for an API key
@@ -357,11 +347,10 @@ func GetAPIKeyUsageStats(apiKeyID uint) (*APIKeyUsageStats, error) {
 
 	// Get time-based statistics in a single query
 	var timeStats struct {
-		TotalRequests    int64
-		Last24Hours      int64
-		Last7Days        int64
-		Last30Days       int64
-		VaultAccessCount int64
+		TotalRequests int64
+		Last24Hours   int64
+		Last7Days     int64
+		Last30Days    int64
 	}
 
 	err := DB.Model(&AuditLog{}).
@@ -369,8 +358,7 @@ func GetAPIKeyUsageStats(apiKeyID uint) (*APIKeyUsageStats, error) {
 			COUNT(*) as total_requests,
 			COUNT(CASE WHEN created_at >= ? THEN 1 END) as last24_hours,
 			COUNT(CASE WHEN created_at >= ? THEN 1 END) as last7_days,
-			COUNT(CASE WHEN created_at >= ? THEN 1 END) as last30_days,
-			COUNT(CASE WHEN vault_id IS NOT NULL THEN 1 END) as vault_access_count
+			COUNT(CASE WHEN created_at >= ? THEN 1 END) as last30_days
 		`, twentyFourHoursAgo, sevenDaysAgo, thirtyDaysAgo).
 		Where("api_key_id = ?", apiKeyID).
 		Scan(&timeStats).Error
@@ -379,27 +367,11 @@ func GetAPIKeyUsageStats(apiKeyID uint) (*APIKeyUsageStats, error) {
 		return nil, err
 	}
 
-	// Get vault breakdown
-	var vaultBreakdown []VaultUsageBreakdown
-	err = DB.Model(&AuditLog{}).
-		Select("audit_logs.vault_id, vaults.name as vault_name, vaults.unique_id as vault_unique_id, COUNT(*) as access_count").
-		Joins("INNER JOIN vaults ON vaults.id = audit_logs.vault_id").
-		Where("audit_logs.api_key_id = ? AND audit_logs.vault_id IS NOT NULL", apiKeyID).
-		Group("audit_logs.vault_id, vaults.name, vaults.unique_id").
-		Order("access_count DESC").
-		Scan(&vaultBreakdown).Error
-
-	if err != nil {
-		return nil, err
-	}
-
 	return &APIKeyUsageStats{
-		TotalRequests:    timeStats.TotalRequests,
-		Last24Hours:      timeStats.Last24Hours,
-		Last7Days:        timeStats.Last7Days,
-		Last30Days:       timeStats.Last30Days,
-		LastUsedAt:       apiKey.LastUsedAt,
-		VaultAccessCount: timeStats.VaultAccessCount,
-		VaultBreakdown:   vaultBreakdown,
+		TotalRequests: timeStats.TotalRequests,
+		Last24Hours:   timeStats.Last24Hours,
+		Last7Days:     timeStats.Last7Days,
+		Last30Days:    timeStats.Last30Days,
+		LastUsedAt:    apiKey.LastUsedAt,
 	}, nil
 }
