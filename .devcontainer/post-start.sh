@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
