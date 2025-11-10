@@ -2,7 +2,13 @@
   "name": "Development Container",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
-    "ghcr.io/wandb/catnip/feature:1": {}
+    "ghcr.io/wandb/catnip/feature:1": {},
+    "ghcr.io/devcontainers/features/go:1": {},
+    "ghcr.io/devcontainers/features/node:1": {},
+  },
+  "remoteEnv": {
+    "CATNIP_GO_VERSION": "1.24",
+    "CATNIP_NODE_VERSION": "24.11.0"
   },
   "forwardPorts": [
     6369
