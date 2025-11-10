@@ -87,9 +87,17 @@ func buildAuditLogFilterParams(params GetAuditLogsParams, userID uint) (model.Ge
 		return model.GetAuditLogsWithFiltersParams{}, err
 	}
 
+	// Convert source parameter to model type
+	var source *model.SourceType
+	if params.Source != nil {
+		sourceType := model.SourceType(*params.Source)
+		source = &sourceType
+	}
+
 	return model.GetAuditLogsWithFiltersParams{
 		UserID:    userID,
 		VaultID:   vaultID,
+		Source:    source,
 		StartDate: params.StartDate,
 		EndDate:   params.EndDate,
 		Limit:     params.PageSize,

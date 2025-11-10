@@ -116,3 +116,25 @@ UpdateVaultRequest:
       type: string
       description: Category/type of vault
       maxLength: 100
+VaultFilterOption:
+  type: object
+  required:
+    - uniqueId
+    - name
+  properties:
+    uniqueId:
+      type: string
+      description: Unique identifier for the vault
+    name:
+      type: string
+      description: Human-readable name
+VaultFilterOptionsResponse:
+  type: object
+  required:
+    - vaults
+  properties:
+    vaults:
+      type: array
+      description: List of vaults for filter dropdowns
+      items:
+        $ref: "#/VaultFilterOption"

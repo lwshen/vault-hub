@@ -34,8 +34,8 @@ const (
 
 // Defines values for AuditLogSource.
 const (
-	Cli AuditLogSource = "cli"
-	Web AuditLogSource = "web"
+	AuditLogSourceCli AuditLogSource = "cli"
+	AuditLogSourceWeb AuditLogSource = "web"
 )
 
 // Defines values for EmailTokenResponseCode.
@@ -57,6 +57,12 @@ const (
 	StatusResponseSystemStatusDegraded    StatusResponseSystemStatus = "degraded"
 	StatusResponseSystemStatusHealthy     StatusResponseSystemStatus = "healthy"
 	StatusResponseSystemStatusUnavailable StatusResponseSystemStatus = "unavailable"
+)
+
+// Defines values for GetAuditLogsParamsSource.
+const (
+	GetAuditLogsParamsSourceCli GetAuditLogsParamsSource = "cli"
+	GetAuditLogsParamsSourceWeb GetAuditLogsParamsSource = "web"
 )
 
 // APIKeysResponse defines model for APIKeysResponse.
@@ -334,6 +340,21 @@ type VaultAPIKey struct {
 	Vaults *[]VaultLite `json:"vaults,omitempty"`
 }
 
+// VaultFilterOption defines model for VaultFilterOption.
+type VaultFilterOption struct {
+	// Name Human-readable name
+	Name string `json:"name"`
+
+	// UniqueId Unique identifier for the vault
+	UniqueId string `json:"uniqueId"`
+}
+
+// VaultFilterOptionsResponse defines model for VaultFilterOptionsResponse.
+type VaultFilterOptionsResponse struct {
+	// Vaults List of vaults for filter dropdowns
+	Vaults []VaultFilterOption `json:"vaults"`
+}
+
 // VaultLite defines model for VaultLite.
 type VaultLite struct {
 	// Category Category/type of vault
@@ -385,12 +406,18 @@ type GetAuditLogsParams struct {
 	// VaultUniqueId Filter logs by vault unique ID
 	VaultUniqueId *string `form:"vaultUniqueId,omitempty" json:"vaultUniqueId,omitempty"`
 
+	// Source Filter logs by source (web interface or CLI)
+	Source *GetAuditLogsParamsSource `form:"source,omitempty" json:"source,omitempty"`
+
 	// PageSize Number of logs per page (default 100, max 1000)
 	PageSize int `form:"pageSize" json:"pageSize"`
 
 	// PageIndex Page index, starting from 0 (default 0)
 	PageIndex int `form:"pageIndex" json:"pageIndex"`
 }
+
+// GetAuditLogsParamsSource defines parameters for GetAuditLogs.
+type GetAuditLogsParamsSource string
 
 // ConsumeMagicLinkParams defines parameters for ConsumeMagicLink.
 type ConsumeMagicLinkParams struct {
@@ -501,6 +528,9 @@ type ServerInterface interface {
 
 	// (POST /api/vaults)
 	CreateVault(c *fiber.Ctx) error
+
+	// (GET /api/vaults/filter-options)
+	GetVaultFilterOptions(c *fiber.Ctx) error
 
 	// (DELETE /api/vaults/{uniqueId})
 	DeleteVault(c *fiber.Ctx, uniqueId string) error
@@ -637,6 +667,13 @@ func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
 	err = runtime.BindQueryParameter("form", true, false, "vaultUniqueId", query, &params.VaultUniqueId)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter vaultUniqueId: %w", err).Error())
+	}
+
+	// ------------- Optional query parameter "source" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "source", query, &params.Source)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter source: %w", err).Error())
 	}
 
 	// ------------- Required query parameter "pageSize" -------------
@@ -851,6 +888,12 @@ func (siw *ServerInterfaceWrapper) CreateVault(c *fiber.Ctx) error {
 	return siw.Handler.CreateVault(c)
 }
 
+// GetVaultFilterOptions operation middleware
+func (siw *ServerInterfaceWrapper) GetVaultFilterOptions(c *fiber.Ctx) error {
+
+	return siw.Handler.GetVaultFilterOptions(c)
+}
+
 // DeleteVault operation middleware
 func (siw *ServerInterfaceWrapper) DeleteVault(c *fiber.Ctx) error {
 
@@ -963,6 +1006,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/api/vaults", wrapper.GetVaults)
 
 	router.Post(options.BaseURL+"/api/vaults", wrapper.CreateVault)
+
+	router.Get(options.BaseURL+"/api/vaults/filter-options", wrapper.GetVaultFilterOptions)
 
 	router.Delete(options.BaseURL+"/api/vaults/:uniqueId", wrapper.DeleteVault)
 
@@ -1388,6 +1433,22 @@ func (response CreateVault201JSONResponse) VisitCreateVaultResponse(ctx *fiber.C
 	return ctx.JSON(&response)
 }
 
+type GetVaultFilterOptionsRequestObject struct {
+}
+
+type GetVaultFilterOptionsResponseObject interface {
+	VisitGetVaultFilterOptionsResponse(ctx *fiber.Ctx) error
+}
+
+type GetVaultFilterOptions200JSONResponse VaultFilterOptionsResponse
+
+func (response GetVaultFilterOptions200JSONResponse) VisitGetVaultFilterOptionsResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
 type DeleteVaultRequestObject struct {
 	UniqueId string `json:"uniqueId"`
 }
@@ -1507,6 +1568,9 @@ type StrictServerInterface interface {
 
 	// (POST /api/vaults)
 	CreateVault(ctx context.Context, request CreateVaultRequestObject) (CreateVaultResponseObject, error)
+
+	// (GET /api/vaults/filter-options)
+	GetVaultFilterOptions(ctx context.Context, request GetVaultFilterOptionsRequestObject) (GetVaultFilterOptionsResponseObject, error)
 
 	// (DELETE /api/vaults/{uniqueId})
 	DeleteVault(ctx context.Context, request DeleteVaultRequestObject) (DeleteVaultResponseObject, error)
@@ -2137,6 +2201,31 @@ func (sh *strictHandler) CreateVault(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(CreateVaultResponseObject); ok {
 		if err := validResponse.VisitCreateVaultResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetVaultFilterOptions operation middleware
+func (sh *strictHandler) GetVaultFilterOptions(ctx *fiber.Ctx) error {
+	var request GetVaultFilterOptionsRequestObject
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaultFilterOptions(ctx.UserContext(), request.(GetVaultFilterOptionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetVaultFilterOptions")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(GetVaultFilterOptionsResponseObject); ok {
+		if err := validResponse.VisitGetVaultFilterOptionsResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

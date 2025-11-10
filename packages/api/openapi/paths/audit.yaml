@@ -27,6 +27,15 @@ auditLogs:
         description: Filter logs by vault unique ID
         schema:
           type: string
+      - name: source
+        in: query
+        required: false
+        description: Filter logs by source (web interface or CLI)
+        schema:
+          type: string
+          enum:
+            - web
+            - cli
       - name: pageSize
         in: query
         required: true
