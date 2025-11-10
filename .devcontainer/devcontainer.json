@@ -1,0 +1,41 @@
+{
+  "name": "Development Container",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "workspaceFolder": "/workspace/vault-hub",
+  "mounts": ["source=${localWorkspaceFolder},target=/workspace/vault-hub,type=bind,consistency=cached"],
+  "features": {
+    "ghcr.io/wandb/catnip/feature:1": {},
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.24"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
+    }
+  },
+  "remoteEnv": {
+    "CATNIP_GO_VERSION": "1.24",
+    "CATNIP_NODE_VERSION": "24",
+    "JWT_SECRET": "dev-jwt-secret",
+    "ENCRYPTION_KEY": "dev-encryption-key-32-chars-min"
+  },
+  "forwardPorts": [3000, 6369],
+  "portsAttributes": {
+    "3000": {
+      "label": "VaultHub API",
+      "onAutoForward": "notify"
+    },
+    "6369": {
+      "label": "Catnip",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  }
+}
