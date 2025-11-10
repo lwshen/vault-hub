@@ -14,7 +14,7 @@ git submodule update --init --remote apps/web
 
 echo "[post-start] Enabling corepack and installing frontend dependencies"
 corepack enable
-pnpm --dir apps/web install
+pnpm --dir apps/web install --frozen-lockfile
 
 echo "[post-start] Building frontend"
 pnpm --dir apps/web run build
