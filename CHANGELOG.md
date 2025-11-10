@@ -1,3 +1,8 @@
+## [1.4.9] - 2025-11-10
+
+### 🚀 Features
+
+- Add audit log source filter and vault options endpoint (#334)
 ## [1.4.7] - 2025-11-08
 
 ### 📚 Documentation
