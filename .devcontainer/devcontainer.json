@@ -8,7 +8,7 @@
   },
   "remoteEnv": {
     "CATNIP_GO_VERSION": "1.24",
-    "CATNIP_NODE_VERSION": "24.11.0"
+    "CATNIP_NODE_VERSION": "24"
   },
   "forwardPorts": [
     6369
