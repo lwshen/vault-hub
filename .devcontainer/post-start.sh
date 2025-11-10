@@ -20,6 +20,7 @@ echo "[post-start] Building frontend"
 pnpm --dir apps/web run build
 
 echo "[post-start] Building backend"
+mkdir -p tmp
 go build -o tmp/main ./apps/server/main.go
 
 echo "[post-start] Installing Air"
