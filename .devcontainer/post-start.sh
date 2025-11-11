@@ -24,4 +24,4 @@ mkdir -p tmp
 go build -o tmp/main ./apps/server/main.go
 
 echo "[post-start] Installing Air"
-go install github.com/cosmtrek/air@latest
+go install github.com/air-verse/air@latest
