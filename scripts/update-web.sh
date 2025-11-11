@@ -13,7 +13,7 @@ git -C "${REPO_ROOT}" submodule update --init --remote apps/web
 
 echo "Installing frontend dependencies..."
 cd "${REPO_ROOT}/apps/web"
-pnpm install
+pnpm install --frozen-lockfile
 
 echo "Building frontend assets..."
 EMBED_DIST="${REPO_ROOT}/internal/embed/dist"
