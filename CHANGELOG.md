@@ -1,3 +1,8 @@
+## [1.4.10] - 2025-11-11
+
+### ⚙️ Miscellaneous Tasks
+
+- Add Catnip Feature (#335)
 ## [1.4.9] - 2025-11-10
 
 ### 🚀 Features
