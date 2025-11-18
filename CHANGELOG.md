@@ -1,3 +1,8 @@
+## [1.4.11] - 2025-11-18
+
+### ⚙️ Miscellaneous Tasks
+
+- Add post-start script for devcontainer setup (#337)
 ## [1.4.10] - 2025-11-11
 
 ### ⚙️ Miscellaneous Tasks
