@@ -214,7 +214,7 @@ func (k *APIKey) GetAccessibleVaults() ([]Vault, error) {
 		query = query.Where("id IN ?", []uint(k.VaultIDs))
 	}
 
-	err := query.Find(&vaults).Error
+	err := query.Order("favourite DESC, created_at DESC").Find(&vaults).Error
 	return vaults, err
 }
 

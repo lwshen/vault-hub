@@ -18,6 +18,7 @@ type Vault struct {
 	Value       string `gorm:"type:text;not null"`                                                   // Encrypted value
 	Description string `gorm:"size:500"`                                                             // Human-readable description
 	Category    string `gorm:"size:100;index"`                                                       // Category/type of vault
+	Favourite   bool   `gorm:"default:false;not null"`                                               // Favourite flag
 }
 
 // CreateVaultParams defines parameters for creating a new vault
@@ -36,6 +37,7 @@ type UpdateVaultParams struct {
 	Value       *string
 	Description *string
 	Category    *string
+	Favourite   *bool
 }
 
 // Validate validates the create vault parameters
@@ -130,6 +132,7 @@ func (params *CreateVaultParams) Create() (*Vault, error) {
 		Value:       encryptedValue,
 		Description: params.Description,
 		Category:    params.Category,
+		Favourite:   false,
 	}
 
 	err = DB.Create(&vault).Error
@@ -185,7 +188,7 @@ func GetVaultsByUser(userID uint, decrypt bool) ([]Vault, error) {
 	var vaults []Vault
 	query := DB.Where("user_id = ?", userID)
 
-	err := query.Order("created_at DESC").Find(&vaults).Error
+	err := query.Order("favourite DESC, created_at DESC").Find(&vaults).Error
 	if err != nil {
 		return nil, err
 	}
@@ -219,9 +222,9 @@ func GetUserVaultsWithPagination(userID uint, pageSize, pageIndex int) ([]Vault,
 	// Calculate offset (pageIndex is 1-based)
 	offset := (pageIndex - 1) * pageSize
 
-	// Fetch paginated vaults, newest first
+	// Fetch paginated vaults, favourites first, then newest
 	if err := DB.Where("user_id = ? AND deleted_at IS NULL", userID).
-		Order("created_at DESC").
+		Order("favourite DESC, created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&vaults).Error; err != nil {
@@ -262,6 +265,10 @@ func (v *Vault) Update(params *UpdateVaultParams) error {
 
 	if params.Category != nil {
 		updates["category"] = *params.Category
+	}
+
+	if params.Favourite != nil {
+		updates["favourite"] = *params.Favourite
 	}
 
 	// Always update the updated_at timestamp

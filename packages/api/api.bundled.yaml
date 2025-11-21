@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.7
+  version: 1.0.8
   title: Vault Hub Server
 paths:
   /api/health:
@@ -684,6 +684,9 @@ components:
         category:
           type: string
           description: Category/type of vault
+        favourite:
+          type: boolean
+          description: Favourite flag
         updatedAt:
           type: string
           format: date-time
@@ -713,6 +716,9 @@ components:
         category:
           type: string
           description: Category/type of vault
+        favourite:
+          type: boolean
+          description: Favourite flag
         createdAt:
           type: string
           format: date-time
@@ -742,6 +748,10 @@ components:
           type: string
           description: Category/type of vault
           maxLength: 100
+        favourite:
+          type: boolean
+          description: Favourite flag
+          default: false
     UpdateVaultRequest:
       type: object
       properties:
@@ -762,6 +772,9 @@ components:
           type: string
           description: Category/type of vault
           maxLength: 100
+        favourite:
+          type: boolean
+          description: Favourite flag
     VaultFilterOption:
       type: object
       required:

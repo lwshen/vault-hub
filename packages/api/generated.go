@@ -171,6 +171,9 @@ type CreateVaultRequest struct {
 	// Description Human-readable description
 	Description *string `json:"description,omitempty"`
 
+	// Favourite Favourite flag
+	Favourite *bool `json:"favourite,omitempty"`
+
 	// Name Human-readable name
 	Name string `json:"name"`
 
@@ -283,6 +286,9 @@ type UpdateVaultRequest struct {
 	// Description Human-readable description
 	Description *string `json:"description,omitempty"`
 
+	// Favourite Favourite flag
+	Favourite *bool `json:"favourite,omitempty"`
+
 	// Name Human-readable name
 	Name *string `json:"name,omitempty"`
 
@@ -298,6 +304,9 @@ type Vault struct {
 
 	// Description Human-readable description
 	Description *string `json:"description,omitempty"`
+
+	// Favourite Favourite flag
+	Favourite *bool `json:"favourite,omitempty"`
 
 	// Name Human-readable name
 	Name string `json:"name"`
@@ -362,6 +371,9 @@ type VaultLite struct {
 
 	// Description Human-readable description
 	Description *string `json:"description,omitempty"`
+
+	// Favourite Favourite flag
+	Favourite *bool `json:"favourite,omitempty"`
 
 	// Name Human-readable name
 	Name string `json:"name"`

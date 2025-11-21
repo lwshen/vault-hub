@@ -48,6 +48,7 @@ func convertToApiVault(vault *model.Vault) Vault {
 		Value:       vault.Value,
 		Description: &vault.Description,
 		Category:    &vault.Category,
+		Favourite:   &vault.Favourite,
 		CreatedAt:   &vault.CreatedAt,
 		UpdatedAt:   &vault.UpdatedAt,
 	}
@@ -60,6 +61,7 @@ func convertToApiVaultLite(vault *model.Vault) VaultLite {
 		Name:        vault.Name,
 		Description: &vault.Description,
 		Category:    &vault.Category,
+		Favourite:   &vault.Favourite,
 		UpdatedAt:   &vault.UpdatedAt,
 	}
 }
@@ -214,6 +216,7 @@ func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 		Value:       input.Value,
 		Description: input.Description,
 		Category:    input.Category,
+		Favourite:   input.Favourite,
 	}
 
 	// Validate parameters
