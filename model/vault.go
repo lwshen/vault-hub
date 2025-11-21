@@ -189,7 +189,7 @@ func GetVaultsByUser(userID uint, decrypt bool) ([]Vault, error) {
 	var vaults []Vault
 	query := DB.Where("user_id = ?", userID)
 
-	err := query.Order("created_at DESC").Find(&vaults).Error
+	err := query.Order("favourite DESC, created_at DESC").Find(&vaults).Error
 	if err != nil {
 		return nil, err
 	}
@@ -223,9 +223,9 @@ func GetUserVaultsWithPagination(userID uint, pageSize, pageIndex int) ([]Vault,
 	// Calculate offset (pageIndex is 1-based)
 	offset := (pageIndex - 1) * pageSize
 
-	// Fetch paginated vaults, newest first
+	// Fetch paginated vaults, favourites first, then newest
 	if err := DB.Where("user_id = ? AND deleted_at IS NULL", userID).
-		Order("created_at DESC").
+		Order("favourite DESC, created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&vaults).Error; err != nil {
