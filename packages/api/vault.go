@@ -216,6 +216,7 @@ func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 		Value:       input.Value,
 		Description: input.Description,
 		Category:    input.Category,
+		Favourite:   input.Favourite,
 	}
 
 	// Validate parameters

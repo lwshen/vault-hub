@@ -29,7 +29,6 @@ type CreateVaultParams struct {
 	Value       string
 	Description string
 	Category    string
-	Favourite   bool
 }
 
 // UpdateVaultParams defines parameters for updating a vault
@@ -133,7 +132,7 @@ func (params *CreateVaultParams) Create() (*Vault, error) {
 		Value:       encryptedValue,
 		Description: params.Description,
 		Category:    params.Category,
-		Favourite:   params.Favourite,
+		Favourite:   false,
 	}
 
 	err = DB.Create(&vault).Error
