@@ -18,6 +18,7 @@ type Vault struct {
 	Value       string `gorm:"type:text;not null"`                                                   // Encrypted value
 	Description string `gorm:"size:500"`                                                             // Human-readable description
 	Category    string `gorm:"size:100;index"`                                                       // Category/type of vault
+	Favourite   bool   `gorm:"default:false;not null"`                                               // Favourite flag
 }
 
 // CreateVaultParams defines parameters for creating a new vault
@@ -28,6 +29,7 @@ type CreateVaultParams struct {
 	Value       string
 	Description string
 	Category    string
+	Favourite   bool
 }
 
 // UpdateVaultParams defines parameters for updating a vault
@@ -36,6 +38,7 @@ type UpdateVaultParams struct {
 	Value       *string
 	Description *string
 	Category    *string
+	Favourite   *bool
 }
 
 // Validate validates the create vault parameters
@@ -130,6 +133,7 @@ func (params *CreateVaultParams) Create() (*Vault, error) {
 		Value:       encryptedValue,
 		Description: params.Description,
 		Category:    params.Category,
+		Favourite:   params.Favourite,
 	}
 
 	err = DB.Create(&vault).Error
@@ -262,6 +266,10 @@ func (v *Vault) Update(params *UpdateVaultParams) error {
 
 	if params.Category != nil {
 		updates["category"] = *params.Category
+	}
+
+	if params.Favourite != nil {
+		updates["favourite"] = *params.Favourite
 	}
 
 	// Always update the updated_at timestamp

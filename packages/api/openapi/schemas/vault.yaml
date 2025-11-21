@@ -38,6 +38,9 @@ VaultLite:
     category:
       type: string
       description: Category/type of vault
+    favourite:
+      type: boolean
+      description: Favourite flag
     updatedAt:
       type: string
       format: date-time
@@ -67,6 +70,9 @@ Vault:
     category:
       type: string
       description: Category/type of vault
+    favourite:
+      type: boolean
+      description: Favourite flag
     createdAt:
       type: string
       format: date-time
@@ -96,6 +102,10 @@ CreateVaultRequest:
       type: string
       description: Category/type of vault
       maxLength: 100
+    favourite:
+      type: boolean
+      description: Favourite flag
+      default: false
 UpdateVaultRequest:
   type: object
   properties:
@@ -116,6 +126,9 @@ UpdateVaultRequest:
       type: string
       description: Category/type of vault
       maxLength: 100
+    favourite:
+      type: boolean
+      description: Favourite flag
 VaultFilterOption:
   type: object
   required:

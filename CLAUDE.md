@@ -550,3 +550,4 @@ vault-hub/
 ├── go.mod              # Go module definition
 └── CLAUDE.md           # AI assistant guidance (this file)
 ```
+- Only change the backend or cli code, do not change the frontend code
