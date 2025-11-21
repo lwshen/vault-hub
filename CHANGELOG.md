@@ -1,3 +1,12 @@
+## [1.4.12] - 2025-11-21
+
+### 🚀 Features
+
+- Add 'Favourite' flag to vault model and API schema (#349)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Claude workflow to use OAuth token instead of API key (#347)
 ## [1.4.11] - 2025-11-18
 
 ### ⚙️ Miscellaneous Tasks
