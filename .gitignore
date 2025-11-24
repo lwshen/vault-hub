@@ -23,6 +23,7 @@ pkg/
 *.test
 *.prof
 tmp/
+.idea
 
 .env
 .env.local

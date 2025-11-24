@@ -10,7 +10,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/lwshen/vault-hub-go-client v1.4.11
+	github.com/lwshen/vault-hub-go-client v1.4.13
 	github.com/oapi-codegen/runtime v1.1.2
 	github.com/orandin/slog-gorm v1.4.0
 	github.com/resend/resend-go/v2 v2.28.0
