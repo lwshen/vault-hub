@@ -12,7 +12,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up Node for GitHub Packages
         uses: actions/setup-node@v6
         with:
@@ -46,7 +46,7 @@ jobs:
   build-and-publish-npm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up Node for npm registry
         uses: actions/setup-node@v6
         with:
