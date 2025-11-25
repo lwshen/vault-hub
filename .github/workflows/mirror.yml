@@ -11,6 +11,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: keninkujovic/gitlab-sync@2.1.0
         with:
           gitlab_url: https://git.slw.app/${{ secrets.GITLAB_USERNAME }}/vault-hub.git
