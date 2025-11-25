@@ -1,3 +1,8 @@
+## [1.4.14] - 2025-11-25
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump vault-hub-go-client to v1.4.13 (#352)
 ## [1.4.12] - 2025-11-21
 
 ### 🚀 Features
