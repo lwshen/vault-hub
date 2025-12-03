@@ -136,6 +136,9 @@ type AuditMetricsResponse struct {
 
 // ConfigResponse defines model for ConfigResponse.
 type ConfigResponse struct {
+	// Demo Whether demo mode is enabled
+	Demo bool `json:"demo"`
+
 	// EmailEnabled Whether transactional email is enabled
 	EmailEnabled bool `json:"emailEnabled"`
 

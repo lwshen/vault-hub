@@ -31,6 +31,7 @@ var (
 	OidcClientId      string
 	OidcClientSecret  string
 	OidcIssuer        string
+	DemoEnabled       bool
 	EmailEnabled      bool
 	EmailType         string
 	SmtpEnabled       bool
@@ -64,6 +65,8 @@ func init() {
 	OidcClientSecret = getEnv("OIDC_CLIENT_SECRET", "")
 	OidcIssuer = getEnv("OIDC_ISSUER", "")
 	OidcEnabled = OidcClientId != "" || OidcClientSecret != "" || OidcIssuer != ""
+
+	DemoEnabled = getEnv("DEMO_ENABLED", "false") == "true"
 
 	// SMTP
 	rawEmailType := strings.ToUpper(strings.TrimSpace(getEnv("EMAIL_TYPE", "")))
@@ -123,6 +126,7 @@ func printConfig() {
 		slog.Info("Config", "OidcClientSecret", mask(OidcClientSecret))
 		slog.Info("Config", "OidcIssuer", OidcIssuer)
 	}
+	slog.Info("Config", "DemoEnabled", DemoEnabled)
 	slog.Info("Config", "EmailEnabled", EmailEnabled)
 	slog.Info("Config", "EmailType", EmailType)
 	slog.Info("Config", "SmtpEnabled", SmtpEnabled)
