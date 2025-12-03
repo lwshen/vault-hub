@@ -1,3 +1,12 @@
+## [1.4.16] - 2025-12-03
+
+### 🚀 Features
+
+- Add demo config item to API (#360)
+
+### ⚙️ Miscellaneous Tasks
+
+- Disable credentials persistence in mirror workflow (#358)
 ## [1.4.14] - 2025-11-25
 
 ### ⚙️ Miscellaneous Tasks
