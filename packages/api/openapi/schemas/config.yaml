@@ -3,7 +3,7 @@ ConfigResponse:
   required:
     - oidcEnabled
     - emailEnabled
-    - demo
+    - demoEnabled
   properties:
     oidcEnabled:
       type: boolean
@@ -13,7 +13,7 @@ ConfigResponse:
       type: boolean
       description: Whether transactional email is enabled
       example: false
-    demo:
+    demoEnabled:
       type: boolean
       description: Whether demo mode is enabled
       example: false
