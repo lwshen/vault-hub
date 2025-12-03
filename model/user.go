@@ -115,24 +115,25 @@ func (u *User) GenerateToken() (string, error) {
 	return auth.GenerateToken(u.ID)
 }
 
+// Demo user constants
+const (
+	DemoUserEmail    = "mock@demo.com"
+	demoUserPassword = "Test1234!"
+	demoUserName     = "demo"
+)
+
 // EnsureDemoUser checks and creates or verifies the demo user when demo mode is enabled
 func EnsureDemoUser() error {
-	const (
-		demoEmail    = "mock@demo.com"
-		demoPassword = "Test1234!"
-		demoName     = "demo"
-	)
-
 	// Check if user exists
 	var user User
-	err := DB.Where("email = ?", demoEmail).First(&user).Error
+	err := DB.Where("email = ?", DemoUserEmail).First(&user).Error
 	if err == gorm.ErrRecordNotFound {
 		// Create demo user
-		password := demoPassword
+		password := demoUserPassword
 		params := CreateUserParams{
-			Email:    demoEmail,
+			Email:    DemoUserEmail,
 			Password: &password,
-			Name:     demoName,
+			Name:     demoUserName,
 		}
 
 		if errs := params.Validate(); len(errs) > 0 {
@@ -152,11 +153,11 @@ func EnsureDemoUser() error {
 	}
 
 	// User exists, verify password and name
-	if !user.ComparePassword(demoPassword) {
+	if !user.ComparePassword(demoUserPassword) {
 		return fmt.Errorf("demo user exists but password does not match expected value")
 	}
 
-	if user.Name == nil || *user.Name != demoName {
+	if user.Name == nil || *user.Name != demoUserName {
 		return fmt.Errorf("demo user exists but name does not match expected value")
 	}
 

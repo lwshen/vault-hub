@@ -31,7 +31,7 @@ func main() {
 			logger.Error("Failed to ensure demo user", "error", err)
 			os.Exit(1)
 		}
-		logger.Info("Demo user verified successfully", "email", "mock@demo.com")
+		logger.Info("Demo user verified successfully", "email", model.DemoUserEmail)
 	}
 
 	app := fiber.New()
