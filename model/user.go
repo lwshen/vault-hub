@@ -152,14 +152,35 @@ func EnsureDemoUser() error {
 		return fmt.Errorf("failed to check for demo user: %w", err)
 	}
 
-	// User exists, verify password and name
+	// User exists, verify and update if needed
+	needsUpdate := false
+
+	// Check and update password if needed
 	if !user.ComparePassword(demoUserPassword) {
-		return fmt.Errorf("demo user exists but password does not match expected value")
+		hashedPassword, err := HashPassword(demoUserPassword)
+		if err != nil {
+			return fmt.Errorf("failed to hash demo user password: %w", err)
+		}
+		user.Password = &hashedPassword
+		needsUpdate = true
 	}
 
+	// Check and update name if needed
 	if user.Name == nil || *user.Name != demoUserName {
-		return fmt.Errorf("demo user exists but name does not match expected value")
+		user.Name = stringPtr(demoUserName)
+		needsUpdate = true
+	}
+
+	// Save updates if needed
+	if needsUpdate {
+		if err := DB.Save(&user).Error; err != nil {
+			return fmt.Errorf("failed to update demo user: %w", err)
+		}
 	}
 
 	return nil
+}
+
+func stringPtr(s string) *string {
+	return &s
 }
