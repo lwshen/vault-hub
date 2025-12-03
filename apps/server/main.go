@@ -24,6 +24,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Ensure demo user exists when demo mode is enabled
+	if config.DemoEnabled {
+		logger.Info("Demo mode enabled, ensuring demo user exists")
+		if err := model.EnsureDemoUser(); err != nil {
+			logger.Error("Failed to ensure demo user", "error", err)
+			os.Exit(1)
+		}
+		logger.Info("Demo user verified successfully", "email", "mock@demo.com")
+	}
+
 	app := fiber.New()
 
 	app.Use(slogfiber.New(logger))

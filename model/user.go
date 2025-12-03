@@ -114,3 +114,51 @@ func (u *User) ComparePassword(password string) bool {
 func (u *User) GenerateToken() (string, error) {
 	return auth.GenerateToken(u.ID)
 }
+
+// EnsureDemoUser checks and creates or verifies the demo user when demo mode is enabled
+func EnsureDemoUser() error {
+	const (
+		demoEmail    = "mock@demo.com"
+		demoPassword = "Test1234!"
+		demoName     = "demo"
+	)
+
+	// Check if user exists
+	var user User
+	err := DB.Where("email = ?", demoEmail).First(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		// Create demo user
+		password := demoPassword
+		params := CreateUserParams{
+			Email:    demoEmail,
+			Password: &password,
+			Name:     demoName,
+		}
+
+		if errs := params.Validate(); len(errs) > 0 {
+			return fmt.Errorf("demo user validation failed: %v", errs)
+		}
+
+		_, err = params.Create()
+		if err != nil {
+			return fmt.Errorf("failed to create demo user: %w", err)
+		}
+
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to check for demo user: %w", err)
+	}
+
+	// User exists, verify password and name
+	if !user.ComparePassword(demoPassword) {
+		return fmt.Errorf("demo user exists but password does not match expected value")
+	}
+
+	if user.Name == nil || *user.Name != demoName {
+		return fmt.Errorf("demo user exists but name does not match expected value")
+	}
+
+	return nil
+}
