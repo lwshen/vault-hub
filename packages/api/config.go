@@ -13,6 +13,7 @@ func (s Server) GetConfig(ctx *fiber.Ctx) error {
 	resp := ConfigResponse{
 		OidcEnabled:  config.OidcEnabled,
 		EmailEnabled: config.EmailEnabled,
+		DemoEnabled:  config.DemoEnabled,
 	}
 
 	return ctx.

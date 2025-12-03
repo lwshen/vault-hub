@@ -114,3 +114,73 @@ func (u *User) ComparePassword(password string) bool {
 func (u *User) GenerateToken() (string, error) {
 	return auth.GenerateToken(u.ID)
 }
+
+// Demo user constants
+const (
+	DemoUserEmail    = "mock@demo.com"
+	demoUserPassword = "Test1234!"
+	demoUserName     = "demo"
+)
+
+// EnsureDemoUser checks and creates or verifies the demo user when demo mode is enabled
+func EnsureDemoUser() error {
+	// Check if user exists
+	var user User
+	err := DB.Where("email = ?", DemoUserEmail).First(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		// Create demo user
+		password := demoUserPassword
+		params := CreateUserParams{
+			Email:    DemoUserEmail,
+			Password: &password,
+			Name:     demoUserName,
+		}
+
+		if errs := params.Validate(); len(errs) > 0 {
+			return fmt.Errorf("demo user validation failed: %v", errs)
+		}
+
+		_, err = params.Create()
+		if err != nil {
+			return fmt.Errorf("failed to create demo user: %w", err)
+		}
+
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to check for demo user: %w", err)
+	}
+
+	// User exists, verify and update if needed
+	needsUpdate := false
+
+	// Check and update password if needed
+	if !user.ComparePassword(demoUserPassword) {
+		hashedPassword, err := HashPassword(demoUserPassword)
+		if err != nil {
+			return fmt.Errorf("failed to hash demo user password: %w", err)
+		}
+		user.Password = &hashedPassword
+		needsUpdate = true
+	}
+
+	// Check and update name if needed
+	if user.Name == nil || *user.Name != demoUserName {
+		user.Name = stringPtr(demoUserName)
+		needsUpdate = true
+	}
+
+	// Save updates if needed
+	if needsUpdate {
+		if err := DB.Save(&user).Error; err != nil {
+			return fmt.Errorf("failed to update demo user: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func stringPtr(s string) *string {
+	return &s
+}
