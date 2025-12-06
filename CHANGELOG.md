@@ -1,3 +1,8 @@
+## [1.4.18] - 2025-12-06
+
+### ⚙️ Miscellaneous Tasks
+
+- Update CLAUDE.md documentation for codebase (#363)
 ## [1.4.16] - 2025-12-03
 
 ### 🚀 Features
