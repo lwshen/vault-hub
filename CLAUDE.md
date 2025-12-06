@@ -59,6 +59,11 @@ VaultHub is a comprehensive secure environment variable and API key management s
   - `internal/config/` - Environment configuration
   - `internal/auth/` - JWT and OIDC authentication
   - `internal/encryption/` - AES-256-GCM encryption for vault values
+  - `internal/email/` - Email service with SMTP and Resend support
+  - `internal/constants/` - Shared constants (e.g., `HeaderClientEncryption`)
+  - `internal/embed/` - Embedded frontend assets for production builds
+  - `internal/version/` - Version and commit information for builds
+  - `internal/cli/` - CLI command implementations and client logic
 
 ### Frontend (React + TypeScript + Vite)
 
@@ -86,17 +91,22 @@ VaultHub is a comprehensive secure environment variable and API key management s
 - **Commands**:
   - `list` (alias: `ls`) - List all accessible vaults
   - `get --name/--id <vault-name-or-id>` - Get specific vault by name or unique ID
+  - `version` - Show version and commit information
 - **API Integration**: Designed to work with `/api/cli/*` endpoints for API key authentication
 - **Cross-platform**: Built for Linux, Windows, and macOS (amd64, arm64)
+- **Client-side Encryption**: Supports optional client-side encryption via `X-Enable-Client-Encryption` header
 
 ### Key Security Features
 
 - All vault values encrypted with AES-256-GCM before database storage
 - JWT-based authentication with optional OIDC support
+- Email-based authentication (password reset, magic links)
 - API key authentication for programmatic access
+- Optional client-side encryption for CLI vault access (PBKDF2 key derivation)
 - Transparent encryption/decryption at model layer
 - Audit logging for all vault operations
 - Strict authentication middleware with route-based credential enforcement
+- Email token security with rate limiting and expiration
 
 ### Health Monitoring
 
@@ -120,7 +130,42 @@ Optional configuration:
 - `APP_PORT` (default: 3000)
 - `DATABASE_TYPE` (sqlite|mysql|postgres, default: sqlite)
 - `DATABASE_URL` (default: data.db)
-- OIDC settings: `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_ISSUER`
+- `DEMO_ENABLED` (true|false, default: false) - Enable demo mode
+
+### OIDC Configuration
+
+- `OIDC_CLIENT_ID` - OIDC client ID
+- `OIDC_CLIENT_SECRET` - OIDC client secret
+- `OIDC_ISSUER` - OIDC issuer URL
+
+### Email Configuration
+
+Email support is optional and enables password reset and magic link authentication.
+
+**General Email Settings:**
+- `EMAIL_ENABLED` (true|false, default: false) - Enable email functionality
+- `EMAIL_TYPE` (SMTP|RESEND, default: SMTP) - Email service provider
+
+**SMTP Settings** (when `EMAIL_TYPE=SMTP`):
+- `SMTP_HOST` - SMTP server hostname (required)
+- `SMTP_PORT` (default: 587) - SMTP server port
+- `SMTP_MODE` (auto|starttls|implicit|plain, default: auto) - TLS mode
+  - `auto` - Automatically choose based on port (465=implicit TLS, 587=STARTTLS, otherwise try STARTTLS then plain)
+  - `starttls` - Use STARTTLS (port 587)
+  - `implicit` - Use implicit TLS (port 465)
+  - `plain` - No TLS (not recommended for production)
+- `SMTP_USERNAME` - SMTP authentication username (required)
+- `SMTP_PASSWORD` - SMTP authentication password (required)
+- `SMTP_FROM_ADDRESS` - Sender email address (required)
+- `SMTP_FROM_NAME` (default: "Vault Hub") - Sender display name
+- `SMTP_TLS` (true|false, default: true) - Enable TLS (deprecated, use SMTP_MODE instead)
+
+**Resend Settings** (when `EMAIL_TYPE=RESEND`):
+- `RESEND_API_KEY` - Resend API key (required)
+- `RESEND_FROM_ADDRESS` - Sender email address (required)
+- `RESEND_FROM_NAME` (default: "Vault Hub") - Sender display name
+
+**Note**: When email is enabled, the required fields for the selected provider must be set, otherwise the server will exit with validation errors.
 
 ### Security & Configuration Tips
 
@@ -136,6 +181,10 @@ Optional configuration:
 - **Vault**: Encrypted key-value pairs for environment variables
 - **AuditLog**: Audit trail of vault operations
 - **APIKey**: API key management for programmatic access
+- **EmailToken**: Email verification and authentication tokens for password reset and magic links
+  - Supports three purposes: `verify_email`, `reset_password`, `magic_link`
+  - SHA-256 hashed tokens with expiration and consumption tracking
+  - Rate limiting to prevent abuse (configurable window per purpose)
 
 ## API Generation
 
@@ -159,10 +208,18 @@ The API spec uses camelCase naming convention for all properties (e.g., `uniqueI
 The application enforces strict authentication rules via middleware (`route/middleware.go`):
 
 **Public Routes (No Authentication Required):**
-- `/api/auth/login` - User login
-- `/api/auth/register` - User registration  
-- `/api/auth/login/oidc` - OIDC login
-- `/api/auth/callback/oidc` - OIDC callback
+- `/api/auth/login` - User login with email/password
+- `/api/auth/signup` - User registration
+- `/api/auth/logout` - User logout
+- `/api/auth/password/reset/request` - Request password reset email
+- `/api/auth/password/reset/confirm` - Confirm password reset with token
+- `/api/auth/magic-link/request` - Request magic link login email
+- `/api/auth/magic-link/token` - Consume magic link token and authenticate
+- `/api/auth/login/oidc` - OIDC login (if OIDC enabled)
+- `/api/auth/callback/oidc` - OIDC callback (if OIDC enabled)
+- `/api/config` - Get server configuration (oidcEnabled, emailEnabled, demoEnabled)
+- `/api/health` - Health check endpoint
+- `/api/status` - Comprehensive system status
 - Static web assets (`/`, `/*`)
 
 **API Key Only Routes:**
@@ -183,9 +240,26 @@ The application enforces strict authentication rules via middleware (`route/midd
 ### API Endpoints
 
 **Public API:**
-- `GET /api/status` - Get comprehensive system status including version, health, and performance metrics (no authentication required)
+- `GET /api/config` - Get server configuration (oidcEnabled, emailEnabled, demoEnabled)
+- `GET /api/health` - Basic health check
+- `GET /api/status` - Comprehensive system status (version, health, performance metrics)
+- `POST /api/auth/login` - Login with email and password, returns JWT token
+- `POST /api/auth/signup` - Register new user, returns JWT token
+- `GET /api/auth/logout` - Logout current user
+- `POST /api/auth/password/reset/request` - Request password reset email
+  - Returns 200 with success indicator (always returns 200 for security)
+  - Returns 429 if rate limited with Retry-After header
+- `POST /api/auth/password/reset/confirm` - Confirm password reset with token and new password
+- `POST /api/auth/magic-link/request` - Request magic link login email
+  - Returns 200 with success indicator (always returns 200 for security)
+  - Returns 429 if rate limited with Retry-After header
+- `GET /api/auth/magic-link/token` - Consume magic link token, returns 302 redirect with JWT
 
-**CLI API Vault Access:**
+**Authenticated API (JWT Required):**
+- `GET /api/user` - Get current user information
+- Vault management, API key management, audit log access (see OpenAPI spec)
+
+**CLI API Vault Access (API Key Required):**
 - `GET /api/cli/vaults` - List accessible vaults (VaultLite format, no decrypted values)
 - `GET /api/cli/vault/{uniqueId}` - Get specific vault (full Vault format with decrypted value)
 - `GET /api/cli/vault/name/{name}` - Get specific vault by name (full Vault format with decrypted value)
@@ -224,6 +298,54 @@ The application enforces strict authentication rules via middleware (`route/midd
 
 - **Current**: Standard React testing patterns
 - **Future**: Add Vitest + Testing Library with a `pnpm run test` script when introducing UI coverage
+
+## Email System
+
+The project includes a comprehensive email system for transactional emails:
+
+### Email Service Architecture
+
+- **Location**: `internal/email/`
+- **Providers**: SMTP and Resend
+- **Template System**: HTML email templates with Go template rendering
+- **Configuration**: Controlled via `EMAIL_ENABLED`, `EMAIL_TYPE`, and provider-specific variables
+
+### Email Service Components
+
+- **Sender Interface** (`sender.go`): Abstract email sender interface
+- **SMTP Implementation** (`smtp.go`): Full-featured SMTP client with TLS support
+  - Auto mode: Intelligently selects TLS mode based on port
+  - STARTTLS mode: Explicit TLS upgrade (port 587)
+  - Implicit TLS mode: Direct TLS connection (port 465)
+  - Plain mode: No encryption (not recommended for production)
+- **Resend Implementation** (`resend.go`): Integration with Resend API
+- **Email Service** (`service.go`): High-level email operations (password reset, magic links)
+- **Template Renderer** (`renderer.go`): HTML template rendering with data
+- **Embedded Templates** (`embed.go`, `templates/`): HTML email templates
+
+### Email Token Security
+
+Email tokens use a secure implementation pattern:
+
+1. **Token Generation**: 32 random bytes, base64-url encoded
+2. **Token Storage**: SHA-256 hash stored in database (not plaintext)
+3. **Token Verification**: Constant-time comparison of hashes
+4. **Single Use**: Tokens marked as consumed after use
+5. **Expiration**: Configurable TTL per token purpose
+6. **Rate Limiting**: Prevents abuse with configurable cooldown windows
+
+### Email Features
+
+- **Password Reset Flow**: Request → Email with token → Confirm with new password
+- **Magic Link Authentication**: Request → Email with token → Click to authenticate
+- **Email Verification**: (Framework in place for future implementation)
+
+### Template Customization
+
+Email templates are located in `internal/email/templates/` and use Go's `html/template` syntax. Templates can include:
+- User data (name, email)
+- Action links with embedded tokens
+- Branding and styling
 
 ## Documentation System
 
@@ -352,7 +474,7 @@ The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
 - **Docker Images**: `build-image.yml`, `build-cli-image.yml` - Container builds
 - **Client Publishing**: `publish-ts-client.yml`, `publish-go-client.yml` - Standalone client publishing
 - **Mirror**: `mirror.yml` - Repository mirroring
-- **Claude Integration**: `claude.yml`, `claude-code-review.yml` - AI-powered code reviews
+- **AI Code Reviews**: `claude.yml`, `claude-code-review.yml`, `cursor-code-review.yml` - AI-powered code reviews
 
 #### Release Management
 - **Changelog**: Automated generation using git-cliff with conventional commits
@@ -370,6 +492,102 @@ The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
 - `vault-hub-cli-linux-{amd64,arm64}`
 - `vault-hub-cli-windows-amd64.exe`
 - `vault-hub-cli-darwin-{amd64,arm64}`
+
+## Build Scripts
+
+The `scripts/` directory contains utility scripts for development and release workflows:
+
+### Version Management
+
+**bump.sh** - Automated version bumping and tagging
+- **Usage**: `./scripts/bump.sh [--dry-run|-n] [patch|minor|major]`
+- **Requirements**: Requires `uvx` (Python tool runner) and `bump-my-version`
+- **Functionality**:
+  - Increments version using semantic versioning (patch/minor/major)
+  - Creates and pushes git tags (format: `v1.2.3`)
+  - Validates tag doesn't already exist
+  - Supports dry-run mode to preview changes
+- **Example**: `./scripts/bump.sh minor` creates and pushes next minor version tag
+- **Note**: Tag creation triggers the release workflow which publishes clients and binaries
+
+### Frontend Management
+
+**update-web.sh** - Update and build frontend submodule
+- **Usage**: `./scripts/update-web.sh`
+- **Functionality**:
+  - Updates `apps/web` submodule to latest remote version
+  - Installs frontend dependencies with pnpm (frozen lockfile)
+  - Builds frontend assets for production
+  - Copies build output to `internal/embed/dist/` for Go embedding
+- **Use Case**: Run when syncing frontend changes or before backend builds that embed frontend assets
+
+### YAML Formatting
+
+**format-yaml.sh** - Format YAML files
+- **Usage**: `./scripts/format-yaml.sh`
+- **Purpose**: Ensures consistent YAML formatting across the project
+- **Files**: Primarily used for OpenAPI specifications and CI workflows
+
+## Docker Deployment
+
+The project provides multi-stage Docker builds for both server and CLI applications:
+
+### Server Docker Image (Dockerfile)
+
+- **Base Images**: Node.js 22 Alpine (frontend), Go 1.24 Alpine (backend), Alpine 3.22 (runtime)
+- **Build Process**:
+  1. Frontend stage: Builds React app with pnpm
+  2. Backend stage: Compiles Go server with embedded frontend assets
+  3. Runtime stage: Minimal Alpine image with compiled binary
+- **Security**: Runs as non-root user (`vaultuser`, UID 1001)
+- **Port**: Exposes 3000
+- **Build Args**: `NODE_VERSION`, `GO_VERSION`, `VERSION`, `COMMIT`
+
+### CLI Docker Image (Dockerfile-cli)
+
+- **Base Images**: Go 1.24 Alpine (builder), Alpine 3.22 (runtime)
+- **Included Binaries**: `vault-hub-cli` and `go-cron`
+- **Run Modes**:
+  - **Oneshot Mode** (default): Runs CLI command once and exits
+  - **Cron Mode**: Schedules CLI commands using go-cron
+- **Environment Variables**:
+  - `RUN_MODE` (oneshot|cron, default: oneshot) - Execution mode
+  - `CRON_SCHEDULE` (default: "0 * * * *") - Cron schedule for periodic execution
+  - `VAULT_HUB_CLI_ARGS` (default: "list") - CLI command arguments
+- **Security**: Runs as non-root user (`vaultuser`, UID 1001)
+- **Additional Packages**: ca-certificates, tzdata, bash
+- **Log Directory**: `/var/log/cron` for cron mode outputs
+
+### Docker Usage Examples
+
+**Server deployment:**
+```bash
+docker build -t vault-hub-server .
+docker run -p 3000:3000 \
+  -e JWT_SECRET=your-secret \
+  -e ENCRYPTION_KEY=your-key \
+  vault-hub-server
+```
+
+**CLI oneshot:**
+```bash
+docker run --rm \
+  -e VAULT_HUB_URL=https://vault.example.com \
+  -e VAULT_HUB_API_KEY=vhub_xxx \
+  -e VAULT_HUB_CLI_ARGS="get --name my-vault" \
+  vault-hub-cli
+```
+
+**CLI cron mode:**
+```bash
+docker run -d \
+  -e RUN_MODE=cron \
+  -e CRON_SCHEDULE="*/30 * * * *" \
+  -e VAULT_HUB_URL=https://vault.example.com \
+  -e VAULT_HUB_API_KEY=vhub_xxx \
+  -e VAULT_HUB_CLI_ARGS="list" \
+  vault-hub-cli
+```
 
 ## Vault Detail Page Implementation
 
@@ -490,9 +708,9 @@ After making code changes, ensure you complete these steps:
 - **CLI**: `apps/cli/` - Cobra CLI backed by `internal/cli` logic and `internal/encryption` utilities
 - **Frontend**: `apps/web/` - Vite + React UI (`src/pages`, `src/components`, `src/stores`); run UI assets through `pnpm`
   - **Important**: Do not edit files under `apps/web`; managed as an external codebase
-- **Scheduled Jobs**: `apps/cron/` and `scripts/` - Supply scheduled jobs and release chores; keep them idempotent
 - **API Specification**: `packages/api/` - Shared OpenAPI specs; regenerate clients with `go generate packages/api/tool.go`
 - **Database Models**: `model/` - Reusable GORM models
+- **Build Scripts**: `scripts/` - Version bumping, frontend updates, and YAML formatting
 - **Container Assets**: `docker/` - Docker build files
 
 ## Project Structure
@@ -504,6 +722,8 @@ vault-hub/
 │   ├── cli/              # Command-line interface (Go + Cobra)
 │   │   ├── main.go       # CLI entry point
 │   │   └── README.md     # CLI documentation
+│   ├── cron/             # Internal cron scheduler (used by Docker CLI image only)
+│   │   └── main.go       # Cron scheduler entry point
 │   ├── server/           # Backend server (Go + Fiber)
 │   │   └── main.go       # Server entry point
 │   └── web/              # Frontend application (React + TypeScript)
@@ -539,8 +759,14 @@ vault-hub/
 ├── route/               # Routing and middleware
 ├── internal/            # Internal packages
 │   ├── auth/           # Authentication (JWT, OIDC)
-│   ├── cli/            # CLI command implementations
+│   ├── cli/            # CLI command implementations and client
+│   │   ├── commands/   # CLI command handlers (get, list, version)
+│   │   └── encryption/ # Client-side encryption for CLI
 │   ├── config/         # Configuration management
+│   ├── constants/      # Shared constants (headers, etc.)
+│   ├── email/          # Email service (SMTP, Resend)
+│   │   └── templates/  # HTML email templates
+│   ├── embed/          # Embedded frontend assets
 │   ├── encryption/     # AES-256-GCM encryption
 │   └── version/        # Version information
 ├── docker/             # Docker build files
