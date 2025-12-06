@@ -27,24 +27,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `vault-hub version` - Show version and commit information
 - **Multi-platform builds**: See CI configuration for cross-compilation examples
 
-### Go Cron (apps/cron/)
-
-- **Build**: `go build -o tmp/go-cron ./apps/cron/main.go` or `go build -o go-cron ./apps/cron/main.go`
-- **Purpose**: Standalone cron job scheduler for running scheduled tasks with timestamped output
-- **Usage**: `go-cron <schedule> <command> [args...]`
-- **Schedule formats**:
-  - Cron syntax: `0 * * * *` (hourly), `*/15 * * * *` (every 15 minutes)
-  - Descriptors: `@hourly`, `@daily`, `@weekly`, `@monthly`
-  - Duration: `@every 1h`, `@every 30m`, `@every 5s`
-- **Features**:
-  - Validates schedule format before starting
-  - Validates command exists in PATH
-  - Streams stdout/stderr with timestamps
-  - 1-hour timeout per job execution
-  - Real-time output streaming
-- **Example**: `go-cron "0 * * * *" vault-hub-cli list`
-- **Docker Integration**: Included in CLI Docker image for scheduled vault fetches
-
 ### React Frontend (apps/web/)
 
 - **Install dependencies**: `pnpm --dir apps/web install` (run from repo root)
@@ -113,18 +95,6 @@ VaultHub is a comprehensive secure environment variable and API key management s
 - **API Integration**: Designed to work with `/api/cli/*` endpoints for API key authentication
 - **Cross-platform**: Built for Linux, Windows, and macOS (amd64, arm64)
 - **Client-side Encryption**: Supports optional client-side encryption via `X-Enable-Client-Encryption` header
-
-### Cron Scheduler (Go + robfig/cron)
-
-- **Location**: `apps/cron/`
-- **Purpose**: Standalone cron job scheduler for running scheduled tasks
-- **Entry point**: `apps/cron/main.go` - Validates and executes scheduled commands
-- **Features**:
-  - Support for standard cron syntax, descriptors (@hourly, @daily), and duration (@every 1h)
-  - Real-time stdout/stderr streaming with timestamps
-  - Command validation and 1-hour execution timeout
-  - Commonly used with CLI Docker image for scheduled vault fetches
-- **Docker Integration**: Included in `Dockerfile-cli` with cron and oneshot modes
 
 ### Key Security Features
 
@@ -738,9 +708,9 @@ After making code changes, ensure you complete these steps:
 - **CLI**: `apps/cli/` - Cobra CLI backed by `internal/cli` logic and `internal/encryption` utilities
 - **Frontend**: `apps/web/` - Vite + React UI (`src/pages`, `src/components`, `src/stores`); run UI assets through `pnpm`
   - **Important**: Do not edit files under `apps/web`; managed as an external codebase
-- **Scheduled Jobs**: `apps/cron/` and `scripts/` - Supply scheduled jobs and release chores; keep them idempotent
 - **API Specification**: `packages/api/` - Shared OpenAPI specs; regenerate clients with `go generate packages/api/tool.go`
 - **Database Models**: `model/` - Reusable GORM models
+- **Build Scripts**: `scripts/` - Version bumping, frontend updates, and YAML formatting
 - **Container Assets**: `docker/` - Docker build files
 
 ## Project Structure
@@ -752,7 +722,7 @@ vault-hub/
 │   ├── cli/              # Command-line interface (Go + Cobra)
 │   │   ├── main.go       # CLI entry point
 │   │   └── README.md     # CLI documentation
-│   ├── cron/             # Cron job scheduler (Go + robfig/cron)
+│   ├── cron/             # Internal cron scheduler (used by Docker CLI image only)
 │   │   └── main.go       # Cron scheduler entry point
 │   ├── server/           # Backend server (Go + Fiber)
 │   │   └── main.go       # Server entry point
