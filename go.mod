@@ -18,7 +18,7 @@ require (
 	github.com/samber/slog-fiber v1.19.0
 	github.com/spf13/cobra v1.10.1
 	golang.org/x/crypto v0.45.0
-	golang.org/x/oauth2 v0.33.0
+	golang.org/x/oauth2 v0.34.0
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/driver/sqlite v1.6.0
