@@ -72,7 +72,7 @@ jobs:
             echo "Skipping push during pull_request event"
           fi
       - name: Upload OpenAPI client artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: go-client
           path: go-client
