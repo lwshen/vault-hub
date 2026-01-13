@@ -15,7 +15,7 @@ require (
 	github.com/orandin/slog-gorm v1.4.0
 	github.com/resend/resend-go/v2 v2.28.0
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/samber/slog-fiber v1.19.0
+	github.com/samber/slog-fiber v1.20.1
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.47.0
 	golang.org/x/oauth2 v0.34.0
