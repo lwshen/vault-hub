@@ -1,7 +1,11 @@
 stages:
   - build
+
 variables:
   BASE_IMAGE: shenlw/vault-hub-base:latest
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_DEPTH: "0"
+
 build:
   stage: build
   image: ${BASE_IMAGE}
@@ -9,50 +13,57 @@ build:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
       - .go-cache/
-      - web/node_modules/
+      - .pnpm-store/
   before_script:
-    # Set up Go cache (tools are already installed in base image)
-    - mkdir -p .go-cache
+    - mkdir -p "$CI_PROJECT_DIR/.go-cache" "$CI_PROJECT_DIR/.pnpm-store"
     - export GOPATH="$CI_PROJECT_DIR/.go-cache"
     - export GOCACHE="$CI_PROJECT_DIR/.go-cache"
-    # Install Go dependencies
+    - if command -v corepack >/dev/null 2>&1; then corepack enable; fi
+    - pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm-store"
     - go mod download
     - go mod verify
-    # Note: The following tools are already installed in the base image, no need to reinstall
-    # - golangci-lint
-    # - Node.js
-    # - pnpm
   script:
-    - golangci-lint run
-    # Install frontend dependencies
-    - cd ./apps/web
-    - pnpm install
-    # Check frontend format
-    - pnpm typecheck && pnpm lint
-    # Build frontend
-    - pnpm build
-    - cd ../..
-    # Run tests
-    - export JWT_SECRET=secret ENCRYPTION_KEY=test-encryption-key-for-ci
-    - go test -v ./...
-    # Build backend
-    # Linux builds
-    - GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-server-linux-amd64 apps/server/main.go
-    - GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-server-linux-arm64 apps/server/main.go
-    # Windows builds
-    - GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-server-windows-amd64.exe apps/server/main.go
-    # macOS builds
-    - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
-    - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
-    # Build CLI
-    # Linux builds
-    - GOOS=linux GOARCH=amd64 go build -o bin/vault-hub-cli-linux-amd64 apps/cli/main.go
-    - GOOS=linux GOARCH=arm64 go build -o bin/vault-hub-cli-linux-arm64 apps/cli/main.go
-    # Windows builds
-    - GOOS=windows GOARCH=amd64 go build -o bin/vault-hub-cli-windows-amd64.exe apps/cli/main.go
-    # macOS builds
-    - GOOS=darwin GOARCH=amd64 go build -o bin/vault-hub-cli-darwin-amd64 apps/cli/main.go
-    - GOOS=darwin GOARCH=arm64 go build -o bin/vault-hub-cli-darwin-arm64 apps/cli/main.go
+    - golangci-lint run ./...
+    - pnpm --dir apps/web install
+    - pnpm --dir apps/web build
+    - |
+      export JWT_SECRET=secret
+      export ENCRYPTION_KEY=test-encryption-key-for-ci
+      go test -v ./...
+    - |
+      VERSION="dev"
+      COMMIT=$(git rev-parse --short HEAD)
+      LDFLAGS="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}"
+
+      mkdir -p bin
+
+      # Linux builds
+      GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-linux-amd64 apps/server/main.go
+      GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-linux-arm64 apps/server/main.go
+
+      # Windows builds
+      GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-windows-amd64.exe apps/server/main.go
+
+      # macOS builds
+      GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-darwin-amd64 apps/server/main.go
+      GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-server-darwin-arm64 apps/server/main.go
+    - |
+      VERSION="dev"
+      COMMIT=$(git rev-parse --short HEAD)
+      LDFLAGS="-X github.com/lwshen/vault-hub/internal/version.Version=${VERSION} -X github.com/lwshen/vault-hub/internal/version.Commit=${COMMIT}"
+
+      mkdir -p bin
+
+      # Linux builds
+      GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-linux-amd64 apps/cli/main.go
+      GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-linux-arm64 apps/cli/main.go
+
+      # Windows builds
+      GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-windows-amd64.exe apps/cli/main.go
+
+      # macOS builds
+      GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-darwin-amd64 apps/cli/main.go
+      GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-darwin-arm64 apps/cli/main.go
 build-openapi-typescript-client:
   stage: build
   image: ${BASE_IMAGE}
