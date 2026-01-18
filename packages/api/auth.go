@@ -100,7 +100,7 @@ func (Server) Signup(c *fiber.Ctx) error {
 
 	// Check if user with this email already exists
 	existingUser := model.User{Email: createParams.Email}
-	if err := existingUser.GetByEmail(); !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := existingUser.GetByEmail(); err == nil && existingUser.ID != 0 {
 		return handler.SendError(c, fiber.StatusBadRequest, "A user with this email already exists")
 	}
 
