@@ -45,6 +45,9 @@ cd vault-hub
 
 # Pull the latest frontend bundle (submodule)
 git submodule update --init --remote apps/web
+#
+# Or build the currently pinned frontend (no remote update):
+./scripts/pull-web.sh
 
 # Required environment variables
 export JWT_SECRET=$(openssl rand -base64 64)
@@ -134,6 +137,12 @@ pnpm --dir apps/web run dev       # Development server
 pnpm --dir apps/web run build     # Production build
 pnpm --dir apps/web run lint      # ESLint
 pnpm --dir apps/web run typecheck # TypeScript validation
+
+# Build embedded assets from the currently pinned frontend submodule
+./scripts/pull-web.sh
+
+# Update the frontend submodule to latest and rebuild embedded assets
+./scripts/update-web.sh
 ```
 
 **CLI:**

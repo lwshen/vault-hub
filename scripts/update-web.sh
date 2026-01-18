@@ -8,8 +8,27 @@ command -v pnpm >/dev/null 2>&1 || {
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "Updating apps/web submodule..."
-git -C "${REPO_ROOT}" submodule update --init --remote apps/web
+NO_UPDATE=false
+for arg in "$@"; do
+  case "${arg}" in
+    --no-update|--skip-update)
+      NO_UPDATE=true
+      ;;
+    *)
+      echo "Unknown argument: ${arg}" >&2
+      echo "Usage: $(basename "$0") [--no-update]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if "${NO_UPDATE}"; then
+  echo "Initializing apps/web submodule (no remote update)..."
+  git -C "${REPO_ROOT}" submodule update --init apps/web
+else
+  echo "Updating apps/web submodule..."
+  git -C "${REPO_ROOT}" submodule update --init --remote apps/web
+fi
 
 echo "Installing frontend dependencies..."
 cd "${REPO_ROOT}/apps/web"
