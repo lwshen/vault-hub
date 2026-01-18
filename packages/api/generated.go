@@ -16,6 +16,7 @@ import (
 
 const (
 	ApiKeyAuthScopes = "ApiKeyAuth.Scopes"
+	BearerScopes     = "bearer.Scopes"
 )
 
 // Defines values for AuditLogAction.
@@ -132,6 +133,15 @@ type AuditMetricsResponse struct {
 
 	// VaultEventsLast30Days Number of vault-related events in the last 30 days
 	VaultEventsLast30Days int `json:"vaultEventsLast30Days"`
+}
+
+// ChangePasswordRequest defines model for ChangePasswordRequest.
+type ChangePasswordRequest struct {
+	// CurrentPassword Current password for verification
+	CurrentPassword string `json:"currentPassword"`
+
+	// NewPassword New password (must meet complexity requirements)
+	NewPassword string `json:"newPassword"`
 }
 
 // ConfigResponse defines model for ConfigResponse.
@@ -460,6 +470,9 @@ type LoginJSONRequestBody = LoginRequest
 // RequestMagicLinkJSONRequestBody defines body for RequestMagicLink for application/json ContentType.
 type RequestMagicLinkJSONRequestBody = MagicLinkRequest
 
+// ChangePasswordJSONRequestBody defines body for ChangePassword for application/json ContentType.
+type ChangePasswordJSONRequestBody = ChangePasswordRequest
+
 // ConfirmPasswordResetJSONRequestBody defines body for ConfirmPasswordReset for application/json ContentType.
 type ConfirmPasswordResetJSONRequestBody = PasswordResetConfirmRequest
 
@@ -507,6 +520,9 @@ type ServerInterface interface {
 
 	// (GET /api/auth/magic-link/token)
 	ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) error
+
+	// (POST /api/auth/password/change)
+	ChangePassword(c *fiber.Ctx) error
 
 	// (POST /api/auth/password/reset/confirm)
 	ConfirmPasswordReset(c *fiber.Ctx) error
@@ -780,6 +796,14 @@ func (siw *ServerInterfaceWrapper) ConsumeMagicLink(c *fiber.Ctx) error {
 	return siw.Handler.ConsumeMagicLink(c, params)
 }
 
+// ChangePassword operation middleware
+func (siw *ServerInterfaceWrapper) ChangePassword(c *fiber.Ctx) error {
+
+	c.Context().SetUserValue(BearerScopes, []string{})
+
+	return siw.Handler.ChangePassword(c)
+}
+
 // ConfirmPasswordReset operation middleware
 func (siw *ServerInterfaceWrapper) ConfirmPasswordReset(c *fiber.Ctx) error {
 
@@ -997,6 +1021,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Post(options.BaseURL+"/api/auth/magic-link/request", wrapper.RequestMagicLink)
 
 	router.Get(options.BaseURL+"/api/auth/magic-link/token", wrapper.ConsumeMagicLink)
+
+	router.Post(options.BaseURL+"/api/auth/password/change", wrapper.ChangePassword)
 
 	router.Post(options.BaseURL+"/api/auth/password/reset/confirm", wrapper.ConfirmPasswordReset)
 
@@ -1221,6 +1247,38 @@ type ConsumeMagicLink302Response struct {
 
 func (response ConsumeMagicLink302Response) VisitConsumeMagicLinkResponse(ctx *fiber.Ctx) error {
 	ctx.Status(302)
+	return nil
+}
+
+type ChangePasswordRequestObject struct {
+	Body *ChangePasswordJSONRequestBody
+}
+
+type ChangePasswordResponseObject interface {
+	VisitChangePasswordResponse(ctx *fiber.Ctx) error
+}
+
+type ChangePassword200Response struct {
+}
+
+func (response ChangePassword200Response) VisitChangePasswordResponse(ctx *fiber.Ctx) error {
+	ctx.Status(200)
+	return nil
+}
+
+type ChangePassword400Response struct {
+}
+
+func (response ChangePassword400Response) VisitChangePasswordResponse(ctx *fiber.Ctx) error {
+	ctx.Status(400)
+	return nil
+}
+
+type ChangePassword401Response struct {
+}
+
+func (response ChangePassword401Response) VisitChangePasswordResponse(ctx *fiber.Ctx) error {
+	ctx.Status(401)
 	return nil
 }
 
@@ -1547,6 +1605,9 @@ type StrictServerInterface interface {
 
 	// (GET /api/auth/magic-link/token)
 	ConsumeMagicLink(ctx context.Context, request ConsumeMagicLinkRequestObject) (ConsumeMagicLinkResponseObject, error)
+
+	// (POST /api/auth/password/change)
+	ChangePassword(ctx context.Context, request ChangePasswordRequestObject) (ChangePasswordResponseObject, error)
 
 	// (POST /api/auth/password/reset/confirm)
 	ConfirmPasswordReset(ctx context.Context, request ConfirmPasswordResetRequestObject) (ConfirmPasswordResetResponseObject, error)
@@ -1886,6 +1947,37 @@ func (sh *strictHandler) ConsumeMagicLink(ctx *fiber.Ctx, params ConsumeMagicLin
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(ConsumeMagicLinkResponseObject); ok {
 		if err := validResponse.VisitConsumeMagicLinkResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// ChangePassword operation middleware
+func (sh *strictHandler) ChangePassword(ctx *fiber.Ctx) error {
+	var request ChangePasswordRequestObject
+
+	var body ChangePasswordJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.ChangePassword(ctx.UserContext(), request.(ChangePasswordRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ChangePassword")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(ChangePasswordResponseObject); ok {
+		if err := validResponse.VisitChangePasswordResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

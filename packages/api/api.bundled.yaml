@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.9
+  version: 1.0.10
   title: Vault Hub Server
 paths:
   /api/health:
@@ -191,6 +191,27 @@ paths:
       responses:
         '302':
           description: Redirect to frontend with token fragment
+  /api/auth/password/change:
+    post:
+      description: Change password for authenticated user
+      tags:
+        - Auth
+      operationId: changePassword
+      security:
+        - bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Invalid input or password requirements not met
+        '401':
+          description: Invalid current password or unauthorized
   /api/user:
     get:
       description: Get current user by credential
@@ -654,6 +675,18 @@ components:
             - email_token_sent
             - email_token_rate_limited
             - email_token_failed
+    ChangePasswordRequest:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+      properties:
+        currentPassword:
+          type: string
+          description: Current password for verification
+        newPassword:
+          type: string
+          description: New password (must meet complexity requirements)
     GetUserResponse:
       type: object
       required:

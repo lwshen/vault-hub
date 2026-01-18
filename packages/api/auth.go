@@ -426,3 +426,57 @@ func deref(p *string) string {
 	}
 	return *p
 }
+
+// ChangePassword handles password change for authenticated users
+func (Server) ChangePassword(c *fiber.Ctx) error {
+	// Get authenticated user from context
+	user, ok := c.Locals("user").(*model.User)
+	if !ok || user == nil {
+		return handler.SendError(c, fiber.StatusUnauthorized, "unauthorized")
+	}
+
+	// Re-fetch user to get password hash (middleware clears it)
+	var fullUser model.User
+	if err := model.DB.First(&fullUser, user.ID).Error; err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, "user not found")
+	}
+
+	// Parse request body
+	var input ChangePasswordRequest
+	if err := c.BodyParser(&input); err != nil {
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	// Verify current password
+	if !fullUser.ComparePassword(input.CurrentPassword) {
+		return handler.SendError(c, fiber.StatusUnauthorized, "invalid current password")
+	}
+
+	// Validate new password meets requirements
+	params := model.CreateUserParams{
+		Email:    fullUser.Email,
+		Password: &input.NewPassword,
+		Name:     deref(fullUser.Name),
+	}
+	if errs := params.Validate(); len(errs) > 0 {
+		return handler.SendError(c, fiber.StatusBadRequest, "password does not meet requirements")
+	}
+
+	// Hash and update password
+	hashed, err := model.HashPassword(input.NewPassword)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to hash password")
+	}
+	fullUser.Password = &hashed
+	if err := model.DB.Save(&fullUser).Error; err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to update password")
+	}
+
+	// Audit log
+	clientIP, userAgent := getClientInfo(c)
+	if err := model.LogUserAction(model.ActionChangePassword, fullUser.ID, model.SourceWeb, clientIP, userAgent); err != nil {
+		slog.Error("Failed to create audit log for password change", "error", err, "userID", fullUser.ID)
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
