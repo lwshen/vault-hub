@@ -1,3 +1,12 @@
+## [1.4.23] - 2026-01-18
+
+### 🚀 Features
+
+- Add change password endpoint (#382)
+
+### ⚙️ Miscellaneous Tasks
+
+- Rename build artifact to vault-hub (#386)
 ## [1.4.22] - 2026-01-18
 
 ### 🚀 Features
