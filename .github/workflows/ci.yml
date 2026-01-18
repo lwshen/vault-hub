@@ -86,7 +86,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: vault-hub-server
+          name: vault-hub
           path: |
             bin/
             internal/embed/dist
