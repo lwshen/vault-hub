@@ -16,7 +16,6 @@ import (
 
 const (
 	ApiKeyAuthScopes = "ApiKeyAuth.Scopes"
-	BearerScopes     = "bearer.Scopes"
 )
 
 // Defines values for AuditLogAction.
@@ -804,8 +803,6 @@ func (siw *ServerInterfaceWrapper) ConsumeMagicLink(c *fiber.Ctx) error {
 
 // ChangePassword operation middleware
 func (siw *ServerInterfaceWrapper) ChangePassword(c *fiber.Ctx) error {
-
-	c.Context().SetUserValue(BearerScopes, []string{})
 
 	return siw.Handler.ChangePassword(c)
 }

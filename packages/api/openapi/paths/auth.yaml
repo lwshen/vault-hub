@@ -160,8 +160,6 @@ changePassword:
     tags:
       - Auth
     operationId: changePassword
-    security:
-      - bearer: []
     requestBody:
       required: true
       content:
