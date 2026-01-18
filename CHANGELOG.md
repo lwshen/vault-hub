@@ -1,3 +1,17 @@
+## [1.4.22] - 2026-01-18
+
+### 🚀 Features
+
+- Add audit log for reset password (#381)
+
+### 🐛 Bug Fixes
+
+- Show friendly error for duplicate email signup (#383)
+
+### ⚙️ Miscellaneous Tasks
+
+- *(ci)* Update GitLab CI configuration (#380)
+- Add pinned frontend build script (#384)
 ## [1.4.18] - 2025-12-06
 
 ### ⚙️ Miscellaneous Tasks
