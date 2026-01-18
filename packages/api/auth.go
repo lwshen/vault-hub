@@ -219,6 +219,9 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 	if err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
+
+	clientIP, userAgent := getClientInfo(c)
+
 	// Always respond 200 to avoid user enumeration
 	// Attempt to find user; if not found, still return success
 	user := model.User{Email: emailStr}
@@ -242,6 +245,11 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 				"success": false,
 				"code":    emailTokenCodeFailed,
 			})
+		}
+
+		// Log password reset request audit
+		if err := model.LogUserAction(model.ActionRequestPasswordReset, user.ID, model.SourceWeb, clientIP, userAgent); err != nil {
+			slog.Error("Failed to create audit log for password reset request", "error", err, "userID", user.ID)
 		}
 
 		baseURL := c.BaseURL()
@@ -270,6 +278,9 @@ func (Server) ConfirmPasswordReset(c *fiber.Ctx) error {
 	if err := c.BodyParser(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
+
+	clientIP, userAgent := getClientInfo(c)
+
 	t, err := model.VerifyAndConsumeEmailToken(input.Token, model.TokenPurposeResetPassword)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, "invalid or expired token")
@@ -295,6 +306,12 @@ func (Server) ConfirmPasswordReset(c *fiber.Ctx) error {
 	if err := model.DB.Save(&user).Error; err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to update password")
 	}
+
+	// Log password reset audit
+	if err := model.LogUserAction(model.ActionPasswordReset, user.ID, model.SourceWeb, clientIP, userAgent); err != nil {
+		slog.Error("Failed to create audit log for password reset", "error", err, "userID", user.ID)
+	}
+
 	return c.SendStatus(fiber.StatusOK)
 }
 
