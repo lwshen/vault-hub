@@ -477,8 +477,7 @@ func (Server) ChangePassword(c *fiber.Ctx) error {
 	if err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to hash password")
 	}
-	fullUser.Password = &hashed
-	if err := model.DB.Save(&fullUser).Error; err != nil {
+	if err := model.DB.Model(&fullUser).Update("password", hashed).Error; err != nil {
 		return handler.SendError(c, fiber.StatusInternalServerError, "failed to update password")
 	}
 
