@@ -447,6 +447,11 @@ func (Server) ChangePassword(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
+	// OIDC users cannot change password (they don't have one)
+	if fullUser.Password == nil {
+		return handler.SendError(c, fiber.StatusBadRequest, "password change not available for OIDC users")
+	}
+
 	// Verify current password
 	if !fullUser.ComparePassword(input.CurrentPassword) {
 		return handler.SendError(c, fiber.StatusUnauthorized, "invalid current password")
