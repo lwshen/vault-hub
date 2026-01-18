@@ -21,16 +21,22 @@ const (
 
 // Defines values for AuditLogAction.
 const (
-	CreateApiKey AuditLogAction = "create_api_key"
-	CreateVault  AuditLogAction = "create_vault"
-	DeleteApiKey AuditLogAction = "delete_api_key"
-	DeleteVault  AuditLogAction = "delete_vault"
-	LoginUser    AuditLogAction = "login_user"
-	LogoutUser   AuditLogAction = "logout_user"
-	ReadVault    AuditLogAction = "read_vault"
-	RegisterUser AuditLogAction = "register_user"
-	UpdateApiKey AuditLogAction = "update_api_key"
-	UpdateVault  AuditLogAction = "update_vault"
+	ChangePassword       AuditLogAction = "change_password"
+	CreateApiKey         AuditLogAction = "create_api_key"
+	CreateVault          AuditLogAction = "create_vault"
+	DeleteApiKey         AuditLogAction = "delete_api_key"
+	DeleteVault          AuditLogAction = "delete_vault"
+	LoginUser            AuditLogAction = "login_user"
+	LogoutUser           AuditLogAction = "logout_user"
+	MagicLinkLogin       AuditLogAction = "magic_link_login"
+	PasswordReset        AuditLogAction = "password_reset"
+	ReadVault            AuditLogAction = "read_vault"
+	RegisterUser         AuditLogAction = "register_user"
+	RequestMagicLink     AuditLogAction = "request_magic_link"
+	RequestPasswordReset AuditLogAction = "request_password_reset"
+	SendSignupEmail      AuditLogAction = "send_signup_email"
+	UpdateApiKey         AuditLogAction = "update_api_key"
+	UpdateVault          AuditLogAction = "update_vault"
 )
 
 // Defines values for AuditLogSource.
