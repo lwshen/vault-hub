@@ -514,12 +514,21 @@ The `scripts/` directory contains utility scripts for development and release wo
 
 **update-web.sh** - Update and build frontend submodule
 - **Usage**: `./scripts/update-web.sh`
+  - `./scripts/update-web.sh --no-update` to build the currently pinned submodule without pulling latest
 - **Functionality**:
   - Updates `apps/web` submodule to latest remote version
   - Installs frontend dependencies with pnpm (frozen lockfile)
   - Builds frontend assets for production
   - Copies build output to `internal/embed/dist/` for Go embedding
 - **Use Case**: Run when syncing frontend changes or before backend builds that embed frontend assets
+
+**pull-web.sh** - Build embedded assets from the currently pinned frontend submodule
+- **Usage**: `./scripts/pull-web.sh`
+- **Functionality**:
+  - Initializes `apps/web` submodule without updating to latest remote
+  - Runs the same install/build steps as `update-web.sh`
+  - Copies build output to `internal/embed/dist/`
+- **Use Case**: Run when you want to rebuild embedded assets without changing the frontend version
 
 ### YAML Formatting
 
