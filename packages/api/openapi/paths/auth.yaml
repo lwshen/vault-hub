@@ -153,3 +153,23 @@ magicLinkConsume:
     responses:
       "302":
         description: Redirect to frontend with token fragment
+
+changePassword:
+  post:
+    description: Change password for authenticated user
+    tags:
+      - Auth
+    operationId: changePassword
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/auth.yaml#/ChangePasswordRequest
+    responses:
+      "200":
+        description: Password changed successfully
+      "400":
+        description: Invalid input or password requirements not met
+      "401":
+        description: Invalid current password or unauthorized

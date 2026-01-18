@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.9
+  version: 1.0.10
   title: Vault Hub Server
 # Merge path definitions from separate files
 paths:
@@ -28,6 +28,8 @@ paths:
     $ref: ./paths/auth.yaml#/magicLinkRequest
   /api/auth/magic-link/token:
     $ref: ./paths/auth.yaml#/magicLinkConsume
+  /api/auth/password/change:
+    $ref: ./paths/auth.yaml#/changePassword
   # User endpoints
   /api/user:
     $ref: ./paths/user.yaml#/getCurrentUser
@@ -87,6 +89,8 @@ components:
       $ref: ./schemas/auth.yaml#/MagicLinkRequest
     EmailTokenResponse:
       $ref: ./schemas/auth.yaml#/EmailTokenResponse
+    ChangePasswordRequest:
+      $ref: ./schemas/auth.yaml#/ChangePasswordRequest
     # User schemas
     GetUserResponse:
       $ref: ./schemas/user.yaml#/GetUserResponse

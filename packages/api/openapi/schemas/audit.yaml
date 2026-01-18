@@ -48,6 +48,12 @@ AuditLog:
         - create_api_key
         - update_api_key
         - delete_api_key
+        - request_password_reset
+        - password_reset
+        - change_password
+        - request_magic_link
+        - magic_link_login
+        - send_signup_email
       description: Type of action performed
     source:
       type: string

@@ -22,6 +22,7 @@ const (
 	ActionDeleteAPIKey         ActionType = "delete_api_key"
 	ActionRequestPasswordReset ActionType = "request_password_reset"
 	ActionPasswordReset        ActionType = "password_reset"
+	ActionChangePassword       ActionType = "change_password"
 	ActionRequestMagicLink     ActionType = "request_magic_link"
 	ActionMagicLinkLogin       ActionType = "magic_link_login"
 	ActionSendSignupEmail      ActionType = "send_signup_email"
