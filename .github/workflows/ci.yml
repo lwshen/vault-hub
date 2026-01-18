@@ -47,7 +47,7 @@ jobs:
         working-directory: ./apps/web
         run: pnpm build
       - name: Copy frontend build
-        run: cp -r ./apps/web/dist ./internal/embed/dist
+        run: cp -a ./apps/web/dist ./internal/embed/dist
       - name: Run tests
         run: |
           export JWT_SECRET=secret
