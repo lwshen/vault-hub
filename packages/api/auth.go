@@ -452,6 +452,11 @@ func (Server) ChangePassword(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusUnauthorized, "invalid current password")
 	}
 
+	// Ensure new password is different from current password
+	if fullUser.ComparePassword(input.NewPassword) {
+		return handler.SendError(c, fiber.StatusBadRequest, "new password must be different from current password")
+	}
+
 	// Validate new password meets requirements
 	params := model.CreateUserParams{
 		Email:    fullUser.Email,
