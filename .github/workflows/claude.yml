@@ -35,6 +35,8 @@ jobs:
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@beta
+        env:
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
         with:
           # Comma-separated list of allowed bot usernames, or '*' to allow all bots. Empty string (default) allows no bots.
           allowed_bots: cursor,dependabot
