@@ -16,10 +16,15 @@ jobs:
       - name: Set package version
         id: set_version
         run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            # Tag event - use tag name
+            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            # workflow_dispatch or main branch push - use timestamp
             echo "version=v0.0.$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
           else
-            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            # Fallback (should not happen with current triggers)
+            echo "version=0.0.0-dev" >> $GITHUB_OUTPUT
           fi
       - name: Generate Typescript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
@@ -49,7 +54,7 @@ jobs:
           registry-url: https://npm.pkg.github.com
           scope: "@lwshen"
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: typescript-fetch-client
       - name: Publish to GitHub Packages
@@ -75,7 +80,7 @@ jobs:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: typescript-fetch-client
       - name: Publish to npm registry
