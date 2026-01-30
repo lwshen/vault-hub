@@ -50,6 +50,7 @@ jobs:
           name: typescript-fetch-client
           path: typescript-fetch-client
           retention-days: 1
+          if-no-files-found: error
 
   publish-github:
     needs: generate
@@ -66,7 +67,7 @@ jobs:
           registry-url: https://npm.pkg.github.com
           scope: "@lwshen"
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: typescript-fetch-client
       - name: Publish to GitHub Packages
@@ -89,7 +90,7 @@ jobs:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: typescript-fetch-client
       - name: Publish to npm registry
