@@ -4,82 +4,91 @@ on:
   push:
     branches:
       - main
+    tags:
+      - v*
   pull_request:
+
 jobs:
-  build-and-publish-github:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set package version
+        id: set_version
+        run: |
+          if [[ "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            # Tag event - use tag name
+            VERSION="${{ github.ref_name }}"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            # workflow_dispatch or main branch push - use timestamp
+            VERSION="v0.0.$(date +'%Y%m%d%H%M%S')"
+          else
+            # Fallback (should not happen with current triggers)
+            VERSION="0.0.0-dev"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
+      - name: Generate Typescript Fetch Client Library
+        uses: openapi-generators/openapitools-generator-action@v1
+        with:
+          generator: typescript-fetch
+          openapi-file: packages/api/openapi/api.yaml
+          generator-tag: v7.13.0
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ steps.set_version.outputs.version }} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: typescript-fetch-client
+          path: typescript-fetch-client
+          retention-days: 1
+          if-no-files-found: error
+
+  publish-github:
+    needs: generate
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v6
       - name: Set up Node for GitHub Packages
         uses: actions/setup-node@v6
         with:
           node-version: 22.x
           registry-url: https://npm.pkg.github.com
           scope: "@lwshen"
-      - name: Set env
-        run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
-      - name: Generate Typescript Fetch Client Library
-        uses: openapi-generators/openapitools-generator-action@v1
+      - name: Download artifact
+        uses: actions/download-artifact@v7
         with:
-          generator: typescript-fetch
-          openapi-file: packages/api/openapi/api.yaml
-          generator-tag: v7.13.0
-          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ env.TAG }} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
+          name: typescript-fetch-client
       - name: Publish to GitHub Packages
         run: |
-          # Push to separate repository only outside of pull_request events
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            cd typescript-fetch-client
-            echo ${{ env.TAG }}
-            cat package.json
-            npm install
-            npm run build
-            npm publish
-          else
-            echo "Skipping push during pull_request event"
-          fi
+          cd typescript-fetch-client
+          npm install
+          npm run build
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  build-and-publish-npm:
+
+  publish-npm:
+    needs: generate
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
       - name: Set up Node for npm registry
         uses: actions/setup-node@v6
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
-      - name: Set env
-        run: echo "TAG=0.$(date +'%Y%m%d.%H%M%S')" >> "$GITHUB_ENV"
-      - name: Generate Typescript Fetch Client Library
-        uses: openapi-generators/openapitools-generator-action@v1
+      - name: Download artifact
+        uses: actions/download-artifact@v7
         with:
-          generator: typescript-fetch
-          openapi-file: packages/api/openapi/api.yaml
-          generator-tag: v7.13.0
-          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=useSingleRequestParameter=false --additional-properties=npmVersion=${{ env.TAG }} --git-user-id lwshen --git-repo-id vault-hub
-      - name: Build package
+          name: typescript-fetch-client
+      - name: Publish to npm registry
         run: |
           cd typescript-fetch-client
           npm install
           npm run build
-      - name: Publish to npm registry
-        run: |
-          # Push to separate repository only outside of pull_request events
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            cd typescript-fetch-client
-            npm publish --access public
-          else
-            echo "Skipping push during pull_request event"
-          fi
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Upload OpenAPI client artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: typescript-fetch-client
-          path: typescript-fetch-client
-          if-no-files-found: error
