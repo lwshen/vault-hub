@@ -11,8 +11,18 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.check_publish.outputs.should_publish }}
     steps:
       - uses: actions/checkout@v6
+      - name: Check if publishing is needed
+        id: check_publish
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          fi
       - name: Set package version
         id: set_version
         run: |
@@ -26,7 +36,6 @@ jobs:
             # Fallback (should not happen with current triggers)
             echo "version=0.0.0-dev" >> $GITHUB_OUTPUT
           fi
-          echo "::set-output name=version::$(cat $GITHUB_OUTPUT | cut -d= -f2)"
       - name: Generate Typescript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
@@ -43,6 +52,7 @@ jobs:
 
   publish-github:
     needs: generate
+    if: needs.generate.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -55,24 +65,21 @@ jobs:
           registry-url: https://npm.pkg.github.com
           scope: "@lwshen"
       - name: Download artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           name: typescript-fetch-client
       - name: Publish to GitHub Packages
         run: |
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            cd typescript-fetch-client
-            npm install
-            npm run build
-            npm publish
-          else
-            echo "Skipping publish during pull_request event"
-          fi
+          cd typescript-fetch-client
+          npm install
+          npm run build
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-npm:
     needs: generate
+    if: needs.generate.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Set up Node for npm registry
@@ -81,18 +88,14 @@ jobs:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
       - name: Download artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           name: typescript-fetch-client
       - name: Publish to npm registry
         run: |
-          if [ "${{ github.event_name }}" != "pull_request" ]; then
-            cd typescript-fetch-client
-            npm install
-            npm run build
-            npm publish --access public
-          else
-            echo "Skipping publish during pull_request event"
-          fi
+          cd typescript-fetch-client
+          npm install
+          npm run build
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
