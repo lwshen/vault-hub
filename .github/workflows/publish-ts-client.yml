@@ -63,7 +63,6 @@ jobs:
           name: typescript-fetch-client
       - name: Publish to GitHub Packages
         run: |
-          cd typescript-fetch-client
           npm install
           npm run build
           npm publish
@@ -86,7 +85,6 @@ jobs:
           name: typescript-fetch-client
       - name: Publish to npm registry
         run: |
-          cd typescript-fetch-client
           npm install
           npm run build
           npm publish --access public
