@@ -51,7 +51,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
           # Clone existing repository to preserve history
-          git clone https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git publish-repo
+          git clone https://${{ secrets.PUBLISH_TOKEN }}@github.com/lwshen/vault-hub-go-client.git publish-repo || exit 1
           cd publish-repo
 
           # Ensure we are on main (create if missing)
