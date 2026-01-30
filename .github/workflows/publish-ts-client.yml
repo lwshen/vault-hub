@@ -11,18 +11,8 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    outputs:
-      should_publish: ${{ steps.check_publish.outputs.should_publish }}
     steps:
       - uses: actions/checkout@v6
-      - name: Check if publishing is needed
-        id: check_publish
-        run: |
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "should_publish=false" >> $GITHUB_OUTPUT
-          else
-            echo "should_publish=true" >> $GITHUB_OUTPUT
-          fi
       - name: Set package version
         id: set_version
         run: |
@@ -54,7 +44,7 @@ jobs:
 
   publish-github:
     needs: generate
-    if: needs.generate.outputs.should_publish == 'true'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -81,7 +71,7 @@ jobs:
 
   publish-npm:
     needs: generate
-    if: needs.generate.outputs.should_publish == 'true'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Set up Node for npm registry
