@@ -72,7 +72,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Generated Go client library ${{ github.ref_name }}"
+            git commit -m "Generated Go client library ${{ steps.set_version.outputs.version }}"
           fi
 
           # Tag the release only for tag events
