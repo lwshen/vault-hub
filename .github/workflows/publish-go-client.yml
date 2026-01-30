@@ -19,13 +19,21 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: "1.21"
+      - name: Set package version
+        id: set_version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "version=v0.0.$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
       - name: Generate Go Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
           generator: go
           openapi-file: packages/api/openapi/api.yaml
           generator-tag: v7.13.0
-          command-args: --additional-properties=packageVersion=${{ github.ref_name }} --additional-properties=moduleName=github.com/lwshen/vault-hub-go-client --git-user-id lwshen --git-repo-id vault-hub-go-client
+          command-args: --additional-properties=packageVersion=${{ steps.set_version.outputs.version }} --additional-properties=moduleName=github.com/lwshen/vault-hub-go-client --git-user-id lwshen --git-repo-id vault-hub-go-client
       - name: Ensure LICENSE is included
         run: cp LICENSE go-client/LICENSE
       - name: Initialize Go module and publish
@@ -61,13 +69,18 @@ jobs:
             git commit -m "Generated Go client library ${{ github.ref_name }}"
           fi
 
-          # Tag the release
-          git tag ${{ github.ref_name }}
+          # Tag the release only for tag events
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            git tag ${{ github.ref_name }}
+          fi
 
           # Push to separate repository only outside of pull_request events
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             git push origin main
-            git push origin ${{ github.ref_name }}
+            # Push tag only if it was created
+            if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+              git push origin ${{ github.ref_name }}
+            fi
           else
             echo "Skipping push during pull_request event"
           fi

@@ -21,13 +21,21 @@ jobs:
           node-version: 22.x
           registry-url: https://npm.pkg.github.com
           scope: "@lwshen"
+      - name: Set package version
+        id: set_version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "version=v0.0.$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
       - name: Generate Typescript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
           generator: typescript-fetch
           openapi-file: packages/api/openapi/api.yaml
           generator-tag: v7.13.0
-          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ github.ref_name }} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ steps.set_version.outputs.version }} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
       - name: Publish to GitHub Packages
         run: |
           # Push to separate repository only outside of pull_request events
@@ -52,13 +60,21 @@ jobs:
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org
+      - name: Set package version
+        id: set_version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "version=v0.0.$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
       - name: Generate Typescript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
           generator: typescript-fetch
           openapi-file: packages/api/openapi/api.yaml
           generator-tag: v7.13.0
-          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=useSingleRequestParameter=false --additional-properties=npmVersion=${{ github.ref_name }} --git-user-id lwshen --git-repo-id vault-hub
+          command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=useSingleRequestParameter=false --additional-properties=npmVersion=${{ steps.set_version.outputs.version }} --git-user-id lwshen --git-repo-id vault-hub
       - name: Build package
         run: |
           cd typescript-fetch-client
