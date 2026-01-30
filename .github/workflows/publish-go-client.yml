@@ -32,7 +32,7 @@ jobs:
             # Fallback (should not happen with current triggers)
             echo "version=0.0.0-dev" >> $GITHUB_OUTPUT
           fi
-          echo "::set-output name=version::$(cat $GITHUB_OUTPUT | cut -d= -f2)"
+          echo "Package version: ${{ steps.set_version.outputs.version }}"
       - name: Generate Go Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
