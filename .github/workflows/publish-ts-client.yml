@@ -18,15 +18,16 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" =~ ^refs/tags/v ]]; then
             # Tag event - use tag name
-            echo "version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            VERSION="${{ github.ref_name }}"
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             # workflow_dispatch or main branch push - use timestamp
-            echo "version=v0.0.$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+            VERSION="v0.0.$(date +'%Y%m%d%H%M%S')"
           else
             # Fallback (should not happen with current triggers)
-            echo "version=0.0.0-dev" >> $GITHUB_OUTPUT
+            VERSION="0.0.0-dev"
           fi
-          echo "Package version: ${{ steps.set_version.outputs.version }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
       - name: Generate Typescript Fetch Client Library
         uses: openapi-generators/openapitools-generator-action@v1
         with:
