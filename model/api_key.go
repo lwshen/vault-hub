@@ -45,13 +45,20 @@ func (v *VaultIDs) Scan(value interface{}) error {
 // APIKey represents an API key for accessing vaults
 type APIKey struct {
 	gorm.Model
-	UserID     uint       `gorm:"not null;index"`          // User who owns this API key
-	Name       string     `gorm:"size:255;not null"`       // Human-readable name for the API key
-	KeyHash    string     `gorm:"size:64;not null;unique"` // SHA-256 hash of the API key
-	VaultIDs   VaultIDs   `gorm:"type:json"`               // JSON array of vault IDs (null = all user's vaults)
-	ExpiresAt  *time.Time `gorm:"index"`                   // Optional expiration date
-	LastUsedAt *time.Time // Track when it was last used
+	UserID               uint       `gorm:"not null;index"`          // User who owns this API key
+	Name                 string     `gorm:"size:255;not null"`       // Human-readable name for the API key
+	KeyHash              string     `gorm:"size:64;not null;unique"` // SHA-256 hash of the API key
+	VaultIDs             VaultIDs   `gorm:"type:json"`               // JSON array of vault IDs (null = all user's vaults)
+	ExpiresAt            *time.Time `gorm:"index"`                   // Optional expiration date
+	LastUsedAt           *time.Time // Track when it was last used
+	LastRotatedAt        *time.Time // When the key was last rotated
+	RotationCount        int        // Number of times the key has been rotated
+	PreviousKeyHash      *string    `gorm:"size:64;index"` // Hash of the previous key (for grace period)
+	PreviousKeyExpiresAt *time.Time `gorm:"index"`         // When the previous key expires (grace period)
 }
+
+// DefaultRotationGracePeriod is the default grace period for key rotation (7 days)
+const DefaultRotationGracePeriod = 7 * 24 * time.Hour
 
 // CreateAPIKeyParams defines parameters for creating a new API key
 type CreateAPIKeyParams struct {
@@ -160,22 +167,36 @@ func ValidateAPIKey(key string) (*APIKey, error) {
 
 	keyHash := HashAPIKey(key)
 	apiKey, err := GetAPIKeyByHash(keyHash)
-	if err != nil {
+	if err == nil {
+		// Found by current key hash
+		now := time.Now()
+		apiKey.LastUsedAt = &now
+		if err := DB.Save(&apiKey).Error; err != nil {
+			slog.Error("Failed to update API key last used timestamp",
+				"api_key_id", apiKey.ID,
+				"error", err)
+		}
+		return apiKey, nil
+	}
+
+	// If not found by current key, check if it might be a previous key in grace period
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 
-	// Update last used timestamp
-	now := time.Now()
-	apiKey.LastUsedAt = &now
-	if err := DB.Save(&apiKey).Error; err != nil {
-		// Log the error but don't fail the validation - usage tracking is not critical
-		// for API key validation functionality
-		slog.Error("Failed to update API key last used timestamp",
-			"api_key_id", apiKey.ID,
-			"error", err)
+	// Try to find by previous key hash
+	err = DB.Model(&APIKey{}).
+		Where("previous_key_hash = ? AND previous_key_expires_at > ?", keyHash, time.Now()).
+		First(&APIKey{}).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("invalid API key")
+		}
+		return nil, err
 	}
 
-	return apiKey, nil
+	// Return error indicating this is a deprecated key (still in grace period)
+	return nil, errors.New("API key has been rotated; please update to the new key")
 }
 
 // HasVaultAccess checks if the API key has access to a specific vault
@@ -322,4 +343,77 @@ func GetUserAPIKeysWithPagination(userID uint, pageSize, pageIndex int) ([]APIKe
 // Delete soft deletes an API key
 func (k *APIKey) Delete() error {
 	return DB.Delete(k).Error
+}
+
+// RotateAPIKeyParams defines parameters for rotating an API key
+type RotateAPIKeyParams struct {
+	GracePeriod time.Duration // How long the old key remains valid (default: 7 days)
+}
+
+// Validate validates the rotate API key parameters
+func (params *RotateAPIKeyParams) Validate() map[string]string {
+	errors := map[string]string{}
+
+	if params.GracePeriod <= 0 {
+		params.GracePeriod = DefaultRotationGracePeriod
+	}
+
+	// Max grace period is 30 days
+	if params.GracePeriod > 30*24*time.Hour {
+		errors["grace_period"] = "grace period cannot exceed 30 days"
+	}
+
+	return errors
+}
+
+// Rotate rotates the API key, generating a new key and setting up a grace period for the old one
+func (k *APIKey) Rotate(params RotateAPIKeyParams) (string, error) {
+	if errs := params.Validate(); len(errs) > 0 {
+		return "", errors.New("invalid parameters")
+	}
+
+	// Generate new API key
+	newKey, err := GenerateAPIKey()
+	if err != nil {
+		return "", err
+	}
+
+	newKeyHash := HashAPIKey(newKey)
+	now := time.Now()
+
+	// Update the API key with new hash and previous key info
+	// First, save the current key hash as previous
+	k.PreviousKeyHash = &k.KeyHash
+	k.PreviousKeyExpiresAt = func() *time.Time {
+		t := now.Add(params.GracePeriod)
+		return &t
+	}()
+
+	// Update to new key
+	k.KeyHash = newKeyHash
+	k.LastRotatedAt = &now
+	k.RotationCount++
+
+	if err := DB.Save(k).Error; err != nil {
+		return "", err
+	}
+
+	return newKey, nil
+}
+
+// ClearPreviousKey clears the previous key hash (called after grace period expires)
+func (k *APIKey) ClearPreviousKey() error {
+	k.PreviousKeyHash = nil
+	k.PreviousKeyExpiresAt = nil
+	return DB.Save(k).Error
+}
+
+// CleanupExpiredPreviousKeys removes expired previous keys from all API keys
+func CleanupExpiredPreviousKeys() error {
+	return DB.Model(&APIKey{}).
+		Where("previous_key_expires_at < ?", time.Now()).
+		Updates(map[string]interface{}{
+			"previous_key_hash":       nil,
+			"previous_key_expires_at": nil,
+		}).Error
 }

@@ -47,6 +47,7 @@ func isPublicRoute(path string) bool {
 		"/api/auth/password/reset/confirm",
 		"/api/auth/magic-link/request",
 		"/api/auth/magic-link/token",
+		"/api/auth/refresh",
 	}
 
 	for _, route := range publicRoutes {

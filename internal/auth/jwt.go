@@ -18,3 +18,8 @@ func GenerateToken(userId uint) (string, error) {
 	})
 	return token.SignedString([]byte(config.JwtSecret))
 }
+
+// TokenExpirationSeconds returns the number of seconds until the token expires
+func TokenExpirationSeconds() int {
+	return expirationHour * 3600
+}

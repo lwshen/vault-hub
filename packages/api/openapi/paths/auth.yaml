@@ -173,3 +173,27 @@ changePassword:
         description: Invalid input or password requirements not met
       "401":
         description: Invalid current password or unauthorized
+
+refreshToken:
+  post:
+    description: Refresh access token using a refresh token
+    tags:
+      - Auth
+    operationId: refreshToken
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/auth.yaml#/RefreshTokenRequest
+    responses:
+      "200":
+        description: Token refreshed successfully
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/auth.yaml#/RefreshTokenResponse
+      "400":
+        description: Invalid request body
+      "401":
+        description: Invalid or expired refresh token

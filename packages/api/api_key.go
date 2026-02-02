@@ -43,25 +43,35 @@ func convertToApiAPIKey(apiKey *model.APIKey) (*VaultAPIKey, error) {
 	}
 
 	// Convert timestamps
-	var expiresAt, lastUsedAt *time.Time
+	var expiresAt, lastUsedAt, lastRotatedAt, previousKeyExpiresAt *time.Time
 	if apiKey.ExpiresAt != nil {
 		expiresAt = apiKey.ExpiresAt
 	}
 	if apiKey.LastUsedAt != nil {
 		lastUsedAt = apiKey.LastUsedAt
 	}
+	if apiKey.LastRotatedAt != nil {
+		lastRotatedAt = apiKey.LastRotatedAt
+	}
+	if apiKey.PreviousKeyExpiresAt != nil {
+		previousKeyExpiresAt = apiKey.PreviousKeyExpiresAt
+	}
 
 	// #nosec G115
 	id := int64(apiKey.ID)
+	rotationCount := apiKey.RotationCount
 	return &VaultAPIKey{
-		Id:         id,
-		Name:       apiKey.Name,
-		Vaults:     &apiVaults,
-		ExpiresAt:  expiresAt,
-		LastUsedAt: lastUsedAt,
-		IsActive:   !apiKey.DeletedAt.Valid,
-		CreatedAt:  apiKey.CreatedAt,
-		UpdatedAt:  &apiKey.UpdatedAt,
+		Id:                   id,
+		Name:                 apiKey.Name,
+		Vaults:               &apiVaults,
+		ExpiresAt:            expiresAt,
+		LastUsedAt:           lastUsedAt,
+		IsActive:             !apiKey.DeletedAt.Valid,
+		CreatedAt:            apiKey.CreatedAt,
+		UpdatedAt:            &apiKey.UpdatedAt,
+		LastRotatedAt:        lastRotatedAt,
+		RotationCount:        &rotationCount,
+		PreviousKeyExpiresAt: previousKeyExpiresAt,
 	}, nil
 }
 
@@ -374,4 +384,57 @@ func (s Server) DeleteAPIKey(c *fiber.Ctx, id int64) error {
 	auditAPIKeyOperation(c, model.ActionDeleteAPIKey, user.ID, apiKey.ID, apiKey.Name)
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// RotateAPIKey handles rotating an API key, generating a new key with a grace period for the old one
+func (s Server) RotateAPIKey(c *fiber.Ctx, id int64) error {
+	// Get authenticated user
+	user, err := getUserFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	// Find and validate API key ownership
+	apiKey, err := findAPIKeyByID(id, user.ID)
+	if err != nil {
+		return err
+	}
+
+	// Parse request body (optional)
+	var req RotateAPIKeyRequest
+	if err := c.BodyParser(&req); err != nil {
+		return handler.SendError(c, fiber.StatusBadRequest, "invalid request body")
+	}
+
+	// Calculate grace period from hours
+	var gracePeriod time.Duration
+	if req.GracePeriodHours != nil && *req.GracePeriodHours > 0 {
+		gracePeriod = time.Duration(*req.GracePeriodHours) * time.Hour
+	} else {
+		gracePeriod = model.DefaultRotationGracePeriod
+	}
+
+	// Rotate the API key
+	newKey, err := apiKey.Rotate(model.RotateAPIKeyParams{
+		GracePeriod: gracePeriod,
+	})
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to rotate API key")
+	}
+
+	// Convert to API format
+	apiAPIKey, err := convertToApiAPIKey(apiKey)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to convert API key")
+	}
+
+	// Log the rotation for audit purposes
+	auditAPIKeyOperation(c, model.ActionUpdateAPIKey, user.ID, apiKey.ID, apiKey.Name)
+
+	response := RotateAPIKeyResponse{
+		ApiKey: *apiAPIKey,
+		Key:    newKey,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
 }

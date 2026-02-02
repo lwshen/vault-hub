@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lwshen/vault-hub/handler"
+	"github.com/lwshen/vault-hub/internal/auth"
 	"github.com/lwshen/vault-hub/internal/email"
 	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -68,13 +69,20 @@ func (Server) Login(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
+	// Create refresh token
+	refreshToken, _, err := model.CreateRefreshToken(user.ID)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
 	// Record successful login audit log
 	if err := model.LogUserAction(model.ActionLoginUser, user.ID, model.SourceWeb, clientIP, userAgent); err != nil {
 		slog.Error("Failed to create audit log for login", "error", err, "userID", user.ID)
 	}
 
 	resp := LoginResponse{
-		Token: token,
+		Token:        token,
+		RefreshToken: refreshToken,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)
@@ -137,8 +145,15 @@ func (Server) Signup(c *fiber.Ctx) error {
 		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
 	}
 
+	// Create refresh token
+	refreshToken, _, err := model.CreateRefreshToken(user.ID)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
 	resp := SignupResponse{
-		Token: token,
+		Token:        token,
+		RefreshToken: refreshToken,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)
@@ -205,6 +220,11 @@ func (Server) Logout(c *fiber.Ctx) error {
 		clientIP, userAgent := getClientInfo(c)
 		if err := model.LogUserAction(model.ActionLogoutUser, user.ID, model.SourceWeb, clientIP, userAgent); err != nil {
 			slog.Error("Failed to create audit log for logout", "error", err, "userID", user.ID)
+		}
+
+		// Revoke all refresh tokens for this user (logout from all devices)
+		if err := model.RevokeAllUserRefreshTokens(user.ID); err != nil {
+			slog.Error("Failed to revoke refresh tokens", "error", err, "userID", user.ID)
 		}
 	}
 
@@ -431,14 +451,28 @@ func (Server) ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) erro
 		}
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
-	redirectFragment := "/login#token=" + url.QueryEscape(jwtToken) + "&source=magic"
+
+	// Create refresh token
+	refreshToken, _, err := model.CreateRefreshToken(user.ID)
+	if err != nil {
+		if acceptsJSON {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "failed to generate refresh token",
+				"code":  emailTokenCodeFailed,
+			})
+		}
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	redirectFragment := "/login#token=" + url.QueryEscape(jwtToken) + "&refreshToken=" + url.QueryEscape(refreshToken) + "&source=magic"
 
 	if acceptsJSON {
 		return c.JSON(fiber.Map{
-			"token":       jwtToken,
-			"redirectUrl": fmt.Sprintf("%s/dashboard", c.BaseURL()),
-			"code":        emailTokenCodeSent,
-			"success":     true,
+			"token":        jwtToken,
+			"refreshToken": refreshToken,
+			"redirectUrl":  fmt.Sprintf("%s/dashboard", c.BaseURL()),
+			"code":         emailTokenCodeSent,
+			"success":      true,
 		})
 	}
 
@@ -513,4 +547,47 @@ func (Server) ChangePassword(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusOK)
+}
+
+// RefreshToken handles refresh token requests
+func (Server) RefreshToken(c *fiber.Ctx) error {
+	var input RefreshTokenRequest
+	if err := c.BodyParser(&input); err != nil {
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	if input.RefreshToken == "" {
+		return handler.SendError(c, fiber.StatusBadRequest, "refresh token is required")
+	}
+
+	// Validate the refresh token and get user ID
+	userID, err := model.ValidateRefreshToken(input.RefreshToken)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusUnauthorized, "invalid or expired refresh token")
+	}
+
+	// Revoke the old refresh token (single use)
+	if err := model.RevokeRefreshToken(input.RefreshToken); err != nil {
+		slog.Error("Failed to revoke refresh token", "error", err, "userID", userID)
+	}
+
+	// Generate new access token
+	token, err := auth.GenerateToken(userID)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Create new refresh token
+	newRefreshToken, _, err := model.CreateRefreshToken(userID)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	resp := RefreshTokenResponse{
+		Token:        token,
+		RefreshToken: newRefreshToken,
+		ExpiresIn:    int32(24 * 3600), // 24 hours in seconds
+	}
+
+	return c.Status(fiber.StatusOK).JSON(resp)
 }

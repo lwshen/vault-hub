@@ -13,9 +13,13 @@ LoginResponse:
   type: object
   required:
     - token
+    - refreshToken
   properties:
     token:
       type: string
+    refreshToken:
+      type: string
+      description: Refresh token for obtaining new access tokens
 SignupRequest:
   type: object
   required:
@@ -34,9 +38,13 @@ SignupResponse:
   type: object
   required:
     - token
+    - refreshToken
   properties:
     token:
       type: string
+    refreshToken:
+      type: string
+      description: Refresh token for obtaining new access tokens
 
 PasswordResetRequest:
   type: object
@@ -96,3 +104,30 @@ ChangePasswordRequest:
     newPassword:
       type: string
       description: New password (must meet complexity requirements)
+
+RefreshTokenRequest:
+  type: object
+  required:
+    - refreshToken
+  properties:
+    refreshToken:
+      type: string
+      description: The refresh token
+
+RefreshTokenResponse:
+  type: object
+  required:
+    - token
+    - refreshToken
+    - expiresIn
+  properties:
+    token:
+      type: string
+      description: New JWT access token
+    refreshToken:
+      type: string
+      description: New refresh token
+    expiresIn:
+      type: integer
+      format: int32
+      description: Token expiration time in seconds

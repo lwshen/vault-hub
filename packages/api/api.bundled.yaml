@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.10
+  version: 1.1.0
   title: Vault Hub Server
 paths:
   /api/health:
@@ -210,6 +210,29 @@ paths:
           description: Invalid input or password requirements not met
         '401':
           description: Invalid current password or unauthorized
+  /api/auth/refresh:
+    post:
+      description: Refresh access token using a refresh token
+      tags:
+        - Auth
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        '400':
+          description: Invalid request body
+        '401':
+          description: Invalid or expired refresh token
   /api/user:
     get:
       description: Get current user by credential
@@ -508,6 +531,37 @@ paths:
       responses:
         '204':
           description: API key deleted successfully
+  /api/api-keys/{id}/rotate:
+    post:
+      description: Rotate an API key, generating a new key and setting up a grace period for the old one
+      tags:
+        - APIKey
+      operationId: rotateAPIKey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RotateAPIKeyRequest'
+      responses:
+        '200':
+          description: API key rotated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RotateAPIKeyResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: API key not found
   /api/cli/vaults:
     get:
       description: Get all vaults accessible by API key
@@ -607,9 +661,13 @@ components:
       type: object
       required:
         - token
+        - refreshToken
       properties:
         token:
           type: string
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
     SignupRequest:
       type: object
       required:
@@ -628,9 +686,13 @@ components:
       type: object
       required:
         - token
+        - refreshToken
       properties:
         token:
           type: string
+        refreshToken:
+          type: string
+          description: Refresh token for obtaining new access tokens
     PasswordResetRequest:
       type: object
       required:
@@ -685,6 +747,31 @@ components:
         newPassword:
           type: string
           description: New password (must meet complexity requirements)
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: The refresh token
+    RefreshTokenResponse:
+      type: object
+      required:
+        - token
+        - refreshToken
+        - expiresIn
+      properties:
+        token:
+          type: string
+          description: New JWT access token
+        refreshToken:
+          type: string
+          description: New refresh token
+        expiresIn:
+          type: integer
+          format: int32
+          description: Token expiration time in seconds
     GetUserResponse:
       type: object
       required:
@@ -977,6 +1064,17 @@ components:
           type: string
           format: date-time
           description: When the key was last updated
+        lastRotatedAt:
+          type: string
+          format: date-time
+          description: When the key was last rotated
+        rotationCount:
+          type: integer
+          description: Number of times the key has been rotated
+        previousKeyExpiresAt:
+          type: string
+          format: date-time
+          description: When the previous key expires (grace period)
     CreateAPIKeyRequest:
       type: object
       required:
@@ -1024,6 +1122,25 @@ components:
           type: string
           format: date-time
           description: Optional expiration date
+    RotateAPIKeyRequest:
+      type: object
+      properties:
+        gracePeriodHours:
+          type: integer
+          description: Grace period in hours for the old key (default 168, max 720, min 1)
+          minimum: 1
+          maximum: 720
+    RotateAPIKeyResponse:
+      type: object
+      required:
+        - apiKey
+        - key
+      properties:
+        apiKey:
+          $ref: '#/components/schemas/VaultAPIKey'
+        key:
+          type: string
+          description: The new rotated API key (only shown once)
     StatusResponse:
       type: object
       required:

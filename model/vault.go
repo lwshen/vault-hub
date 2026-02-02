@@ -338,3 +338,10 @@ func CheckVaultNameUnique(name string, userID uint, excludeVaultID ...uint) erro
 
 	return nil
 }
+
+// GetAllVaults returns all vaults (for key rotation)
+func GetAllVaults() ([]Vault, error) {
+	var vaults []Vault
+	err := DB.Find(&vaults).Error
+	return vaults, err
+}

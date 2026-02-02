@@ -32,6 +32,7 @@ linters:
       - third_party$
       - builtin$
       - examples$
+      - mfa\.go$ # TOTP requires SHA1 per RFC 6238
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

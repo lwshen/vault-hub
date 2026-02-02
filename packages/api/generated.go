@@ -232,7 +232,9 @@ type LoginRequest struct {
 
 // LoginResponse defines model for LoginResponse.
 type LoginResponse struct {
-	Token string `json:"token"`
+	// RefreshToken Refresh token for obtaining new access tokens
+	RefreshToken string `json:"refreshToken"`
+	Token        string `json:"token"`
 }
 
 // MagicLinkRequest defines model for MagicLinkRequest.
@@ -251,6 +253,38 @@ type PasswordResetRequest struct {
 	Email openapi_types.Email `json:"email"`
 }
 
+// RefreshTokenRequest defines model for RefreshTokenRequest.
+type RefreshTokenRequest struct {
+	// RefreshToken The refresh token
+	RefreshToken string `json:"refreshToken"`
+}
+
+// RefreshTokenResponse defines model for RefreshTokenResponse.
+type RefreshTokenResponse struct {
+	// ExpiresIn Token expiration time in seconds
+	ExpiresIn int32 `json:"expiresIn"`
+
+	// RefreshToken New refresh token
+	RefreshToken string `json:"refreshToken"`
+
+	// Token New JWT access token
+	Token string `json:"token"`
+}
+
+// RotateAPIKeyRequest defines model for RotateAPIKeyRequest.
+type RotateAPIKeyRequest struct {
+	// GracePeriodHours Grace period in hours for the old key (default 168, max 720, min 1)
+	GracePeriodHours *int `json:"gracePeriodHours,omitempty"`
+}
+
+// RotateAPIKeyResponse defines model for RotateAPIKeyResponse.
+type RotateAPIKeyResponse struct {
+	ApiKey VaultAPIKey `json:"apiKey"`
+
+	// Key The new rotated API key (only shown once)
+	Key string `json:"key"`
+}
+
 // SignupRequest defines model for SignupRequest.
 type SignupRequest struct {
 	Email    openapi_types.Email `json:"email"`
@@ -260,7 +294,9 @@ type SignupRequest struct {
 
 // SignupResponse defines model for SignupResponse.
 type SignupResponse struct {
-	Token string `json:"token"`
+	// RefreshToken Refresh token for obtaining new access tokens
+	RefreshToken string `json:"refreshToken"`
+	Token        string `json:"token"`
 }
 
 // StatusResponse defines model for StatusResponse.
@@ -354,11 +390,20 @@ type VaultAPIKey struct {
 	// IsActive Whether the key is currently active
 	IsActive bool `json:"isActive"`
 
+	// LastRotatedAt When the key was last rotated
+	LastRotatedAt *time.Time `json:"lastRotatedAt,omitempty"`
+
 	// LastUsedAt When the key was last used
 	LastUsedAt *time.Time `json:"lastUsedAt,omitempty"`
 
 	// Name Human-readable name for the API key
 	Name string `json:"name"`
+
+	// PreviousKeyExpiresAt When the previous key expires (grace period)
+	PreviousKeyExpiresAt *time.Time `json:"previousKeyExpiresAt,omitempty"`
+
+	// RotationCount Number of times the key has been rotated
+	RotationCount *int `json:"rotationCount,omitempty"`
 
 	// UpdatedAt When the key was last updated
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
@@ -469,6 +514,9 @@ type CreateAPIKeyJSONRequestBody = CreateAPIKeyRequest
 // UpdateAPIKeyJSONRequestBody defines body for UpdateAPIKey for application/json ContentType.
 type UpdateAPIKeyJSONRequestBody = UpdateAPIKeyRequest
 
+// RotateAPIKeyJSONRequestBody defines body for RotateAPIKey for application/json ContentType.
+type RotateAPIKeyJSONRequestBody = RotateAPIKeyRequest
+
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
 
@@ -483,6 +531,9 @@ type ConfirmPasswordResetJSONRequestBody = PasswordResetConfirmRequest
 
 // RequestPasswordResetJSONRequestBody defines body for RequestPasswordReset for application/json ContentType.
 type RequestPasswordResetJSONRequestBody = PasswordResetRequest
+
+// RefreshTokenJSONRequestBody defines body for RefreshToken for application/json ContentType.
+type RefreshTokenJSONRequestBody = RefreshTokenRequest
 
 // SignupJSONRequestBody defines body for Signup for application/json ContentType.
 type SignupJSONRequestBody = SignupRequest
@@ -507,6 +558,9 @@ type ServerInterface interface {
 
 	// (PATCH /api/api-keys/{id})
 	UpdateAPIKey(c *fiber.Ctx, id int64) error
+
+	// (POST /api/api-keys/{id}/rotate)
+	RotateAPIKey(c *fiber.Ctx, id int64) error
 
 	// (GET /api/audit-logs)
 	GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error
@@ -534,6 +588,9 @@ type ServerInterface interface {
 
 	// (POST /api/auth/password/reset/request)
 	RequestPasswordReset(c *fiber.Ctx) error
+
+	// (POST /api/auth/refresh)
+	RefreshToken(c *fiber.Ctx) error
 
 	// (POST /api/auth/signup)
 	Signup(c *fiber.Ctx) error
@@ -668,6 +725,22 @@ func (siw *ServerInterfaceWrapper) UpdateAPIKey(c *fiber.Ctx) error {
 	}
 
 	return siw.Handler.UpdateAPIKey(c, id)
+}
+
+// RotateAPIKey operation middleware
+func (siw *ServerInterfaceWrapper) RotateAPIKey(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+	}
+
+	return siw.Handler.RotateAPIKey(c, id)
 }
 
 // GetAuditLogs operation middleware
@@ -817,6 +890,12 @@ func (siw *ServerInterfaceWrapper) ConfirmPasswordReset(c *fiber.Ctx) error {
 func (siw *ServerInterfaceWrapper) RequestPasswordReset(c *fiber.Ctx) error {
 
 	return siw.Handler.RequestPasswordReset(c)
+}
+
+// RefreshToken operation middleware
+func (siw *ServerInterfaceWrapper) RefreshToken(c *fiber.Ctx) error {
+
+	return siw.Handler.RefreshToken(c)
 }
 
 // Signup operation middleware
@@ -1013,6 +1092,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Patch(options.BaseURL+"/api/api-keys/:id", wrapper.UpdateAPIKey)
 
+	router.Post(options.BaseURL+"/api/api-keys/:id/rotate", wrapper.RotateAPIKey)
+
 	router.Get(options.BaseURL+"/api/audit-logs", wrapper.GetAuditLogs)
 
 	router.Get(options.BaseURL+"/api/audit-logs/metrics", wrapper.GetAuditMetrics)
@@ -1030,6 +1111,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Post(options.BaseURL+"/api/auth/password/reset/confirm", wrapper.ConfirmPasswordReset)
 
 	router.Post(options.BaseURL+"/api/auth/password/reset/request", wrapper.RequestPasswordReset)
+
+	router.Post(options.BaseURL+"/api/auth/refresh", wrapper.RefreshToken)
 
 	router.Post(options.BaseURL+"/api/auth/signup", wrapper.Signup)
 
@@ -1127,6 +1210,40 @@ func (response UpdateAPIKey200JSONResponse) VisitUpdateAPIKeyResponse(ctx *fiber
 	ctx.Status(200)
 
 	return ctx.JSON(&response)
+}
+
+type RotateAPIKeyRequestObject struct {
+	Id   int64 `json:"id"`
+	Body *RotateAPIKeyJSONRequestBody
+}
+
+type RotateAPIKeyResponseObject interface {
+	VisitRotateAPIKeyResponse(ctx *fiber.Ctx) error
+}
+
+type RotateAPIKey200JSONResponse RotateAPIKeyResponse
+
+func (response RotateAPIKey200JSONResponse) VisitRotateAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type RotateAPIKey400Response struct {
+}
+
+func (response RotateAPIKey400Response) VisitRotateAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Status(400)
+	return nil
+}
+
+type RotateAPIKey404Response struct {
+}
+
+func (response RotateAPIKey404Response) VisitRotateAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Status(404)
+	return nil
 }
 
 type GetAuditLogsRequestObject struct {
@@ -1342,6 +1459,39 @@ func (response RequestPasswordReset500JSONResponse) VisitRequestPasswordResetRes
 	ctx.Status(500)
 
 	return ctx.JSON(&response)
+}
+
+type RefreshTokenRequestObject struct {
+	Body *RefreshTokenJSONRequestBody
+}
+
+type RefreshTokenResponseObject interface {
+	VisitRefreshTokenResponse(ctx *fiber.Ctx) error
+}
+
+type RefreshToken200JSONResponse RefreshTokenResponse
+
+func (response RefreshToken200JSONResponse) VisitRefreshTokenResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type RefreshToken400Response struct {
+}
+
+func (response RefreshToken400Response) VisitRefreshTokenResponse(ctx *fiber.Ctx) error {
+	ctx.Status(400)
+	return nil
+}
+
+type RefreshToken401Response struct {
+}
+
+func (response RefreshToken401Response) VisitRefreshTokenResponse(ctx *fiber.Ctx) error {
+	ctx.Status(401)
+	return nil
 }
 
 type SignupRequestObject struct {
@@ -1591,6 +1741,9 @@ type StrictServerInterface interface {
 	// (PATCH /api/api-keys/{id})
 	UpdateAPIKey(ctx context.Context, request UpdateAPIKeyRequestObject) (UpdateAPIKeyResponseObject, error)
 
+	// (POST /api/api-keys/{id}/rotate)
+	RotateAPIKey(ctx context.Context, request RotateAPIKeyRequestObject) (RotateAPIKeyResponseObject, error)
+
 	// (GET /api/audit-logs)
 	GetAuditLogs(ctx context.Context, request GetAuditLogsRequestObject) (GetAuditLogsResponseObject, error)
 
@@ -1617,6 +1770,9 @@ type StrictServerInterface interface {
 
 	// (POST /api/auth/password/reset/request)
 	RequestPasswordReset(ctx context.Context, request RequestPasswordResetRequestObject) (RequestPasswordResetResponseObject, error)
+
+	// (POST /api/auth/refresh)
+	RefreshToken(ctx context.Context, request RefreshTokenRequestObject) (RefreshTokenResponseObject, error)
 
 	// (POST /api/auth/signup)
 	Signup(ctx context.Context, request SignupRequestObject) (SignupResponseObject, error)
@@ -1784,6 +1940,39 @@ func (sh *strictHandler) UpdateAPIKey(ctx *fiber.Ctx, id int64) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(UpdateAPIKeyResponseObject); ok {
 		if err := validResponse.VisitUpdateAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RotateAPIKey operation middleware
+func (sh *strictHandler) RotateAPIKey(ctx *fiber.Ctx, id int64) error {
+	var request RotateAPIKeyRequestObject
+
+	request.Id = id
+
+	var body RotateAPIKeyJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.RotateAPIKey(ctx.UserContext(), request.(RotateAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RotateAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(RotateAPIKeyResponseObject); ok {
+		if err := validResponse.VisitRotateAPIKeyResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
@@ -2043,6 +2232,37 @@ func (sh *strictHandler) RequestPasswordReset(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(RequestPasswordResetResponseObject); ok {
 		if err := validResponse.VisitRequestPasswordResetResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// RefreshToken operation middleware
+func (sh *strictHandler) RefreshToken(ctx *fiber.Ctx) error {
+	var request RefreshTokenRequestObject
+
+	var body RefreshTokenJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.RefreshToken(ctx.UserContext(), request.(RefreshTokenRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RefreshToken")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(RefreshTokenResponseObject); ok {
+		if err := validResponse.VisitRefreshTokenResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {

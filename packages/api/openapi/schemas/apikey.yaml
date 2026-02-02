@@ -58,6 +58,17 @@ VaultAPIKey:
       type: string
       format: date-time
       description: When the key was last updated
+    lastRotatedAt:
+      type: string
+      format: date-time
+      description: When the key was last rotated
+    rotationCount:
+      type: integer
+      description: Number of times the key has been rotated
+    previousKeyExpiresAt:
+      type: string
+      format: date-time
+      description: When the previous key expires (grace period)
 CreateAPIKeyRequest:
   type: object
   required:
@@ -77,6 +88,25 @@ CreateAPIKeyRequest:
       type: string
       format: date-time
       description: Optional expiration date
+RotateAPIKeyRequest:
+  type: object
+  properties:
+    gracePeriodHours:
+      type: integer
+      description: Grace period in hours for the old key (default 168, max 720, min 1)
+      minimum: 1
+      maximum: 720
+RotateAPIKeyResponse:
+  type: object
+  required:
+    - apiKey
+    - key
+  properties:
+    apiKey:
+      $ref: "#/VaultAPIKey"
+    key:
+      type: string
+      description: The new rotated API key (only shown once)
 CreateAPIKeyResponse:
   type: object
   required:

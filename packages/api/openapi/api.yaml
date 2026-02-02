@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.10
+  version: 1.4.0
   title: Vault Hub Server
 # Merge path definitions from separate files
 paths:
@@ -30,6 +30,8 @@ paths:
     $ref: ./paths/auth.yaml#/magicLinkConsume
   /api/auth/password/change:
     $ref: ./paths/auth.yaml#/changePassword
+  /api/auth/refresh:
+    $ref: ./paths/auth.yaml#/refreshToken
   # User endpoints
   /api/user:
     $ref: ./paths/user.yaml#/getCurrentUser
@@ -50,6 +52,8 @@ paths:
     $ref: ./paths/apikey.yaml#/apiKeys
   /api/api-keys/{id}:
     $ref: ./paths/apikey.yaml#/apiKeyById
+  /api/api-keys/{id}/rotate:
+    $ref: ./paths/apikey.yaml#/apiKeyRotate
   /api/cli/vaults:
     $ref: ./paths/apikey-vault.yaml#/apiKeyVaults
   /api/cli/vault/{uniqueId}:
@@ -91,6 +95,10 @@ components:
       $ref: ./schemas/auth.yaml#/EmailTokenResponse
     ChangePasswordRequest:
       $ref: ./schemas/auth.yaml#/ChangePasswordRequest
+    RefreshTokenRequest:
+      $ref: ./schemas/auth.yaml#/RefreshTokenRequest
+    RefreshTokenResponse:
+      $ref: ./schemas/auth.yaml#/RefreshTokenResponse
     # User schemas
     GetUserResponse:
       $ref: ./schemas/user.yaml#/GetUserResponse
@@ -125,6 +133,10 @@ components:
       $ref: ./schemas/apikey.yaml#/CreateAPIKeyResponse
     UpdateAPIKeyRequest:
       $ref: ./schemas/apikey.yaml#/UpdateAPIKeyRequest
+    RotateAPIKeyRequest:
+      $ref: ./schemas/apikey.yaml#/RotateAPIKeyRequest
+    RotateAPIKeyResponse:
+      $ref: ./schemas/apikey.yaml#/RotateAPIKeyResponse
     # Status schemas
     StatusResponse:
       $ref: ./schemas/status.yaml#/StatusResponse

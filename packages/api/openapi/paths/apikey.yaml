@@ -92,3 +92,34 @@ apiKeyById:
     responses:
       "204":
         description: API key deleted successfully
+apiKeyRotate:
+  post:
+    description: Rotate an API key, generating a new key and setting up a grace period for the old one
+    tags:
+      - APIKey
+    operationId: rotateAPIKey
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: API Key ID
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/apikey.yaml#/RotateAPIKeyRequest
+    responses:
+      "200":
+        description: API key rotated successfully
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/apikey.yaml#/RotateAPIKeyResponse
+      "400":
+        description: Invalid request
+      "404":
+        description: API key not found
