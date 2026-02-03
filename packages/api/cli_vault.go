@@ -6,8 +6,10 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"io"
 	"log/slog"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
@@ -65,6 +67,24 @@ func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
 	}
 
 	return s.getVaultByAPIKey(c, name, enableClientEncryptionParam, func(apiKey *model.APIKey) (*model.Vault, error) {
+		var vault model.Vault
+		err := vault.GetByName(name, apiKey.UserID)
+		return &vault, err
+	})
+}
+
+// UpdateVaultByAPIKey - Update a vault by unique ID for a given API key
+func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
+	return s.updateVaultByAPIKey(c, uniqueId, func(apiKey *model.APIKey) (*model.Vault, error) {
+		var vault model.Vault
+		err := vault.GetByUniqueID(uniqueId, apiKey.UserID)
+		return &vault, err
+	})
+}
+
+// UpdateVaultByNameAPIKey - Update a vault by name for a given API key
+func (s Server) UpdateVaultByNameAPIKey(c *fiber.Ctx, name string) error {
+	return s.updateVaultByAPIKey(c, name, func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByName(name, apiKey.UserID)
 		return &vault, err
@@ -134,6 +154,92 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientE
 	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))
 }
 
+// updateVaultByAPIKey - Common logic for updating a vault via API key
+func (s Server) updateVaultByAPIKey(c *fiber.Ctx, encryptSalt string, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
+	apiKey, ok := c.Locals("api_key").(*model.APIKey)
+	if !ok {
+		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
+	}
+
+	vault, err := vaultGetter(apiKey)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
+		}
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	if !apiKey.HasVaultAccess(vault.ID) {
+		return handler.SendError(c, fiber.StatusForbidden, "API key does not have access to this vault")
+	}
+
+	var input UpdateVaultRequest
+	if err := c.BodyParser(&input); err != nil {
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	// Read X-Enable-Client-Encryption header directly
+	headerValue := c.Get(constants.HeaderClientEncryption)
+	var enableClientEncryptionParam *string
+	if headerValue != "" {
+		enableClientEncryptionParam = &headerValue
+	}
+	enableClientEncryption := enableClientEncryptionParam != nil && *enableClientEncryptionParam == "true"
+
+	var originalAPIKey string
+	if enableClientEncryption {
+		var err error
+		originalAPIKey, err = extractBearerToken(c)
+		if err != nil {
+			return handler.SendError(c, fiber.StatusBadRequest, "invalid authorization header format")
+		}
+
+		if input.Value != nil {
+			decryptedValue, err := decryptForClientWithDerivedKey(*input.Value, originalAPIKey, encryptSalt)
+			if err != nil {
+				slog.Error("Failed to decrypt vault value from client", "error", err, "vaultID", vault.ID)
+				return handler.SendError(c, fiber.StatusBadRequest, "failed to decrypt value from client")
+			}
+			input.Value = &decryptedValue
+		}
+	}
+
+	params := model.UpdateVaultParams{
+		Name:        input.Name,
+		Value:       input.Value,
+		Description: input.Description,
+		Category:    input.Category,
+		Favourite:   input.Favourite,
+	}
+
+	errors := params.Validate()
+	if len(errors) > 0 {
+		var errorMsgs []string
+		for _, msg := range errors {
+			errorMsgs = append(errorMsgs, msg)
+		}
+		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMsgs, "; "))
+	}
+
+	if err := vault.Update(&params); err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	ip, userAgent := getClientInfo(c)
+	_ = model.LogVaultAction(vault.ID, model.ActionUpdateVault, apiKey.UserID, model.SourceCLI, &apiKey.ID, ip, userAgent)
+
+	if enableClientEncryption {
+		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, encryptSalt)
+		if err != nil {
+			slog.Error("Failed to encrypt vault value for client", "error", err, "vaultID", vault.ID)
+			return handler.SendError(c, fiber.StatusInternalServerError, "failed to encrypt value for client")
+		}
+		vault.Value = encryptedValue
+	}
+
+	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))
+}
+
 // encryptForClientWithDerivedKey encrypts the vault value using a key derived from the API key
 // This provides additional security without requiring key exchange
 func encryptForClientWithDerivedKey(plaintext, apiKey, salt string) (string, error) {
@@ -164,4 +270,50 @@ func encryptForClientWithDerivedKey(plaintext, apiKey, salt string) (string, err
 
 	// Return base64 encoded result
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// decryptForClientWithDerivedKey decrypts the vault value using a key derived from the API key
+// This matches the client-side encryption in internal/cli/encryption/client_encryption.go
+func decryptForClientWithDerivedKey(ciphertext, apiKey, salt string) (string, error) {
+	if ciphertext == "" {
+		return "", nil
+	}
+
+	derivedKey := pbkdf2.Key([]byte(apiKey), []byte(salt), 100000, 32, sha256.New)
+
+	decoded, err := base64.StdEncoding.DecodeString(ciphertext)
+	if err != nil {
+		return "", err
+	}
+
+	block, err := aes.NewCipher(derivedKey)
+	if err != nil {
+		return "", err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	nonceSize := gcm.NonceSize()
+	if len(decoded) < nonceSize {
+		return "", errors.New("ciphertext too short")
+	}
+
+	nonce, ciphertextBytes := decoded[:nonceSize], decoded[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertextBytes, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return string(plaintext), nil
+}
+
+func extractBearerToken(c *fiber.Ctx) (string, error) {
+	authHeader := c.Get("Authorization")
+	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		return "", errors.New("invalid authorization header format")
+	}
+	return authHeader[7:], nil
 }
