@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"io"
 	"log/slog"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
@@ -164,4 +165,84 @@ func encryptForClientWithDerivedKey(plaintext, apiKey, salt string) (string, err
 
 	// Return base64 encoded result
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// UpdateVaultByAPIKey - Update a single vault by unique ID using API key
+func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
+	return s.updateVaultByAPIKey(c, uniqueId, func(apiKey *model.APIKey) (*model.Vault, error) {
+		var vault model.Vault
+		err := vault.GetByUniqueID(uniqueId, apiKey.UserID)
+		return &vault, err
+	})
+}
+
+// UpdateVaultByNameAPIKey - Update a single vault by name using API key
+func (s Server) UpdateVaultByNameAPIKey(c *fiber.Ctx, name string) error {
+	return s.updateVaultByAPIKey(c, name, func(apiKey *model.APIKey) (*model.Vault, error) {
+		var vault model.Vault
+		err := vault.GetByName(name, apiKey.UserID)
+		return &vault, err
+	})
+}
+
+// updateVaultByAPIKey - Common logic for updating a vault via API key
+func (s Server) updateVaultByAPIKey(c *fiber.Ctx, identifier string, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
+	// Get API key from context
+	apiKey, ok := c.Locals("api_key").(*model.APIKey)
+	if !ok {
+		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
+	}
+
+	// Get the vault using the provided getter function
+	vault, err := vaultGetter(apiKey)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
+		}
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Check if the API key has access to this specific vault
+	if !apiKey.HasVaultAccess(vault.ID) {
+		return handler.SendError(c, fiber.StatusForbidden, "API key does not have access to this vault")
+	}
+
+	// Parse request body
+	var input UpdateVaultRequest
+	if err := c.BodyParser(&input); err != nil {
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	// Create update parameters
+	params := model.UpdateVaultParams{
+		Name:        input.Name,
+		Value:       input.Value,
+		Description: input.Description,
+		Category:    input.Category,
+		Favourite:   input.Favourite,
+	}
+
+	// Validate parameters
+	errors := params.Validate()
+	if len(errors) > 0 {
+		var errorMsgs []string
+		for _, msg := range errors {
+			errorMsgs = append(errorMsgs, msg)
+		}
+		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMsgs, "; "))
+	}
+
+	// Update vault
+	err = vault.Update(&params)
+	if err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Log update action (using the API key user ID)
+	ip, userAgent := getClientInfo(c)
+	if err := model.LogVaultAction(vault.ID, model.ActionUpdateVault, apiKey.UserID, model.SourceCLI, &apiKey.ID, ip, userAgent); err != nil {
+		slog.Error("Failed to create audit log for update vault", "error", err, "vaultID", vault.ID)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))
 }
