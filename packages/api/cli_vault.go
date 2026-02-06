@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"io"
 	"log/slog"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
@@ -41,14 +42,7 @@ func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 
 // GetVaultByAPIKey - Get a single vault by unique ID for a given API key
 func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
-	// Read X-Enable-Client-Encryption header directly
-	headerValue := c.Get(constants.HeaderClientEncryption)
-	var enableClientEncryptionParam *string
-	if headerValue != "" {
-		enableClientEncryptionParam = &headerValue
-	}
-
-	return s.getVaultByAPIKey(c, uniqueId, enableClientEncryptionParam, func(apiKey *model.APIKey) (*model.Vault, error) {
+	return s.getVaultByAPIKey(c, uniqueId, clientEncryptionHeaderParam(c), func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByUniqueID(uniqueId, apiKey.UserID)
 		return &vault, err
@@ -57,14 +51,25 @@ func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 
 // GetVaultByNameAPIKey - Get a single vault by name for a given API key
 func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
-	// Read X-Enable-Client-Encryption header directly
-	headerValue := c.Get(constants.HeaderClientEncryption)
-	var enableClientEncryptionParam *string
-	if headerValue != "" {
-		enableClientEncryptionParam = &headerValue
-	}
+	return s.getVaultByAPIKey(c, name, clientEncryptionHeaderParam(c), func(apiKey *model.APIKey) (*model.Vault, error) {
+		var vault model.Vault
+		err := vault.GetByName(name, apiKey.UserID)
+		return &vault, err
+	})
+}
 
-	return s.getVaultByAPIKey(c, name, enableClientEncryptionParam, func(apiKey *model.APIKey) (*model.Vault, error) {
+// UpdateVaultByAPIKey - Update a single vault by unique ID for a given API key
+func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
+	return s.updateVaultByAPIKey(c, uniqueId, clientEncryptionHeaderParam(c), func(apiKey *model.APIKey) (*model.Vault, error) {
+		var vault model.Vault
+		err := vault.GetByUniqueID(uniqueId, apiKey.UserID)
+		return &vault, err
+	})
+}
+
+// UpdateVaultByNameAPIKey - Update a single vault by name for a given API key
+func (s Server) UpdateVaultByNameAPIKey(c *fiber.Ctx, name string) error {
+	return s.updateVaultByAPIKey(c, name, clientEncryptionHeaderParam(c), func(apiKey *model.APIKey) (*model.Vault, error) {
 		var vault model.Vault
 		err := vault.GetByName(name, apiKey.UserID)
 		return &vault, err
@@ -98,6 +103,81 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientE
 		slog.Error("Failed to create audit log for read vault", "error", err, "vaultID", vault.ID)
 	}
 
+	if err := applyClientEncryptionToVaultValue(c, vault, encryptSalt, enableClientEncryptionParam); err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))
+}
+
+// updateVaultByAPIKey - Common logic for updating a vault via API key
+func (s Server) updateVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientEncryptionParam *string, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
+	apiKey, ok := c.Locals("api_key").(*model.APIKey)
+	if !ok {
+		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
+	}
+
+	// Get the target vault using the provided getter function
+	vault, err := vaultGetter(apiKey)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
+		}
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Check if the API key has access to this specific vault
+	if !apiKey.HasVaultAccess(vault.ID) {
+		return handler.SendError(c, fiber.StatusForbidden, "API key does not have access to this vault")
+	}
+
+	var input UpdateVaultRequest
+	if err := c.BodyParser(&input); err != nil {
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	params := model.UpdateVaultParams{
+		Name:        input.Name,
+		Value:       input.Value,
+		Description: input.Description,
+		Category:    input.Category,
+		Favourite:   input.Favourite,
+	}
+
+	validationErrors := params.Validate()
+	if len(validationErrors) > 0 {
+		var errorMessages []string
+		for _, message := range validationErrors {
+			errorMessages = append(errorMessages, message)
+		}
+		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMessages, "; "))
+	}
+
+	if err := vault.Update(&params); err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	ip, userAgent := getClientInfo(c)
+	if err := model.LogVaultAction(vault.ID, model.ActionUpdateVault, apiKey.UserID, model.SourceCLI, &apiKey.ID, ip, userAgent); err != nil {
+		slog.Error("Failed to create audit log for update vault", "error", err, "vaultID", vault.ID)
+	}
+
+	if err := applyClientEncryptionToVaultValue(c, vault, encryptSalt, enableClientEncryptionParam); err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))
+}
+
+func clientEncryptionHeaderParam(c *fiber.Ctx) *string {
+	headerValue := c.Get(constants.HeaderClientEncryption)
+	if headerValue == "" {
+		return nil
+	}
+	return &headerValue
+}
+
+func applyClientEncryptionToVaultValue(c *fiber.Ctx, vault *model.Vault, encryptSalt string, enableClientEncryptionParam *string) error {
 	// Enhanced security: Apply additional client-side encryption if requested
 	enableClientEncryption := enableClientEncryptionParam != nil && *enableClientEncryptionParam == "true"
 	if enableClientEncryption {
@@ -131,7 +211,7 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientE
 		}
 	}
 
-	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))
+	return nil
 }
 
 // encryptForClientWithDerivedKey encrypts the vault value using a key derived from the API key
