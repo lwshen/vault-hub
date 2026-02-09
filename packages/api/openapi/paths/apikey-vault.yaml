@@ -39,6 +39,39 @@ apiKeyVaultById:
           application/json:
             schema:
               $ref: ../schemas/vault.yaml#/Vault
+  put:
+    description: Update a vault by Unique ID using API key. Supports X-Enable-Client-Encryption header for client-side encryption.
+    tags:
+      - Cli
+    operationId: updateVaultByAPIKey
+    security:
+      - ApiKeyAuth: []
+    parameters:
+      - name: uniqueId
+        in: path
+        required: true
+        description: Vault Unique ID
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/vault.yaml#/UpdateVaultRequest
+    responses:
+      "200":
+        description: Vault updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/vault.yaml#/Vault
+      "400":
+        description: Bad request - validation error
+      "403":
+        description: Forbidden - API key does not have access to this vault
+      "404":
+        description: Vault not found
 apiKeyVaultByName:
   get:
     description: Get a specific vault by name using API key

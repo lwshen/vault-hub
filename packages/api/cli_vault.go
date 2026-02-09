@@ -6,8 +6,11 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"io"
 	"log/slog"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/lwshen/vault-hub/handler"
@@ -164,4 +167,141 @@ func encryptForClientWithDerivedKey(plaintext, apiKey, salt string) (string, err
 
 	// Return base64 encoded result
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// decryptClientValue decrypts a value that was encrypted with client-side encryption
+func decryptClientValue(encryptedValue, apiKey, salt string) (string, error) {
+	// Derive the same key using PBKDF2 with API key + salt (vault uniqueId)
+	derivedKey := pbkdf2.Key([]byte(apiKey), []byte(salt), 100000, 32, sha256.New)
+
+	// Decode base64
+	ciphertext, err := base64.StdEncoding.DecodeString(encryptedValue)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode base64: %w", err)
+	}
+
+	// Create AES cipher and GCM
+	block, err := aes.NewCipher(derivedKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to create cipher: %w", err)
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", fmt.Errorf("failed to create GCM: %w", err)
+	}
+
+	// Extract nonce and decrypt
+	nonceSize := gcm.NonceSize()
+	if len(ciphertext) < nonceSize {
+		return "", errors.New("ciphertext too short")
+	}
+	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to decrypt: %w", err)
+	}
+
+	return string(plaintext), nil
+}
+
+// getAPIKeyFromContext retrieves the API key from the Fiber context
+func getAPIKeyFromContext(c *fiber.Ctx) (*model.APIKey, error) {
+	apiKey, ok := c.Locals("api_key").(*model.APIKey)
+	if !ok {
+		return nil, handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
+	}
+	return apiKey, nil
+}
+
+// getVaultForAPIKey retrieves a vault by unique ID and verifies API key access
+func getVaultForAPIKey(c *fiber.Ctx, uniqueId string, apiKey *model.APIKey) (*model.Vault, error) {
+	var vault model.Vault
+	if err := vault.GetByUniqueID(uniqueId, apiKey.UserID); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, handler.SendError(c, fiber.StatusNotFound, "vault not found")
+		}
+		return nil, handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	if !apiKey.HasVaultAccess(vault.ID) {
+		return nil, handler.SendError(c, fiber.StatusForbidden, "API key does not have access to this vault")
+	}
+
+	return &vault, nil
+}
+
+// decryptClientValueIfNeeded decrypts the value if client-side encryption is enabled
+func decryptClientValueIfNeeded(c *fiber.Ctx, value *string, uniqueId string, vaultID uint, enableClientEncryption bool) (*string, error) {
+	if !enableClientEncryption || value == nil {
+		return value, nil
+	}
+
+	authHeader := c.Get("Authorization")
+	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		slog.Error("Invalid Authorization header format for client-side decryption", "vaultID", vaultID)
+		return nil, handler.SendError(c, fiber.StatusBadRequest, "invalid authorization header format")
+	}
+	originalAPIKey := authHeader[7:]
+
+	decryptedValue, err := decryptClientValue(*value, originalAPIKey, uniqueId)
+	if err != nil {
+		slog.Error("Failed to decrypt client value", "error", err, "vaultID", vaultID)
+		return nil, handler.SendError(c, fiber.StatusBadRequest, "failed to decrypt value: "+err.Error())
+	}
+
+	return &decryptedValue, nil
+}
+
+// UpdateVaultByAPIKey - Update a vault by unique ID using API key
+func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
+	apiKey, err := getAPIKeyFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	vault, err := getVaultForAPIKey(c, uniqueId, apiKey)
+	if err != nil {
+		return err
+	}
+
+	var input UpdateVaultRequest
+	if err := c.BodyParser(&input); err != nil {
+		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	// Check for client-side encryption header directly
+	enableClientEncryption := c.Get(constants.HeaderClientEncryption) == "true"
+	decryptedValue, err := decryptClientValueIfNeeded(c, input.Value, uniqueId, vault.ID, enableClientEncryption)
+	if err != nil {
+		return err
+	}
+	input.Value = decryptedValue
+
+	updateParams := model.UpdateVaultParams{
+		Name:        input.Name,
+		Value:       input.Value,
+		Description: input.Description,
+		Category:    input.Category,
+		Favourite:   input.Favourite,
+	}
+
+	validationErrors := updateParams.Validate()
+	if len(validationErrors) > 0 {
+		var errorMsgs []string
+		for _, msg := range validationErrors {
+			errorMsgs = append(errorMsgs, msg)
+		}
+		return handler.SendError(c, fiber.StatusBadRequest, strings.Join(errorMsgs, "; "))
+	}
+
+	if err := vault.Update(&updateParams); err != nil {
+		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	ip, userAgent := getClientInfo(c)
+	if err := model.LogVaultAction(vault.ID, model.ActionUpdateVault, apiKey.UserID, model.SourceCLI, &apiKey.ID, ip, userAgent); err != nil {
+		slog.Error("Failed to create audit log for update vault", "error", err, "vaultID", vault.ID)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))
 }
