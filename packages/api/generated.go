@@ -487,6 +487,9 @@ type RequestPasswordResetJSONRequestBody = PasswordResetRequest
 // SignupJSONRequestBody defines body for Signup for application/json ContentType.
 type SignupJSONRequestBody = SignupRequest
 
+// UpdateVaultByAPIKeyJSONRequestBody defines body for UpdateVaultByAPIKey for application/json ContentType.
+type UpdateVaultByAPIKeyJSONRequestBody = UpdateVaultRequest
+
 // CreateVaultJSONRequestBody defines body for CreateVault for application/json ContentType.
 type CreateVaultJSONRequestBody = CreateVaultRequest
 
@@ -543,6 +546,9 @@ type ServerInterface interface {
 
 	// (GET /api/cli/vault/{uniqueId})
 	GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error
+
+	// (PUT /api/cli/vault/{uniqueId})
+	UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error
 
 	// (GET /api/cli/vaults)
 	GetVaultsByAPIKey(c *fiber.Ctx) error
@@ -861,6 +867,24 @@ func (siw *ServerInterfaceWrapper) GetVaultByAPIKey(c *fiber.Ctx) error {
 	return siw.Handler.GetVaultByAPIKey(c, uniqueId)
 }
 
+// UpdateVaultByAPIKey operation middleware
+func (siw *ServerInterfaceWrapper) UpdateVaultByAPIKey(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "uniqueId" -------------
+	var uniqueId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uniqueId", c.Params("uniqueId"), &uniqueId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter uniqueId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
+
+	return siw.Handler.UpdateVaultByAPIKey(c, uniqueId)
+}
+
 // GetVaultsByAPIKey operation middleware
 func (siw *ServerInterfaceWrapper) GetVaultsByAPIKey(c *fiber.Ctx) error {
 
@@ -1036,6 +1060,8 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/api/cli/vault/name/:name", wrapper.GetVaultByNameAPIKey)
 
 	router.Get(options.BaseURL+"/api/cli/vault/:uniqueId", wrapper.GetVaultByAPIKey)
+
+	router.Put(options.BaseURL+"/api/cli/vault/:uniqueId", wrapper.UpdateVaultByAPIKey)
 
 	router.Get(options.BaseURL+"/api/cli/vaults", wrapper.GetVaultsByAPIKey)
 
@@ -1395,6 +1421,48 @@ func (response GetVaultByAPIKey200JSONResponse) VisitGetVaultByAPIKeyResponse(ct
 	return ctx.JSON(&response)
 }
 
+type UpdateVaultByAPIKeyRequestObject struct {
+	UniqueId string `json:"uniqueId"`
+	Body     *UpdateVaultByAPIKeyJSONRequestBody
+}
+
+type UpdateVaultByAPIKeyResponseObject interface {
+	VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error
+}
+
+type UpdateVaultByAPIKey200JSONResponse Vault
+
+func (response UpdateVaultByAPIKey200JSONResponse) VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Response().Header.Set("Content-Type", "application/json")
+	ctx.Status(200)
+
+	return ctx.JSON(&response)
+}
+
+type UpdateVaultByAPIKey400Response struct {
+}
+
+func (response UpdateVaultByAPIKey400Response) VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Status(400)
+	return nil
+}
+
+type UpdateVaultByAPIKey403Response struct {
+}
+
+func (response UpdateVaultByAPIKey403Response) VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Status(403)
+	return nil
+}
+
+type UpdateVaultByAPIKey404Response struct {
+}
+
+func (response UpdateVaultByAPIKey404Response) VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+	ctx.Status(404)
+	return nil
+}
+
 type GetVaultsByAPIKeyRequestObject struct {
 }
 
@@ -1626,6 +1694,9 @@ type StrictServerInterface interface {
 
 	// (GET /api/cli/vault/{uniqueId})
 	GetVaultByAPIKey(ctx context.Context, request GetVaultByAPIKeyRequestObject) (GetVaultByAPIKeyResponseObject, error)
+
+	// (PUT /api/cli/vault/{uniqueId})
+	UpdateVaultByAPIKey(ctx context.Context, request UpdateVaultByAPIKeyRequestObject) (UpdateVaultByAPIKeyResponseObject, error)
 
 	// (GET /api/cli/vaults)
 	GetVaultsByAPIKey(ctx context.Context, request GetVaultsByAPIKeyRequestObject) (GetVaultsByAPIKeyResponseObject, error)
@@ -2128,6 +2199,39 @@ func (sh *strictHandler) GetVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) error
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	} else if validResponse, ok := response.(GetVaultByAPIKeyResponseObject); ok {
 		if err := validResponse.VisitGetVaultByAPIKeyResponse(ctx); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// UpdateVaultByAPIKey operation middleware
+func (sh *strictHandler) UpdateVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) error {
+	var request UpdateVaultByAPIKeyRequestObject
+
+	request.UniqueId = uniqueId
+
+	var body UpdateVaultByAPIKeyJSONRequestBody
+	if err := ctx.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	request.Body = &body
+
+	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateVaultByAPIKey(ctx.UserContext(), request.(UpdateVaultByAPIKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateVaultByAPIKey")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	} else if validResponse, ok := response.(UpdateVaultByAPIKeyResponseObject); ok {
+		if err := validResponse.VisitUpdateVaultByAPIKeyResponse(ctx); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 	} else if response != nil {
