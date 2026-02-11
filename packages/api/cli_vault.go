@@ -107,12 +107,11 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientE
 		slog.Debug("Client-side encryption requested", "header", *enableClientEncryptionParam, "vaultID", vault.ID)
 
 		// Get the original API key from the Authorization header to use for key derivation
-		authHeader := c.Get("Authorization")
-		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		originalAPIKey, err := extractBearerToken(c)
+		if err != nil {
 			slog.Error("Invalid Authorization header format for client-side encryption", "vaultID", vault.ID)
-			return handler.SendError(c, fiber.StatusBadRequest, "invalid authorization header format")
+			return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 		}
-		originalAPIKey := authHeader[7:]
 
 		originalValueLen := len(vault.Value)
 		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, encryptSalt)
@@ -204,6 +203,15 @@ func decryptClientValue(encryptedValue, apiKey, salt string) (string, error) {
 	return string(plaintext), nil
 }
 
+// extractBearerToken extracts the API key token from the Authorization header
+func extractBearerToken(c *fiber.Ctx) (string, error) {
+	authHeader := c.Get("Authorization")
+	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		return "", errors.New("invalid authorization header format")
+	}
+	return authHeader[7:], nil
+}
+
 // getAPIKeyFromContext retrieves the API key from the Fiber context
 func getAPIKeyFromContext(c *fiber.Ctx) (*model.APIKey, error) {
 	apiKey, ok := c.Locals("api_key").(*model.APIKey)
@@ -236,17 +244,16 @@ func decryptClientValueIfNeeded(c *fiber.Ctx, value *string, uniqueId string, va
 		return value, nil
 	}
 
-	authHeader := c.Get("Authorization")
-	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+	originalAPIKey, err := extractBearerToken(c)
+	if err != nil {
 		slog.Error("Invalid Authorization header format for client-side decryption", "vaultID", vaultID)
-		return nil, handler.SendError(c, fiber.StatusBadRequest, "invalid authorization header format")
+		return nil, handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
-	originalAPIKey := authHeader[7:]
 
 	decryptedValue, err := decryptClientValue(*value, originalAPIKey, uniqueId)
 	if err != nil {
 		slog.Error("Failed to decrypt client value", "error", err, "vaultID", vaultID)
-		return nil, handler.SendError(c, fiber.StatusBadRequest, "failed to decrypt value: "+err.Error())
+		return nil, handler.SendError(c, fiber.StatusBadRequest, "failed to decrypt value")
 	}
 
 	return &decryptedValue, nil
