@@ -30,7 +30,8 @@ func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 	// Get all accessible vaults for this API key (encrypted)
 	vaults, err := apiKey.GetAccessibleVaults()
 	if err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		slog.Error("Failed to get accessible vaults", "error", err, "apiKeyID", apiKey.ID)
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to retrieve vaults")
 	}
 
 	// Convert to API VaultLite format (no decryption needed)
@@ -87,7 +88,8 @@ func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientE
 		if err == gorm.ErrRecordNotFound {
 			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
 		}
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		slog.Error("Failed to get vault", "error", err)
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to retrieve vault")
 	}
 
 	// Check if the API key has access to this specific vault
@@ -228,7 +230,8 @@ func getVaultForAPIKey(c *fiber.Ctx, uniqueId string, apiKey *model.APIKey) (*mo
 		if err == gorm.ErrRecordNotFound {
 			return nil, handler.SendError(c, fiber.StatusNotFound, "vault not found")
 		}
-		return nil, handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		slog.Error("Failed to get vault by unique ID", "error", err, "uniqueId", uniqueId)
+		return nil, handler.SendError(c, fiber.StatusInternalServerError, "failed to retrieve vault")
 	}
 
 	if !apiKey.HasVaultAccess(vault.ID) {
@@ -302,7 +305,8 @@ func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 	}
 
 	if err := vault.Update(&updateParams); err != nil {
-		return handler.SendError(c, fiber.StatusInternalServerError, err.Error())
+		slog.Error("Failed to update vault", "error", err, "vaultID", vault.ID)
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to update vault")
 	}
 
 	ip, userAgent := getClientInfo(c)
