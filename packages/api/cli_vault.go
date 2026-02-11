@@ -310,5 +310,20 @@ func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 		slog.Error("Failed to create audit log for update vault", "error", err, "vaultID", vault.ID)
 	}
 
+	// Re-encrypt the response value if client-side encryption is enabled
+	if enableClientEncryption {
+		originalAPIKey, err := extractBearerToken(c)
+		if err != nil {
+			slog.Error("Invalid Authorization header format for client-side encryption", "vaultID", vault.ID)
+			return handler.SendError(c, fiber.StatusBadRequest, err.Error())
+		}
+		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, uniqueId)
+		if err != nil {
+			slog.Error("Failed to encrypt vault value for client", "error", err, "vaultID", vault.ID)
+			return handler.SendError(c, fiber.StatusInternalServerError, "failed to encrypt value for client")
+		}
+		vault.Value = encryptedValue
+	}
+
 	return c.Status(fiber.StatusOK).JSON(convertToApiVault(vault))
 }
