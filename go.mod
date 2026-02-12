@@ -1,6 +1,6 @@
 module github.com/lwshen/vault-hub
 
-go 1.24.2
+go 1.26.0
 
 tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 

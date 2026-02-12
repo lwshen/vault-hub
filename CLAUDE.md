@@ -113,7 +113,7 @@ VaultHub is a comprehensive secure environment variable and API key management s
 The `/api/status` endpoint provides comprehensive system monitoring:
 
 - **Database Health**: Response time, connection pool status, availability checks
-- **System Health**: Memory usage, disk space, overall system status  
+- **System Health**: Memory usage, disk space, overall system status
 - **Status Levels**: `healthy`, `degraded`, `unavailable` with specific thresholds
 - **Performance Metrics**: Database response times, connection counts, resource utilization
 - **Multi-factor Assessment**: System status determined by database health, memory usage, disk space
@@ -143,10 +143,12 @@ Optional configuration:
 Email support is optional and enables password reset and magic link authentication.
 
 **General Email Settings:**
+
 - `EMAIL_ENABLED` (true|false, default: false) - Enable email functionality
 - `EMAIL_TYPE` (SMTP|RESEND, default: SMTP) - Email service provider
 
 **SMTP Settings** (when `EMAIL_TYPE=SMTP`):
+
 - `SMTP_HOST` - SMTP server hostname (required)
 - `SMTP_PORT` (default: 587) - SMTP server port
 - `SMTP_MODE` (auto|starttls|implicit|plain, default: auto) - TLS mode
@@ -161,6 +163,7 @@ Email support is optional and enables password reset and magic link authenticati
 - `SMTP_TLS` (true|false, default: true) - Enable TLS (deprecated, use SMTP_MODE instead)
 
 **Resend Settings** (when `EMAIL_TYPE=RESEND`):
+
 - `RESEND_API_KEY` - Resend API key (required)
 - `RESEND_FROM_ADDRESS` - Sender email address (required)
 - `RESEND_FROM_NAME` (default: "Vault Hub") - Sender display name
@@ -194,6 +197,7 @@ The project uses OpenAPI 3.0 specification (`packages/api/openapi/api.yaml`) wit
 - TypeScript client library (published as npm package)
 
 **Important**: After modifying files in `packages/api/openapi/*`:
+
 1. **Bump the API version** in `packages/api/openapi/api.yaml` (update the `version` field in the `info` section) unless this branch has already updated the version relative to `main`
 2. Run `go generate packages/api/tool.go` to regenerate the Go types and interfaces
 
@@ -208,6 +212,7 @@ The API spec uses camelCase naming convention for all properties (e.g., `uniqueI
 The application enforces strict authentication rules via middleware (`route/middleware.go`):
 
 **Public Routes (No Authentication Required):**
+
 - `/api/auth/login` - User login with email/password
 - `/api/auth/signup` - User registration
 - `/api/auth/logout` - User logout
@@ -223,13 +228,15 @@ The application enforces strict authentication rules via middleware (`route/midd
 - Static web assets (`/`, `/*`)
 
 **API Key Only Routes:**
+
 - `/api/cli/*` - Vault access via API keys (e.g., `/api/cli/vaults`, `/api/cli/vault/{id}`)
 - Must use `Authorization: Bearer vhub_xxx` header
 - Rejects JWT tokens with error message
 
 **JWT Only Routes:**
+
 - All other `/api/*` routes - User management, API key management, vault management via web UI
-- Must use `Authorization: Bearer <jwt_token>` header  
+- Must use `Authorization: Bearer <jwt_token>` header
 - Rejects API keys with error message
 
 ### Context Variables
@@ -240,6 +247,7 @@ The application enforces strict authentication rules via middleware (`route/midd
 ### API Endpoints
 
 **Public API:**
+
 - `GET /api/config` - Get server configuration (oidcEnabled, emailEnabled, demoEnabled)
 - `GET /api/health` - Basic health check
 - `GET /api/status` - Comprehensive system status (version, health, performance metrics)
@@ -256,10 +264,12 @@ The application enforces strict authentication rules via middleware (`route/midd
 - `GET /api/auth/magic-link/token` - Consume magic link token, returns 302 redirect with JWT
 
 **Authenticated API (JWT Required):**
+
 - `GET /api/user` - Get current user information
 - Vault management, API key management, audit log access (see OpenAPI spec)
 
 **CLI API Vault Access (API Key Required):**
+
 - `GET /api/cli/vaults` - List accessible vaults (VaultLite format, no decrypted values)
 - `GET /api/cli/vault/{uniqueId}` - Get specific vault (full Vault format with decrypted value)
 - `GET /api/cli/vault/name/{name}` - Get specific vault by name (full Vault format with decrypted value)
@@ -343,6 +353,7 @@ Email tokens use a secure implementation pattern:
 ### Template Customization
 
 Email templates are located in `internal/email/templates/` and use Go's `html/template` syntax. Templates can include:
+
 - User data (name, email)
 - Action links with embedded tokens
 - Branding and styling
@@ -352,24 +363,28 @@ Email templates are located in `internal/email/templates/` and use Go's `html/te
 The project includes a comprehensive built-in documentation system:
 
 ### Documentation Structure
+
 - **Location**: `apps/web/src/docs/`
 - **Format**: Markdown files with TypeScript TOC configuration
 - **Sections**: CLI Guide, Server Setup, API Reference, Security
 - **Navigation**: Hash-based routing with browser history support (e.g., `/docs#cli-guide`)
 
 ### Key Components
+
 - **MarkdownContent**: Reusable component (`src/components/ui/markdown-content.tsx`) with configurable prose sizes
 - **TOC Configuration**: Type-safe table of contents in `src/docs/toc.ts`
 - **Markdown Rendering**: Uses `react-markdown` with `remark-gfm` for GitHub Flavored Markdown
 - **Typography**: Tailwind CSS Typography plugin for consistent prose styling
 
 ### Documentation Files
+
 - `cli-guide.md` - CLI installation, authentication, and usage examples
 - `server-setup.md` - Server configuration and deployment
 - `api-reference.md` - API endpoint documentation with OpenAPI references
 - `security.md` - Security features, encryption, and best practices
 
 ### Features
+
 - **URL-based Navigation**: Direct linking to sections with `/docs#section-id`
 - **Dark Mode Support**: Automatic theme switching with `prose-invert`
 - **Mobile Responsive**: Optimized for all screen sizes
@@ -428,12 +443,14 @@ The frontend uses Zustand for component-level state management:
 The project uses Tailwind CSS 4.x with the new CSS-first configuration approach:
 
 ### Configuration Method
+
 - **No `tailwind.config.js`**: Uses CSS-first approach via `@import` and `@plugin` directives
 - **Main CSS file**: `apps/web/src/index.css` contains all Tailwind configuration
 - **Typography Plugin**: Added via `@plugin "@tailwindcss/typography";` directive
 - **Vite Integration**: Uses `@tailwindcss/vite` plugin for seamless integration
 
 ### Important CSS Directives
+
 ```css
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -441,6 +458,7 @@ The project uses Tailwind CSS 4.x with the new CSS-first configuration approach:
 ```
 
 ### Theme Configuration
+
 - **CSS Custom Properties**: Extensive design tokens defined in `:root` and `.dark`
 - **OKLCH Color Space**: Modern color system for better perceptual uniformity
 - **Custom Variants**: Dark mode via `@custom-variant dark (&:is(.dark *))`
@@ -452,8 +470,9 @@ The project uses Tailwind CSS 4.x with the new CSS-first configuration approach:
 The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
 
 #### Main CI Workflow (`.github/workflows/ci.yml`)
+
 - **Triggers**: Push to main, pull requests to main
-- **Go Version**: 1.24.2 with module caching
+- **Go Version**: 1.26.0 with module caching
 - **Frontend**: pnpm 10.15.1 with Node.js 22
 - **Quality Checks**: golangci-lint, frontend typecheck and lint
 - **Testing**: Go tests with required environment variables
@@ -461,8 +480,9 @@ The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
 - **Artifacts**: Uploads server, CLI binaries, and frontend build
 
 #### Release Workflow (`.github/workflows/release.yml`)
+
 - **Triggers**: Git tags matching `v*`
-- **Client Publishing**: 
+- **Client Publishing**:
   - TypeScript fetch client (`@lwshen/vault-hub-ts-fetch-client`) to npm
   - Go client to separate repository (`vault-hub-go-client`)
 - **Changelog Generation**: Uses git-cliff with conventional commits
@@ -470,6 +490,7 @@ The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
 - **Automated PR**: Creates pull request to update CHANGELOG.md
 
 #### Additional Workflows
+
 - **Database Testing**: `db-test.yml` - Database-specific tests
 - **Docker Images**: `build-image.yml`, `build-cli-image.yml` - Container builds
 - **Client Publishing**: `publish-ts-client.yml`, `publish-go-client.yml` - Standalone client publishing
@@ -477,6 +498,7 @@ The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
 - **AI Code Reviews**: `claude.yml`, `claude-code-review.yml`, `cursor-code-review.yml` - AI-powered code reviews
 
 #### Release Management
+
 - **Changelog**: Automated generation using git-cliff with conventional commits
 - **Versioning**: Git tags drive version information in binaries
 - **Client Libraries**: Auto-published on releases with OpenAPI generators
@@ -484,11 +506,13 @@ The project uses multiple GitHub Actions workflows for comprehensive CI/CD:
 ### Build Outputs
 
 **Server binaries**:
+
 - `vault-hub-server-linux-{amd64,arm64}`
 - `vault-hub-server-windows-amd64.exe`
 - `vault-hub-server-darwin-{amd64,arm64}`
 
 **CLI binaries**:
+
 - `vault-hub-cli-linux-{amd64,arm64}`
 - `vault-hub-cli-windows-amd64.exe`
 - `vault-hub-cli-darwin-{amd64,arm64}`
@@ -500,6 +524,7 @@ The `scripts/` directory contains utility scripts for development and release wo
 ### Version Management
 
 **bump.sh** - Automated version bumping and tagging
+
 - **Usage**: `./scripts/bump.sh [--dry-run|-n] [patch|minor|major]`
 - **Requirements**: Requires `uvx` (Python tool runner) and `bump-my-version`
 - **Functionality**:
@@ -513,6 +538,7 @@ The `scripts/` directory contains utility scripts for development and release wo
 ### Frontend Management
 
 **update-web.sh** - Update and build frontend submodule
+
 - **Usage**: `./scripts/update-web.sh`
   - `./scripts/update-web.sh --no-update` to build the currently pinned submodule without pulling latest
 - **Functionality**:
@@ -523,6 +549,7 @@ The `scripts/` directory contains utility scripts for development and release wo
 - **Use Case**: Run when syncing frontend changes or before backend builds that embed frontend assets
 
 **pull-web.sh** - Build embedded assets from the currently pinned frontend submodule
+
 - **Usage**: `./scripts/pull-web.sh`
 - **Functionality**:
   - Initializes `apps/web` submodule without updating to latest remote
@@ -533,6 +560,7 @@ The `scripts/` directory contains utility scripts for development and release wo
 ### YAML Formatting
 
 **format-yaml.sh** - Format YAML files
+
 - **Usage**: `./scripts/format-yaml.sh`
 - **Purpose**: Ensures consistent YAML formatting across the project
 - **Files**: Primarily used for OpenAPI specifications and CI workflows
@@ -561,7 +589,7 @@ The project provides multi-stage Docker builds for both server and CLI applicati
   - **Cron Mode**: Schedules CLI commands using go-cron
 - **Environment Variables**:
   - `RUN_MODE` (oneshot|cron, default: oneshot) - Execution mode
-  - `CRON_SCHEDULE` (default: "0 * * * *") - Cron schedule for periodic execution
+  - `CRON_SCHEDULE` (default: "0 \* \* \* \*") - Cron schedule for periodic execution
   - `VAULT_HUB_CLI_ARGS` (default: "list") - CLI command arguments
 - **Security**: Runs as non-root user (`vaultuser`, UID 1001)
 - **Additional Packages**: ca-certificates, tzdata, bash
@@ -570,6 +598,7 @@ The project provides multi-stage Docker builds for both server and CLI applicati
 ### Docker Usage Examples
 
 **Server deployment:**
+
 ```bash
 docker build -t vault-hub-server .
 docker run -p 3000:3000 \
@@ -579,6 +608,7 @@ docker run -p 3000:3000 \
 ```
 
 **CLI oneshot:**
+
 ```bash
 docker run --rm \
   -e VAULT_HUB_URL=https://vault.example.com \
@@ -588,6 +618,7 @@ docker run --rm \
 ```
 
 **CLI cron mode:**
+
 ```bash
 docker run -d \
   -e RUN_MODE=cron \
@@ -605,11 +636,13 @@ docker run -d \
 The vault viewing and editing experience was significantly improved by replacing modal dialogs with dedicated full-page views:
 
 #### Previous Implementation (Modal-based)
+
 - Used `ViewVaultValueModal` and `EditVaultValueModal` components
 - Limited screen real estate, especially on mobile devices
 - Cramped editing experience with small text areas
 
 #### Current Implementation (Full-page)
+
 - **Dedicated Route**: `/dashboard/vaults/:vaultId` with URL-based mode switching
 - **Responsive Design**: Mobile-first approach with sticky action bar for better thumb access
 - **Components**:
@@ -620,9 +653,10 @@ The vault viewing and editing experience was significantly improved by replacing
 #### Key Implementation Details
 
 **Route Configuration** (`src/routes.tsx`):
+
 ```tsx
 <Route path={PATH.VAULT_DETAIL}>
-  {(params: { vaultId: string; }) => (
+  {(params: { vaultId: string }) => (
     <ProtectedRoute>
       <VaultDetail vaultId={params.vaultId} />
     </ProtectedRoute>
@@ -635,12 +669,14 @@ The vault viewing and editing experience was significantly improved by replacing
 **Mobile UX**: Dedicated sticky action bar at bottom for better mobile interaction
 
 #### Responsive Features
+
 - **Desktop**: Header actions with text labels
 - **Mobile**: Icon-only header actions + sticky bottom action bar
 - **Textarea**: Responsive height (6 rows mobile, 8 rows tablet, 12 rows desktop)
 - **Warnings**: Context-aware messages for edit/view modes
 
 #### Files Modified
+
 - **Deleted**: `view-vault-value-modal.tsx`, `edit-vault-value-modal.tsx`
 - **Modified**: `vaults-content.tsx`, `dashboard-content.tsx`, `routes.tsx`, `path.ts`
 - **Created**: `vault-detail.tsx`, `vault-detail-content.tsx`
@@ -785,4 +821,5 @@ vault-hub/
 ├── go.mod              # Go module definition
 └── CLAUDE.md           # AI assistant guidance (this file)
 ```
+
 - Only change the backend or cli code, do not change the frontend code

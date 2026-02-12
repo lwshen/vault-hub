@@ -30,7 +30,7 @@ sudo mv vault-hub-cli /usr/local/bin/  # Optional: for global access
 
 ### Prerequisites
 
-- Go 1.24+ (for building from source)
+- Go 1.26+ (for building from source)
 - Access to a running VaultHub server
 - Valid API key from your VaultHub instance
 
@@ -80,9 +80,11 @@ vault-hub-cli --api-key="your-key" --base-url="https://vault.example.com" list -
 ```
 
 **Flags:**
+
 - `-j, --json`: Output in JSON format
 
 **Example output:**
+
 ```
 Found 3 vault(s):
 
@@ -117,6 +119,7 @@ vault-hub-cli --api-key="your-key" --base-url="https://vault.example.com" get --
 ```
 
 **Flags:**
+
 - `-n, --name <name>`: Vault name
 - `-i, --id <id>`: Vault unique ID
 - `-o, --output <file>`: Save output to file instead of stdout
@@ -177,8 +180,9 @@ vault-hub-cli \
 ```
 
 Debug output will show:
+
 - API client initialization
-- HTTP request details  
+- HTTP request details
 - Response processing
 - Error details
 
@@ -224,7 +228,7 @@ vault-hub-cli --api-key="$API_KEY" --base-url="$URL" list --json | \
 
 ```dockerfile
 # Dockerfile example
-FROM golang:1.24-alpine AS builder
+FROM golang:1.26-alpine AS builder
 COPY . /app
 WORKDIR /app
 RUN go build -o vault-hub-cli ./apps/cli/main.go
@@ -247,14 +251,17 @@ ENTRYPOINT ["vault-hub-cli"]
 ### Common Issues
 
 1. **"Error: either name or id must be provided"**
+
    - Solution: Use either `--name` or `--id` flag with the `get` command
 
 2. **"Error: connection refused"**
+
    - Check if the VaultHub server is running
    - Verify the `--base-url` is correct
    - Ensure network connectivity
 
 3. **"Error: 401 Unauthorized"**
+
    - Verify your API key is correct and not expired
    - Check if the API key has the required permissions
 
