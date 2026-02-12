@@ -205,6 +205,20 @@ The API spec uses camelCase naming convention for all properties (e.g., `uniqueI
 
 **NEVER EDIT**: Do not modify `packages/api/generated.go` or `packages/api/api.bundled.yaml` directly as they are auto-generated code. All API changes must be made in the OpenAPI specification files in `packages/api/openapi/*`.
 
+## Code Generation
+
+When working with auto-generated code in this project:
+
+- **NEVER modify generated files directly** - Always edit the source specification and regenerate
+- **OpenAPI/Go**: Modify `packages/api/openapi/api.yaml`, then run `go generate packages/api/tool.go`
+- **TypeScript client**: The `@lwshen/vault-hub-ts-fetch-client` is generated from the OpenAPI spec via the release workflow
+- **Versioning**: Bump the API version in the OpenAPI spec when making breaking changes
+
+Generated files to **never edit manually**:
+
+- `packages/api/generated.go` - Go server stubs from oapi-codegen
+- `packages/api/api.bundled.yaml` - Bundled OpenAPI specification
+
 ## Authentication & Authorization
 
 ### Authentication Middleware Rules
