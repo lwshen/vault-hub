@@ -7,7 +7,7 @@ This document describes Docker usage for VaultHub, including the server, CLI, an
 VaultHub includes three Dockerfile configurations:
 
 - **`Dockerfile`** - Multi-stage build for the full VaultHub server with React frontend
-- **`Dockerfile-cli`** - Lightweight CLI container with cronjob and one-time execution support  
+- **`Dockerfile-cli`** - Lightweight CLI container with cronjob and one-time execution support
 - **`docker/Dockerfile-base`** - Development base image with Go, Node.js, and build tools
 - **`docs/docker.md`** - This documentation file
 
@@ -37,10 +37,12 @@ docker run -d \
 ### Server Environment Variables
 
 Required:
+
 - `JWT_SECRET` - Secret for JWT token signing
 - `ENCRYPTION_KEY` - AES-256 encryption key
 
 Optional:
+
 - `APP_PORT` (default: 3000)
 - `DATABASE_TYPE` (sqlite|mysql|postgres, default: sqlite)
 - `DATABASE_URL` (default: data.db)
@@ -64,17 +66,20 @@ The CLI container supports two run modes via the `RUN_MODE` environment variable
 ### 1. One-shot Mode (`RUN_MODE=oneshot`)
 
 Executes the CLI command once and exits. Useful for:
+
 - Manual vault operations
 - CI/CD pipelines
 - One-time data retrieval
 
 **Environment Variables:**
+
 - `RUN_MODE=oneshot` (default)
 - `VAULT_HUB_CLI_ARGS` - CLI arguments to execute (default: `list`)
 - `VAULT_HUB_SERVER_URL` - VaultHub server URL
 - `VAULT_HUB_API_KEY` - API key for authentication
 
 **Example:**
+
 ```bash
 docker run --rm \
   -e RUN_MODE=oneshot \
@@ -87,11 +92,13 @@ docker run --rm \
 ### 2. Cron Mode (`RUN_MODE=cron`)
 
 Runs the CLI command on a schedule using cron. Useful for:
+
 - Periodic vault synchronization
 - Scheduled backups
 - Monitoring and alerting
 
 **Environment Variables:**
+
 - `RUN_MODE=cron`
 - `CRON_SCHEDULE` - Cron expression (default: `0 * * * *` - every hour)
 - `VAULT_HUB_CLI_ARGS` - CLI arguments to execute (default: `list`)
@@ -99,6 +106,7 @@ Runs the CLI command on a schedule using cron. Useful for:
 - `VAULT_HUB_API_KEY` - API key for authentication
 
 **Example:**
+
 ```bash
 docker run -d \
   -e RUN_MODE=cron \
@@ -170,6 +178,7 @@ docker run -d \
 ```
 
 **Note:** When outputting to files, make sure to:
+
 1. Mount a volume (`-v`) to persist the output file
 2. Set the working directory (`-w`) to the mounted volume
 3. Use relative paths for the output file
@@ -191,6 +200,7 @@ In cron mode, logs are written to `/var/log/cron/vault-hub.log` inside the conta
 ```
 
 View logs:
+
 ```bash
 docker exec -it <container-name> tail -f /var/log/cron/vault-hub.log
 ```
@@ -208,8 +218,8 @@ The base image provides a pre-configured development environment with all necess
 
 ### What's Included
 
-- **Go 1.24** - Latest Go compiler
-- **Node.js 22** - JavaScript runtime  
+- **Go 1.26** - Latest Go compiler
+- **Node.js 22** - JavaScript runtime
 - **pnpm** - Fast package manager
 - **golangci-lint** - Go code quality tools
 - **OpenAPI Generator** - API client generation
@@ -250,6 +260,7 @@ build:
 ### Multi-Platform Support
 
 The base image supports multiple architectures:
+
 - `linux/amd64` - Intel/AMD 64-bit
 - `linux/arm64` - ARM 64-bit (Apple Silicon, ARM servers)
 - `linux/arm/v7` - ARM 32-bit (Raspberry Pi)
@@ -257,11 +268,13 @@ The base image supports multiple architectures:
 ## Troubleshooting
 
 ### Check container logs:
+
 ```bash
 docker logs <container-name>
 ```
 
 ### Debug cron jobs:
+
 ```bash
 # Check if cron is running
 docker exec -it <container-name> ps aux | grep cron
@@ -274,6 +287,7 @@ docker exec -it <container-name> ./vault-hub-cli list
 ```
 
 ### Environment variables:
+
 ```bash
 # Check environment inside container
 docker exec -it <container-name> env | grep VAULT_HUB

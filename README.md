@@ -5,6 +5,7 @@ A comprehensive secure environment variable and API key management system with A
 ## ✨ Features
 
 ### 🔐 Security First
+
 - **AES-256-GCM encryption** for all vault values before database storage
 - **JWT-based authentication** with optional OIDC support
 - **API key authentication** for programmatic access
@@ -12,6 +13,7 @@ A comprehensive secure environment variable and API key management system with A
 - **Enhanced client-side encryption** for CLI with PBKDF2 key derivation
 
 ### 🌐 Web Interface
+
 - **Modern React 19** application with TypeScript
 - **Real-time dashboard** with vault management
 - **System status monitoring** with health metrics
@@ -19,6 +21,7 @@ A comprehensive secure environment variable and API key management system with A
 - **Dark/light theme** support
 
 ### ⌨️ Command-Line Interface
+
 - **Cross-platform binaries** (Linux, Windows, macOS)
 - **Simple commands**: `list`, `get` with name/ID support
 - **Environment file export** (.env file generation with 0600 permissions)
@@ -28,6 +31,7 @@ A comprehensive secure environment variable and API key management system with A
 - **Automated synchronization** for CI/CD and production environments
 
 ### 🗄️ Database Support
+
 - **SQLite** (default, zero-config)
 - **MySQL** for production deployments
 - **PostgreSQL** for enterprise use
@@ -35,10 +39,12 @@ A comprehensive secure environment variable and API key management system with A
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Go 1.24+** for backend development
+
+- **Go 1.26+** for backend development
 - **Node.js 22+ and pnpm** for web interface development
 
 ### 1. Clone and Setup
+
 ```bash
 git clone https://github.com/lwshen/vault-hub.git
 cd vault-hub
@@ -55,12 +61,14 @@ export ENCRYPTION_KEY=$(openssl rand -base64 32)
 ```
 
 ### 2. Run Backend Server
+
 ```bash
 go run ./apps/server/main.go
 # Server starts at http://localhost:3000
 ```
 
 ### 3. Run Web Interface (Development)
+
 ```bash
 # Run from the repository root
 pnpm --dir apps/web install
@@ -69,6 +77,7 @@ pnpm --dir apps/web run dev
 ```
 
 ### 4. Build and Use CLI
+
 ```bash
 # Build CLI
 go build -o vault-hub-cli ./apps/cli/main.go
@@ -87,10 +96,12 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 
 # Execute command with vault environment
 ./vault-hub-cli get --name dev-secrets --exec "npm start"
+```
 
 ## 🏗️ Architecture
 
 ### Backend (Go)
+
 - **Web Framework**: Fiber v2.52.9
 - **Database ORM**: GORM v1.31.0
 - **Authentication**: golang-jwt/jwt/v5 + optional OIDC
@@ -98,6 +109,7 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 - **CLI**: Cobra v1.10.1 framework
 
 ### Frontend (React)
+
 - **React**: 19.1.1 with TypeScript 5.9.2
 - **Build Tool**: Vite 7.1.5 with Lightning CSS
 - **Styling**: Tailwind CSS 4.1.13 + Radix UI components
@@ -106,6 +118,7 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 - **Animations**: Framer Motion 12.23.12
 
 ### API Architecture
+
 - **Modular OpenAPI**: Separate path and schema files
 - **Auto-generated clients**: Go server code + TypeScript client
 - **Clear separation**: Web API (JWT) vs CLI API (API keys)
@@ -116,6 +129,7 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 ### Build Commands
 
 **Backend:**
+
 ```bash
 # Run server
 go run ./apps/server/main.go
@@ -131,6 +145,7 @@ go generate packages/api/tool.go
 ```
 
 **Frontend:**
+
 ```bash
 pnpm --dir apps/web install       # Install dependencies
 pnpm --dir apps/web run dev       # Development server
@@ -146,6 +161,7 @@ pnpm --dir apps/web run typecheck # TypeScript validation
 ```
 
 **CLI:**
+
 ```bash
 # Build CLI
 go build -o vault-hub-cli ./apps/cli/main.go
@@ -154,13 +170,16 @@ go build -o vault-hub-cli ./apps/cli/main.go
 ```
 
 **Live Reload (Air):**
+
 ```bash
 # Rebuilds the API and refreshes the embedded frontend bundle
 air -c .air.toml
 ```
+
 > `air` runs `pnpm --dir apps/web run build -- --mode development --outDir ../../internal/embed/dist` before rebuilding the server so the embedded assets stay in sync.
 
 ### Project Structure
+
 ```
 vault-hub/
 ├── apps/
@@ -179,24 +198,28 @@ vault-hub/
 ├── route/               # Routing and middleware
 └── .github/workflows/   # CI/CD pipelines
 ```
+
 > The `apps/web` directory is managed as an external package; avoid editing those sources directly and regenerate embedded assets via the documented build commands instead.
 > Run `git submodule update --remote apps/web` whenever you need the latest frontend before rebuilding the server or Docker image.
 
 ## 🔒 Security
 
 ### Encryption
+
 - **AES-256-GCM** encryption for all vault values
 - **Unique IV** per encryption operation
 - **AEAD** (Authenticated Encryption with Associated Data)
 - **Client-side encryption** option for CLI with PBKDF2
 
 ### Authentication
+
 - **JWT tokens** for web interface access
 - **API keys** for CLI and programmatic access (prefix: `vhub_`)
 - **Optional OIDC** integration for enterprise SSO
 - **Route-based protection** with middleware enforcement
 
 ### Audit Trail
+
 - **Complete operation history** in audit logs
 - **User and API key attribution** for all actions
 - **IP address and user agent** tracking
@@ -206,10 +229,12 @@ vault-hub/
 ## 🌍 Environment Variables
 
 **Required:**
+
 - `JWT_SECRET` - JWT token signing secret
 - `ENCRYPTION_KEY` - AES-256 encryption key
 
 **Optional:**
+
 - `APP_PORT` - Server port (default: 3000)
 - `DATABASE_TYPE` - sqlite|mysql|postgres (default: sqlite)
 - `DATABASE_URL` - Database connection string
@@ -218,12 +243,14 @@ vault-hub/
 ## 📦 Installation
 
 ### Pre-built Binaries
+
 Download the latest releases from [GitHub Releases](https://github.com/lwshen/vault-hub/releases/latest):
 
 - `vault-hub-server-{platform}-{arch}` - Backend server
 - `vault-hub-cli-{platform}-{arch}` - CLI tool
 
 ### Docker
+
 ```bash
 # Pull from Docker Hub (when available)
 docker pull ghcr.io/lwshen/vault-hub:latest
@@ -234,6 +261,7 @@ docker build . -t vault-hub:local
 ```
 
 ### Package Managers
+
 ```bash
 # TypeScript client
 npm install @lwshen/vault-hub-ts-fetch-client
@@ -262,6 +290,7 @@ Access documentation at `/docs` in the web interface.
 5. Push and create a Pull Request
 
 ### Code Quality
+
 - **Go**: Run `golangci-lint run ./...` before committing
 - **Frontend**: Use `pnpm run lint --fix` for auto-formatting
 - **Tests**: Ensure all tests pass with required environment variables
