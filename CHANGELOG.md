@@ -1,3 +1,18 @@
+## [1.4.24] - 2026-02-12
+
+### 🚀 Features
+
+- Add API key vault update endpoint (#400)
+
+### 💼 Other
+
+- *(deps)* Upgrade Go version to 1.26 (#404)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Claude workflows and add ANTHROPIC_BASE_URL (#391)
+- Move client publishing logic to standalone publish workflows (#392)
+- Fix publish ts client (#393)
 ## [1.4.23] - 2026-01-18
 
 ### 🚀 Features
