@@ -571,7 +571,7 @@ The project provides multi-stage Docker builds for both server and CLI applicati
 
 ### Server Docker Image (Dockerfile)
 
-- **Base Images**: Node.js 22 Alpine (frontend), Go 1.24 Alpine (backend), Alpine 3.22 (runtime)
+- **Base Images**: Node.js 22 Alpine (frontend), Go 1.26 Alpine (backend), Alpine 3.22 (runtime)
 - **Build Process**:
   1. Frontend stage: Builds React app with pnpm
   2. Backend stage: Compiles Go server with embedded frontend assets
@@ -582,7 +582,7 @@ The project provides multi-stage Docker builds for both server and CLI applicati
 
 ### CLI Docker Image (Dockerfile-cli)
 
-- **Base Images**: Go 1.24 Alpine (builder), Alpine 3.22 (runtime)
+- **Base Images**: Go 1.26 Alpine (builder), Alpine 3.22 (runtime)
 - **Included Binaries**: `vault-hub-cli` and `go-cron`
 - **Run Modes**:
   - **Oneshot Mode** (default): Runs CLI command once and exits
