@@ -78,7 +78,7 @@ pnpm --dir apps/web run dev
 
 ### 4. Build and Use CLI
 
-````bash
+```bash
 # Build CLI
 go build -o vault-hub-cli ./apps/cli/main.go
 
@@ -96,10 +96,12 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 
 # Execute command with vault environment
 ./vault-hub-cli get --name dev-secrets --exec "npm start"
+```
 
 ## 🏗️ Architecture
 
 ### Backend (Go)
+
 - **Web Framework**: Fiber v2.52.9
 - **Database ORM**: GORM v1.31.0
 - **Authentication**: golang-jwt/jwt/v5 + optional OIDC
@@ -107,6 +109,7 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 - **CLI**: Cobra v1.10.1 framework
 
 ### Frontend (React)
+
 - **React**: 19.1.1 with TypeScript 5.9.2
 - **Build Tool**: Vite 7.1.5 with Lightning CSS
 - **Styling**: Tailwind CSS 4.1.13 + Radix UI components
@@ -115,6 +118,7 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 - **Animations**: Framer Motion 12.23.12
 
 ### API Architecture
+
 - **Modular OpenAPI**: Separate path and schema files
 - **Auto-generated clients**: Go server code + TypeScript client
 - **Clear separation**: Web API (JWT) vs CLI API (API keys)
@@ -125,6 +129,7 @@ export VAULT_HUB_API_KEY=vhub_your_api_key_here
 ### Build Commands
 
 **Backend:**
+
 ```bash
 # Run server
 go run ./apps/server/main.go
@@ -137,7 +142,7 @@ JWT_SECRET=test ENCRYPTION_KEY=$(openssl rand -base64 32) go test ./...
 
 # Generate API code (after modifying OpenAPI files)
 go generate packages/api/tool.go
-````
+```
 
 **Frontend:**
 
