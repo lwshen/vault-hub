@@ -86,7 +86,7 @@ jobs:
           GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-darwin-amd64 apps/cli/main.go
           GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/vault-hub-cli-darwin-arm64 apps/cli/main.go
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: vault-hub
           path: |
