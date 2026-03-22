@@ -274,6 +274,34 @@ func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 		return err
 	}
 
+	return s.updateVaultByAPIKeyCommon(c, vault, apiKey, uniqueId)
+}
+
+// UpdateVaultByNameAPIKey - Update a vault by name using API key
+func (s Server) UpdateVaultByNameAPIKey(c *fiber.Ctx, name string) error {
+	apiKey, err := getAPIKeyFromContext(c)
+	if err != nil {
+		return err
+	}
+
+	var vault model.Vault
+	if err := vault.GetByName(name, apiKey.UserID); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return handler.SendError(c, fiber.StatusNotFound, "vault not found")
+		}
+		slog.Error("Failed to get vault by name", "error", err, "name", name)
+		return handler.SendError(c, fiber.StatusInternalServerError, "failed to retrieve vault")
+	}
+
+	if !apiKey.HasVaultAccess(vault.ID) {
+		return handler.SendError(c, fiber.StatusForbidden, "API key does not have access to this vault")
+	}
+
+	return s.updateVaultByAPIKeyCommon(c, &vault, apiKey, name)
+}
+
+// updateVaultByAPIKeyCommon contains the shared update logic for API key vault updates
+func (s Server) updateVaultByAPIKeyCommon(c *fiber.Ctx, vault *model.Vault, apiKey *model.APIKey, encryptSalt string) error {
 	var input UpdateVaultRequest
 	if err := c.BodyParser(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
@@ -281,7 +309,7 @@ func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 
 	// Check for client-side encryption header directly
 	enableClientEncryption := c.Get(constants.HeaderClientEncryption) == "true"
-	decryptedValue, err := decryptClientValueIfNeeded(c, input.Value, uniqueId, vault.ID, enableClientEncryption)
+	decryptedValue, err := decryptClientValueIfNeeded(c, input.Value, encryptSalt, vault.ID, enableClientEncryption)
 	if err != nil {
 		return err
 	}
@@ -321,7 +349,7 @@ func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 			slog.Error("Invalid Authorization header format for client-side encryption", "vaultID", vault.ID)
 			return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 		}
-		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, uniqueId)
+		encryptedValue, err := encryptForClientWithDerivedKey(vault.Value, originalAPIKey, encryptSalt)
 		if err != nil {
 			slog.Error("Failed to encrypt vault value for client", "error", err, "vaultID", vault.ID)
 			return handler.SendError(c, fiber.StatusInternalServerError, "failed to encrypt value for client")
