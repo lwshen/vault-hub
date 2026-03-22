@@ -1,3 +1,12 @@
+## [1.4.25] - 2026-03-22
+
+### 🚀 Features
+
+- Add update vault by name endpoint with API key support (#417)
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove Cursor Code Review workflow (#416)
 ## [1.4.24] - 2026-02-12
 
 ### 🚀 Features
