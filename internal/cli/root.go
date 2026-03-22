@@ -50,6 +50,7 @@ Global flags can be set via environment variables:
 	// Add subcommands
 	rootCmd.AddCommand(commands.NewListCommand(ctx))
 	rootCmd.AddCommand(commands.NewGetCommand(ctx))
+	rootCmd.AddCommand(commands.NewUpdateCommand(ctx))
 	rootCmd.AddCommand(commands.NewVersionCommand())
 
 	return rootCmd
