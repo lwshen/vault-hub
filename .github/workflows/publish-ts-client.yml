@@ -36,7 +36,7 @@ jobs:
           generator-tag: v7.13.0
           command-args: --additional-properties=npmName=@lwshen/vault-hub-ts-fetch-client --additional-properties=npmVersion=${{ steps.set_version.outputs.version }} --additional-properties=useSingleRequestParameter=false --git-user-id lwshen --git-repo-id vault-hub
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: typescript-fetch-client
           path: typescript-fetch-client
