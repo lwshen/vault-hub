@@ -1,0 +1,22 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+      - run: go mod download
+      - run: go build -o /tmp/vault-hub-server ./apps/server/main.go
+      - run: go build -o /tmp/vault-hub-cli ./apps/cli/main.go
+      - run: go test -v ./e2e/... -timeout 10m
+        env:
+          PROJECT_ROOT: ${{ github.workspace }}

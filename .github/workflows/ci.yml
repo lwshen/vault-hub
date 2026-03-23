@@ -52,6 +52,7 @@ jobs:
         run: |
           export JWT_SECRET=secret
           export ENCRYPTION_KEY=test-encryption-key-for-ci
+          export PROJECT_ROOT=$PWD
           go test -v ./...
       - name: Build backend
         run: |
