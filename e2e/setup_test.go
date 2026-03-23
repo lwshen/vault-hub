@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 
@@ -21,9 +21,9 @@ import (
 type TestServer struct {
 	URL       string
 	APIKey    string
+	JWTToken  string // JWT token for authenticated requests
 	VaultName string
 	VaultID   string
-	UserID    uint
 	cmd       *exec.Cmd
 	cancel    context.CancelFunc
 }
@@ -39,11 +39,22 @@ type CLIResult struct {
 func StartTestServer(t *testing.T) *TestServer {
 	t.Helper()
 
+	// Get project root directory (parent of e2e/)
+	projectRoot := os.Getenv("PROJECT_ROOT")
+	if projectRoot == "" {
+		// Try to find project root from current directory
+		wd, err := os.Getwd()
+		if err != nil {
+			t.Fatalf("Failed to get working directory: %v", err)
+		}
+		projectRoot = wd
+	}
+
 	// Build server binary if not exists
 	serverBinary := "/tmp/vault-hub-test-server"
 	if _, err := os.Stat(serverBinary); os.IsNotExist(err) {
 		cmd := exec.Command("go", "build", "-o", serverBinary, "./apps/server/main.go")
-		cmd.Dir = "/home/openclaw/vault-hub"
+		cmd.Dir = projectRoot
 		if output, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("Failed to build server: %v\n%s", err, output)
 		}
@@ -60,11 +71,14 @@ func StartTestServer(t *testing.T) *TestServer {
 	}
 	dbPath := tempDir + "/test.db"
 
+	// Find an available port
+	port := findAvailablePort(t)
+
 	// Start server with SQLite
 	ctx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(ctx, serverBinary)
 	cmd.Env = append(os.Environ(),
-		"APP_PORT=0", // Let OS assign port
+		"APP_PORT="+port, // Use fixed port
 		"DATABASE_TYPE=sqlite",
 		"DATABASE_URL="+dbPath,
 		"JWT_SECRET="+jwtSecret,
@@ -72,7 +86,7 @@ func StartTestServer(t *testing.T) *TestServer {
 		"DEMO_ENABLED=true", // Enable demo mode to auto-create demo user
 	)
 
-	// Capture server output for port detection
+	// Capture server output
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
 		cancel()
@@ -89,48 +103,31 @@ func StartTestServer(t *testing.T) *TestServer {
 		t.Fatalf("Failed to start server: %v", err)
 	}
 
-	// Combine stdout and stderr for port detection
-	var outputBuf bytes.Buffer
-	go io.Copy(&outputBuf, stdoutPipe)
-	go io.Copy(&outputBuf, stderrPipe)
+	// Discard output (we don't need to parse port anymore)
+	go io.Copy(io.Discard, stdoutPipe)
+	go io.Copy(io.Discard, stderrPipe)
 
-	// Wait for server to start and extract port
-	var port string
-	for i := 0; i < 100; i++ {
+	// Wait for server to be ready (check health endpoint)
+	serverURL := "http://localhost:" + port
+	var serverReady bool
+	for i := 0; i < 50; i++ {
 		time.Sleep(100 * time.Millisecond)
-		output := outputBuf.String()
-
-		// Look for "addr=" in the log output (Fiber format)
-		if strings.Contains(output, "addr=") {
-			lines := strings.Split(output, "\n")
-			for _, line := range lines {
-				if idx := strings.Index(line, "addr="); idx != -1 {
-					addrPart := line[idx+5:]
-					// Extract port from addr=:3000 or addr=0.0.0.0:3000
-					if colonIdx := strings.LastIndex(addrPart, ":"); colonIdx != -1 {
-						port = strings.TrimSpace(addrPart[colonIdx+1:])
-						// Remove any trailing characters
-						if spaceIdx := strings.IndexAny(port, " \t\"'"); spaceIdx != -1 {
-							port = port[:spaceIdx]
-						}
-						break
-					}
-				}
-			}
-		}
-		if port != "" {
+		resp, err := http.Get(serverURL + "/api/health")
+		if err == nil && resp.StatusCode == http.StatusOK {
+			resp.Body.Close()
+			serverReady = true
 			break
 		}
 	}
 
-	if port == "" {
+	if !serverReady {
 		cmd.Process.Kill()
 		cancel()
-		t.Fatalf("Server failed to start within timeout. Output:\n%s", outputBuf.String())
+		t.Fatalf("Server failed to start within timeout on port %s", port)
 	}
 
 	server := &TestServer{
-		URL: "http://localhost:" + port,
+		URL: serverURL,
 		cmd: cmd,
 		cancel: cancel,
 	}
@@ -189,15 +186,9 @@ func (s *TestServer) setupTestUserAndAPIKey(t *testing.T) {
 		s.Stop()
 		t.Fatalf("No token in login response")
 	}
+	s.JWTToken = token // Save JWT token for later use
 
-	userID, ok := loginResp["userId"].(float64)
-	if !ok {
-		s.Stop()
-		t.Fatalf("No userId in login response")
-	}
-	s.UserID = uint(userID)
-
-	// Create API key
+	// Create API key using the token
 	apiKeyReq := map[string]interface{}{
 		"name": "e2e-test-key",
 	}
@@ -226,22 +217,28 @@ func (s *TestServer) setupTestUserAndAPIKey(t *testing.T) {
 		t.Fatalf("Failed to decode API key response: %v", err)
 	}
 
-	plainKey, ok := apiKeyResp["plainKey"].(string)
-	if !ok {
+	// Try "key" first (CreateAPIKeyResponse uses "key"), then "plainKey"
+	var apiKey string
+	if key, ok := apiKeyResp["key"].(string); ok {
+		apiKey = key
+	} else if key, ok := apiKeyResp["plainKey"].(string); ok {
+		apiKey = key
+	} else {
 		s.Stop()
-		t.Fatalf("No plainKey in API key response")
+		t.Fatalf("No key or plainKey in API key response: %v", apiKeyResp)
 	}
-	s.APIKey = plainKey
+	s.APIKey = apiKey
 }
 
-// setupTestVault creates a test vault via API
+// setupTestVault creates a test vault via API using JWT authentication
 func (s *TestServer) setupTestVault(t *testing.T) {
 	t.Helper()
 
 	vaultName := "test-vault-" + generateRandomString(8)
 	s.VaultName = vaultName
 
-	// Create vault via API using API key
+	// Create vault via API using JWT token (not API key)
+	// POST /api/vaults requires JWT authentication
 	vaultReq := map[string]interface{}{
 		"uniqueId": uuid.New().String(),
 		"name":     vaultName,
@@ -249,9 +246,9 @@ func (s *TestServer) setupTestVault(t *testing.T) {
 	}
 	vaultBody, _ := json.Marshal(vaultReq)
 
-	req, _ := http.NewRequest("POST", s.URL+"/api/cli/vaults", bytes.NewBuffer(vaultBody))
+	req, _ := http.NewRequest("POST", s.URL+"/api/vaults", bytes.NewBuffer(vaultBody))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.APIKey)
+	req.Header.Set("Authorization", "Bearer "+s.JWTToken)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -295,11 +292,21 @@ func (s *TestServer) Stop() {
 func RunCLI(t *testing.T, args ...string) *CLIResult {
 	t.Helper()
 
+	// Get project root directory
+	projectRoot := os.Getenv("PROJECT_ROOT")
+	if projectRoot == "" {
+		wd, err := os.Getwd()
+		if err != nil {
+			t.Fatalf("Failed to get working directory: %v", err)
+		}
+		projectRoot = wd
+	}
+
 	// Build CLI binary if not exists
 	cliBinary := "/tmp/vault-hub-test-cli"
 	if _, err := os.Stat(cliBinary); os.IsNotExist(err) {
 		cmd := exec.Command("go", "build", "-o", cliBinary, "./apps/cli/main.go")
-		cmd.Dir = "/home/openclaw/vault-hub"
+		cmd.Dir = projectRoot
 		if output, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("Failed to build CLI: %v\n%s", err, output)
 		}
@@ -355,6 +362,29 @@ func (r *CLIResult) ContainsStdout(t *testing.T, expected string) bool {
 func (r *CLIResult) ContainsStderr(t *testing.T, expected string) bool {
 	t.Helper()
 	return strings.Contains(r.Stderr, expected)
+}
+
+// findAvailablePort finds an available TCP port for the test server
+func findAvailablePort(t *testing.T) string {
+	t.Helper()
+
+	// Try to find an available port
+	for i := 0; i < 10; i++ {
+		// Start from a high port range to avoid conflicts
+		port := 30000 + (time.Now().Nanosecond() % 30000)
+		addr := fmt.Sprintf(":%d", port)
+
+		// Try to listen on the port
+		ln, err := net.Listen("tcp", addr)
+		if err == nil {
+			ln.Close()
+			return fmt.Sprintf("%d", port)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	t.Fatal("Could not find an available port")
+	return ""
 }
 
 // generateRandomString generates a random string for test data
