@@ -46,7 +46,7 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "COMMIT=${COMMIT}" >> $GITHUB_OUTPUT
       - name: Build and push CLI Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile-cli
