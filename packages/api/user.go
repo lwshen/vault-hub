@@ -1,13 +1,13 @@
 package api
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-func (Server) GetCurrentUser(c *fiber.Ctx) error {
+func (Server) GetCurrentUser(c fiber.Ctx) error {
 	user, ok := c.Locals("user").(*model.User)
 	if !ok {
 		return handler.SendError(c, fiber.StatusUnauthorized, "user not found in context")

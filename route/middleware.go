@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/internal/config"
 	"github.com/lwshen/vault-hub/model"
 )
 
-func jwtMiddleware(c *fiber.Ctx) error {
+func jwtMiddleware(c fiber.Ctx) error {
 	path := c.Path()
 
 	// Public routes that don't need authentication
@@ -58,7 +58,7 @@ func isPublicRoute(path string) bool {
 }
 
 // jwtOnlyMiddleware ensures non-API-key routes only accept JWT authentication
-func jwtOnlyMiddleware(c *fiber.Ctx) error {
+func jwtOnlyMiddleware(c fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
 		return handler.SendError(c, fiber.StatusUnauthorized, "JWT token required")
@@ -80,7 +80,7 @@ func jwtOnlyMiddleware(c *fiber.Ctx) error {
 }
 
 // apiKeyOnlyMiddleware ensures API key routes only accept API key authentication
-func apiKeyOnlyMiddleware(c *fiber.Ctx) error {
+func apiKeyOnlyMiddleware(c fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
 		return handler.SendError(c, fiber.StatusUnauthorized, "API key required for this endpoint")
@@ -101,7 +101,7 @@ func apiKeyOnlyMiddleware(c *fiber.Ctx) error {
 	return handleAPIKeyAuth(c, tokenString)
 }
 
-func handleAPIKeyAuth(c *fiber.Ctx, apiKey string) error {
+func handleAPIKeyAuth(c fiber.Ctx, apiKey string) error {
 	key, err := model.ValidateAPIKey(apiKey)
 	if err != nil {
 		return handler.SendError(c, fiber.StatusUnauthorized, "invalid API key")
@@ -113,7 +113,7 @@ func handleAPIKeyAuth(c *fiber.Ctx, apiKey string) error {
 	return c.Next()
 }
 
-func handleJWTAuth(c *fiber.Ctx, tokenString string) error {
+func handleJWTAuth(c fiber.Ctx, tokenString string) error {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

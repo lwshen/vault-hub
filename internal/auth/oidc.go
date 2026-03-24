@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/session"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/extractors"
+	"github.com/gofiber/fiber/v3/middleware/session"
 	"github.com/google/uuid"
 	"github.com/lwshen/vault-hub/internal/config"
 	"golang.org/x/oauth2"
@@ -35,9 +36,9 @@ func init() {
 }
 
 func SetupOIDC() error {
-	sessionStore = session.New(session.Config{
-		KeyLookup:  "cookie:auth_session",
-		Expiration: time.Hour * 1,
+	sessionStore = session.NewStore(session.Config{
+		Extractor:   extractors.FromCookie("auth_session"),
+		IdleTimeout: time.Hour,
 	})
 
 	ctx := context.Background()
@@ -56,7 +57,7 @@ func SetupOIDC() error {
 	return nil
 }
 
-func AuthCodeURL(ctx *fiber.Ctx, baseUrl string) (string, error) {
+func AuthCodeURL(ctx fiber.Ctx, baseUrl string) (string, error) {
 	state := generateState()
 	err := storeInSession(ctx, "oauth", state)
 	if err != nil {
@@ -88,7 +89,7 @@ func verifyToken(ctx context.Context, token *oauth2.Token) (*oidc.IDToken, error
 	return verifier.Verify(ctx, rawIDToken)
 }
 
-func VerifyState(ctx *fiber.Ctx, state string) error {
+func VerifyState(ctx fiber.Ctx, state string) error {
 	storedState, err := getFromSession(ctx, "oauth")
 	if err != nil {
 		return err
@@ -108,7 +109,7 @@ func generateState() string {
 	return uuid.New().String()
 }
 
-func storeInSession(ctx *fiber.Ctx, key string, value string) error {
+func storeInSession(ctx fiber.Ctx, key string, value string) error {
 	session, err := sessionStore.Get(ctx)
 	if err != nil {
 		return err
@@ -117,7 +118,7 @@ func storeInSession(ctx *fiber.Ctx, key string, value string) error {
 	return session.Save()
 }
 
-func getFromSession(ctx *fiber.Ctx, key string) (string, error) {
+func getFromSession(ctx fiber.Ctx, key string) (string, error) {
 	session, err := sessionStore.Get(ctx)
 	if err != nil {
 		return "", err

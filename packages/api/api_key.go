@@ -5,14 +5,14 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	"gorm.io/gorm"
 )
 
 // auditAPIKeyOperation creates an audit log entry for API key operations
-func auditAPIKeyOperation(c *fiber.Ctx, action model.ActionType, userID uint, apiKeyID uint, apiKeyName string) {
+func auditAPIKeyOperation(c fiber.Ctx, action model.ActionType, userID uint, apiKeyID uint, apiKeyName string) {
 	ip, userAgent := getClientInfo(c)
 
 	err := model.LogAPIKeyAction(apiKeyID, action, userID, model.SourceWeb, ip, userAgent)
@@ -66,7 +66,7 @@ func convertToApiAPIKey(apiKey *model.APIKey) (*VaultAPIKey, error) {
 }
 
 // GetAPIKeys - Get API keys for the current user with pagination
-func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
+func (s Server) GetAPIKeys(c fiber.Ctx, params GetAPIKeysParams) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
@@ -121,7 +121,7 @@ func (s Server) GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error {
 
 // CreateAPIKey handles the creation of a new API key
 // It validates the request, converts vault IDs, creates the key, and returns the response
-func (s Server) CreateAPIKey(c *fiber.Ctx) error {
+func (s Server) CreateAPIKey(c fiber.Ctx) error {
 	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
@@ -172,9 +172,9 @@ func (s Server) CreateAPIKey(c *fiber.Ctx) error {
 }
 
 // parseCreateAPIKeyRequest parses the request body for API key creation
-func parseCreateAPIKeyRequest(c *fiber.Ctx) (CreateAPIKeyRequest, error) {
+func parseCreateAPIKeyRequest(c fiber.Ctx) (CreateAPIKeyRequest, error) {
 	var req CreateAPIKeyRequest
-	err := c.BodyParser(&req)
+	err := c.Bind().Body(&req)
 	return req, err
 }
 
@@ -238,7 +238,7 @@ func createAPIKey(params model.CreateAPIKeyParams) (*model.APIKey, string, error
 
 // UpdateAPIKey handles updating an existing API key's properties
 // It validates ownership, processes the update request, and returns the updated key
-func (s Server) UpdateAPIKey(c *fiber.Ctx, id int64) error {
+func (s Server) UpdateAPIKey(c fiber.Ctx, id int64) error {
 	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
@@ -302,9 +302,9 @@ func findAPIKeyByID(id int64, userID uint) (*model.APIKey, error) {
 }
 
 // parseUpdateAPIKeyRequest parses the request body for API key updates
-func parseUpdateAPIKeyRequest(c *fiber.Ctx) (UpdateAPIKeyRequest, error) {
+func parseUpdateAPIKeyRequest(c fiber.Ctx) (UpdateAPIKeyRequest, error) {
 	var req UpdateAPIKeyRequest
-	err := c.BodyParser(&req)
+	err := c.Bind().Body(&req)
 	return req, err
 }
 
@@ -348,7 +348,7 @@ func updateAPIKey(apiKey *model.APIKey, params model.UpdateAPIKeyParams) error {
 }
 
 // DeleteAPIKey - Delete an API key
-func (s Server) DeleteAPIKey(c *fiber.Ctx, id int64) error {
+func (s Server) DeleteAPIKey(c fiber.Ctx, id int64) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err

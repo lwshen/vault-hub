@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
 	"gorm.io/gorm"
@@ -35,7 +35,7 @@ func convertToApiAuditLog(auditLog *model.AuditLog) AuditLog {
 
 // GetAuditLogs retrieves filtered and paginated audit logs for the authenticated user
 // It supports filtering by vault, date range, and pagination parameters
-func (Server) GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error {
+func (Server) GetAuditLogs(c fiber.Ctx, params GetAuditLogsParams) error {
 	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {
@@ -155,7 +155,7 @@ func buildAuditLogsResponse(logs []model.AuditLog, totalCount int64, params GetA
 	}
 }
 
-func (Server) GetAuditMetrics(c *fiber.Ctx) error {
+func (Server) GetAuditMetrics(c fiber.Ctx) error {
 	// Get authenticated user
 	user, err := getUserFromContext(c)
 	if err != nil {

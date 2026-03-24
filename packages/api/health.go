@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func (Server) Health(ctx *fiber.Ctx) error {
+func (Server) Health(ctx fiber.Ctx) error {
 	status := "ok"
 	time := time.Now()
 	resp := HealthCheckResponse{

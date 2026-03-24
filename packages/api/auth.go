@@ -13,7 +13,7 @@ import (
 	"github.com/lwshen/vault-hub/model"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"gorm.io/gorm"
 )
 
@@ -39,9 +39,9 @@ func formatTTLForEmail(d time.Duration) string {
 	}
 }
 
-func (Server) Login(c *fiber.Ctx) error {
+func (Server) Login(c fiber.Ctx) error {
 	var input LoginRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind().Body(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
@@ -82,7 +82,7 @@ func (Server) Login(c *fiber.Ctx) error {
 
 // Signup handles user registration requests
 // It validates input, creates the user account, and returns a JWT token
-func (Server) Signup(c *fiber.Ctx) error {
+func (Server) Signup(c fiber.Ctx) error {
 	// Parse request body
 	input, err := parseSignupRequest(c)
 	if err != nil {
@@ -145,9 +145,9 @@ func (Server) Signup(c *fiber.Ctx) error {
 }
 
 // parseSignupRequest parses and validates the signup request body
-func parseSignupRequest(c *fiber.Ctx) (SignupRequest, error) {
+func parseSignupRequest(c fiber.Ctx) (SignupRequest, error) {
 	var input SignupRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind().Body(&input); err != nil {
 		return input, err
 	}
 	return input, nil
@@ -197,7 +197,7 @@ func logSignupAudit(userID uint, clientIP, userAgent string) {
 	}
 }
 
-func (Server) Logout(c *fiber.Ctx) error {
+func (Server) Logout(c fiber.Ctx) error {
 	// Try to get user information from context (set by JWT middleware)
 	// If there is no authentication information, this should not prevent logout operation
 	user, ok := c.Locals("user").(*model.User)
@@ -218,9 +218,9 @@ func getEmail(email openapi_types.Email) (string, error) {
 }
 
 // RequestPasswordReset creates a password reset token and sends email
-func (Server) RequestPasswordReset(c *fiber.Ctx) error {
+func (Server) RequestPasswordReset(c fiber.Ctx) error {
 	var input PasswordResetRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind().Body(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 	emailStr, err := getEmail(input.Email)
@@ -281,9 +281,9 @@ func (Server) RequestPasswordReset(c *fiber.Ctx) error {
 }
 
 // ConfirmPasswordReset verifies token and updates password
-func (Server) ConfirmPasswordReset(c *fiber.Ctx) error {
+func (Server) ConfirmPasswordReset(c fiber.Ctx) error {
 	var input PasswordResetConfirmRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind().Body(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
@@ -324,9 +324,9 @@ func (Server) ConfirmPasswordReset(c *fiber.Ctx) error {
 }
 
 // RequestMagicLink creates a magic link login token and emails it
-func (Server) RequestMagicLink(c *fiber.Ctx) error {
+func (Server) RequestMagicLink(c fiber.Ctx) error {
 	var input MagicLinkRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind().Body(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 	emailStr, err := getEmail(input.Email)
@@ -388,7 +388,7 @@ func (Server) RequestMagicLink(c *fiber.Ctx) error {
 }
 
 // ConsumeMagicLink verifies token, generates JWT and redirects with fragment
-func (Server) ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) error {
+func (Server) ConsumeMagicLink(c fiber.Ctx, params ConsumeMagicLinkParams) error {
 	token := params.Token
 	acceptsJSON := strings.Contains(c.Get(fiber.HeaderAccept), fiber.MIMEApplicationJSON)
 	if token == "" {
@@ -442,7 +442,7 @@ func (Server) ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) erro
 		})
 	}
 
-	return c.Redirect(redirectFragment)
+	return c.Redirect().To(redirectFragment)
 }
 
 func deref(p *string) string {
@@ -453,7 +453,7 @@ func deref(p *string) string {
 }
 
 // ChangePassword handles password change for authenticated users
-func (Server) ChangePassword(c *fiber.Ctx) error {
+func (Server) ChangePassword(c fiber.Ctx) error {
 	// Get authenticated user from context
 	user, ok := c.Locals("user").(*model.User)
 	if !ok || user == nil {
@@ -468,7 +468,7 @@ func (Server) ChangePassword(c *fiber.Ctx) error {
 
 	// Parse request body
 	var input ChangePasswordRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind().Body(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 

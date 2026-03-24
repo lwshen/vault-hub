@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/url"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/lwshen/vault-hub/internal/auth"
 	"github.com/lwshen/vault-hub/model"
 )
@@ -14,7 +14,7 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
-func LoginOidc(c *fiber.Ctx) error {
+func LoginOidc(c fiber.Ctx) error {
 	baseUrl := c.BaseURL()
 	url, err := auth.AuthCodeURL(c, baseUrl)
 	if err != nil {
@@ -22,10 +22,10 @@ func LoginOidc(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 	slog.Debug("Login with OIDC", "url", url)
-	return c.Redirect(url)
+	return c.Redirect().To(url)
 }
 
-func LoginOidcCallback(c *fiber.Ctx) error {
+func LoginOidcCallback(c fiber.Ctx) error {
 	code := c.Query("code")
 	state := c.Query("state")
 	slog.Debug("Login with OIDC callback", "uri", c.Request().URI(), "code", code, "state", state)
@@ -103,11 +103,11 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 	// Redirect back to frontend with token in URL fragment (hash) for security
 	// URL fragments are never sent to the server, preventing token leakage in logs, Referer headers, and browser history
 	redirectUrl := "/login#token=" + url.QueryEscape(jwtToken) + "&source=oidc"
-	return c.Redirect(redirectUrl)
+	return c.Redirect().To(redirectUrl)
 }
 
 // getClientInfo extracts IP address and User-Agent from the request
-func getClientInfo(c *fiber.Ctx) (string, string) {
+func getClientInfo(c fiber.Ctx) (string, string) {
 	// Get IP address (check for forwarded headers first)
 	ip := c.Get("X-Forwarded-For")
 	if ip == "" {

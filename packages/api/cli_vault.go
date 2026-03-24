@@ -12,7 +12,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/internal/constants"
 	"github.com/lwshen/vault-hub/model"
@@ -21,7 +21,7 @@ import (
 )
 
 // GetVaultsByAPIKey - Get all vaults for a given API key
-func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
+func (s Server) GetVaultsByAPIKey(c fiber.Ctx) error {
 	apiKey, ok := c.Locals("api_key").(*model.APIKey)
 	if !ok {
 		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
@@ -44,7 +44,7 @@ func (s Server) GetVaultsByAPIKey(c *fiber.Ctx) error {
 }
 
 // GetVaultByAPIKey - Get a single vault by unique ID for a given API key
-func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
+func (s Server) GetVaultByAPIKey(c fiber.Ctx, uniqueId string) error {
 	// Read X-Enable-Client-Encryption header directly
 	headerValue := c.Get(constants.HeaderClientEncryption)
 	var enableClientEncryptionParam *string
@@ -60,7 +60,7 @@ func (s Server) GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 }
 
 // GetVaultByNameAPIKey - Get a single vault by name for a given API key
-func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
+func (s Server) GetVaultByNameAPIKey(c fiber.Ctx, name string) error {
 	// Read X-Enable-Client-Encryption header directly
 	headerValue := c.Get(constants.HeaderClientEncryption)
 	var enableClientEncryptionParam *string
@@ -76,7 +76,7 @@ func (s Server) GetVaultByNameAPIKey(c *fiber.Ctx, name string) error {
 }
 
 // getVaultByAPIKey - Common logic for getting a vault via API key
-func (s Server) getVaultByAPIKey(c *fiber.Ctx, encryptSalt string, enableClientEncryptionParam *string, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
+func (s Server) getVaultByAPIKey(c fiber.Ctx, encryptSalt string, enableClientEncryptionParam *string, vaultGetter func(*model.APIKey) (*model.Vault, error)) error {
 	apiKey, ok := c.Locals("api_key").(*model.APIKey)
 	if !ok {
 		return handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
@@ -206,7 +206,7 @@ func decryptClientValue(encryptedValue, apiKey, salt string) (string, error) {
 }
 
 // extractBearerToken extracts the API key token from the Authorization header
-func extractBearerToken(c *fiber.Ctx) (string, error) {
+func extractBearerToken(c fiber.Ctx) (string, error) {
 	authHeader := c.Get("Authorization")
 	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
 		return "", errors.New("invalid authorization header format")
@@ -215,7 +215,7 @@ func extractBearerToken(c *fiber.Ctx) (string, error) {
 }
 
 // getAPIKeyFromContext retrieves the API key from the Fiber context
-func getAPIKeyFromContext(c *fiber.Ctx) (*model.APIKey, error) {
+func getAPIKeyFromContext(c fiber.Ctx) (*model.APIKey, error) {
 	apiKey, ok := c.Locals("api_key").(*model.APIKey)
 	if !ok {
 		return nil, handler.SendError(c, fiber.StatusUnauthorized, "API key not found in context")
@@ -224,7 +224,7 @@ func getAPIKeyFromContext(c *fiber.Ctx) (*model.APIKey, error) {
 }
 
 // getVaultForAPIKey retrieves a vault by unique ID and verifies API key access
-func getVaultForAPIKey(c *fiber.Ctx, uniqueId string, apiKey *model.APIKey) (*model.Vault, error) {
+func getVaultForAPIKey(c fiber.Ctx, uniqueId string, apiKey *model.APIKey) (*model.Vault, error) {
 	var vault model.Vault
 	if err := vault.GetByUniqueID(uniqueId, apiKey.UserID); err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -242,7 +242,7 @@ func getVaultForAPIKey(c *fiber.Ctx, uniqueId string, apiKey *model.APIKey) (*mo
 }
 
 // decryptClientValueIfNeeded decrypts the value if client-side encryption is enabled
-func decryptClientValueIfNeeded(c *fiber.Ctx, value *string, uniqueId string, vaultID uint, enableClientEncryption bool) (*string, error) {
+func decryptClientValueIfNeeded(c fiber.Ctx, value *string, uniqueId string, vaultID uint, enableClientEncryption bool) (*string, error) {
 	if !enableClientEncryption || value == nil {
 		return value, nil
 	}
@@ -263,7 +263,7 @@ func decryptClientValueIfNeeded(c *fiber.Ctx, value *string, uniqueId string, va
 }
 
 // UpdateVaultByAPIKey - Update a vault by unique ID using API key
-func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
+func (s Server) UpdateVaultByAPIKey(c fiber.Ctx, uniqueId string) error {
 	apiKey, err := getAPIKeyFromContext(c)
 	if err != nil {
 		return err
@@ -278,7 +278,7 @@ func (s Server) UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error {
 }
 
 // UpdateVaultByNameAPIKey - Update a vault by name using API key
-func (s Server) UpdateVaultByNameAPIKey(c *fiber.Ctx, name string) error {
+func (s Server) UpdateVaultByNameAPIKey(c fiber.Ctx, name string) error {
 	apiKey, err := getAPIKeyFromContext(c)
 	if err != nil {
 		return err
@@ -301,9 +301,9 @@ func (s Server) UpdateVaultByNameAPIKey(c *fiber.Ctx, name string) error {
 }
 
 // updateVaultByAPIKeyCommon contains the shared update logic for API key vault updates
-func (s Server) updateVaultByAPIKeyCommon(c *fiber.Ctx, vault *model.Vault, apiKey *model.APIKey, encryptSalt string) error {
+func (s Server) updateVaultByAPIKeyCommon(c fiber.Ctx, vault *model.Vault, apiKey *model.APIKey, encryptSalt string) error {
 	var input UpdateVaultRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind().Body(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 

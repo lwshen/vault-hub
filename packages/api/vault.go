@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/lwshen/vault-hub/handler"
 	"github.com/lwshen/vault-hub/model"
@@ -12,7 +12,7 @@ import (
 )
 
 // getClientInfo extracts IP address and User-Agent from the request
-func getClientInfo(c *fiber.Ctx) (string, string) {
+func getClientInfo(c fiber.Ctx) (string, string) {
 	// Get IP address (check for forwarded headers first)
 	ip := c.Get("X-Forwarded-For")
 	if ip == "" {
@@ -29,7 +29,7 @@ func getClientInfo(c *fiber.Ctx) (string, string) {
 }
 
 // getUserFromContext extracts the authenticated user from the context
-func getUserFromContext(c *fiber.Ctx) (*model.User, error) {
+func getUserFromContext(c fiber.Ctx) (*model.User, error) {
 	user, ok := c.Locals("user").(*model.User)
 	if !ok {
 		return nil, handler.SendError(c, fiber.StatusUnauthorized, "user not found in context")
@@ -67,7 +67,7 @@ func convertToApiVaultLite(vault *model.Vault) VaultLite {
 }
 
 // GetVaults handles GET /api/vaults with pagination
-func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
+func (Server) GetVaults(c fiber.Ctx, params GetVaultsParams) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
@@ -114,7 +114,7 @@ func (Server) GetVaults(c *fiber.Ctx, params GetVaultsParams) error {
 }
 
 // GetVault handles GET /api/vaults/{unique_id}
-func (Server) GetVault(c *fiber.Ctx, uniqueID string) error {
+func (Server) GetVault(c fiber.Ctx, uniqueID string) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
@@ -139,14 +139,14 @@ func (Server) GetVault(c *fiber.Ctx, uniqueID string) error {
 }
 
 // CreateVault handles POST /api/vaults
-func (Server) CreateVault(c *fiber.Ctx) error {
+func (Server) CreateVault(c fiber.Ctx) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
 	}
 
 	var input CreateVaultRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind().Body(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
@@ -190,7 +190,7 @@ func (Server) CreateVault(c *fiber.Ctx) error {
 }
 
 // UpdateVault handles PUT /api/vaults/{unique_id}
-func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
+func (Server) UpdateVault(c fiber.Ctx, uniqueID string) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
@@ -206,7 +206,7 @@ func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 	}
 
 	var input UpdateVaultRequest
-	if err := c.BodyParser(&input); err != nil {
+	if err := c.Bind().Body(&input); err != nil {
 		return handler.SendError(c, fiber.StatusBadRequest, err.Error())
 	}
 
@@ -243,7 +243,7 @@ func (Server) UpdateVault(c *fiber.Ctx, uniqueID string) error {
 }
 
 // DeleteVault handles DELETE /api/vaults/{unique_id}
-func (Server) DeleteVault(c *fiber.Ctx, uniqueID string) error {
+func (Server) DeleteVault(c fiber.Ctx, uniqueID string) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err
@@ -289,7 +289,7 @@ func convertToApiVaultFilterOption(vault *model.Vault) VaultFilterOption {
 
 // GetVaultFilterOptions handles GET /api/vaults/filter-options
 // Returns a minimal list of vaults (uniqueId and name only) for filter dropdowns
-func (Server) GetVaultFilterOptions(c *fiber.Ctx) error {
+func (Server) GetVaultFilterOptions(c fiber.Ctx) error {
 	user, err := getUserFromContext(c)
 	if err != nil {
 		return err

@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
@@ -503,91 +503,91 @@ type UpdateVaultJSONRequestBody = UpdateVaultRequest
 type ServerInterface interface {
 
 	// (GET /api/api-keys)
-	GetAPIKeys(c *fiber.Ctx, params GetAPIKeysParams) error
+	GetAPIKeys(c fiber.Ctx, params GetAPIKeysParams) error
 
 	// (POST /api/api-keys)
-	CreateAPIKey(c *fiber.Ctx) error
+	CreateAPIKey(c fiber.Ctx) error
 
 	// (DELETE /api/api-keys/{id})
-	DeleteAPIKey(c *fiber.Ctx, id int64) error
+	DeleteAPIKey(c fiber.Ctx, id int64) error
 
 	// (PATCH /api/api-keys/{id})
-	UpdateAPIKey(c *fiber.Ctx, id int64) error
+	UpdateAPIKey(c fiber.Ctx, id int64) error
 
 	// (GET /api/audit-logs)
-	GetAuditLogs(c *fiber.Ctx, params GetAuditLogsParams) error
+	GetAuditLogs(c fiber.Ctx, params GetAuditLogsParams) error
 
 	// (GET /api/audit-logs/metrics)
-	GetAuditMetrics(c *fiber.Ctx) error
+	GetAuditMetrics(c fiber.Ctx) error
 
 	// (POST /api/auth/login)
-	Login(c *fiber.Ctx) error
+	Login(c fiber.Ctx) error
 
 	// (GET /api/auth/logout)
-	Logout(c *fiber.Ctx) error
+	Logout(c fiber.Ctx) error
 
 	// (POST /api/auth/magic-link/request)
-	RequestMagicLink(c *fiber.Ctx) error
+	RequestMagicLink(c fiber.Ctx) error
 
 	// (GET /api/auth/magic-link/token)
-	ConsumeMagicLink(c *fiber.Ctx, params ConsumeMagicLinkParams) error
+	ConsumeMagicLink(c fiber.Ctx, params ConsumeMagicLinkParams) error
 
 	// (POST /api/auth/password/change)
-	ChangePassword(c *fiber.Ctx) error
+	ChangePassword(c fiber.Ctx) error
 
 	// (POST /api/auth/password/reset/confirm)
-	ConfirmPasswordReset(c *fiber.Ctx) error
+	ConfirmPasswordReset(c fiber.Ctx) error
 
 	// (POST /api/auth/password/reset/request)
-	RequestPasswordReset(c *fiber.Ctx) error
+	RequestPasswordReset(c fiber.Ctx) error
 
 	// (POST /api/auth/signup)
-	Signup(c *fiber.Ctx) error
+	Signup(c fiber.Ctx) error
 
 	// (GET /api/cli/vault/name/{name})
-	GetVaultByNameAPIKey(c *fiber.Ctx, name string) error
+	GetVaultByNameAPIKey(c fiber.Ctx, name string) error
 
 	// (PUT /api/cli/vault/name/{name})
-	UpdateVaultByNameAPIKey(c *fiber.Ctx, name string) error
+	UpdateVaultByNameAPIKey(c fiber.Ctx, name string) error
 
 	// (GET /api/cli/vault/{uniqueId})
-	GetVaultByAPIKey(c *fiber.Ctx, uniqueId string) error
+	GetVaultByAPIKey(c fiber.Ctx, uniqueId string) error
 
 	// (PUT /api/cli/vault/{uniqueId})
-	UpdateVaultByAPIKey(c *fiber.Ctx, uniqueId string) error
+	UpdateVaultByAPIKey(c fiber.Ctx, uniqueId string) error
 
 	// (GET /api/cli/vaults)
-	GetVaultsByAPIKey(c *fiber.Ctx) error
+	GetVaultsByAPIKey(c fiber.Ctx) error
 	// Get public configuration
 	// (GET /api/config)
-	GetConfig(c *fiber.Ctx) error
+	GetConfig(c fiber.Ctx) error
 
 	// (GET /api/health)
-	Health(c *fiber.Ctx) error
+	Health(c fiber.Ctx) error
 	// Get system status
 	// (GET /api/status)
-	GetStatus(c *fiber.Ctx) error
+	GetStatus(c fiber.Ctx) error
 
 	// (GET /api/user)
-	GetCurrentUser(c *fiber.Ctx) error
+	GetCurrentUser(c fiber.Ctx) error
 
 	// (GET /api/vaults)
-	GetVaults(c *fiber.Ctx, params GetVaultsParams) error
+	GetVaults(c fiber.Ctx, params GetVaultsParams) error
 
 	// (POST /api/vaults)
-	CreateVault(c *fiber.Ctx) error
+	CreateVault(c fiber.Ctx) error
 
 	// (GET /api/vaults/filter-options)
-	GetVaultFilterOptions(c *fiber.Ctx) error
+	GetVaultFilterOptions(c fiber.Ctx) error
 
 	// (DELETE /api/vaults/{uniqueId})
-	DeleteVault(c *fiber.Ctx, uniqueId string) error
+	DeleteVault(c fiber.Ctx, uniqueId string) error
 
 	// (GET /api/vaults/{uniqueId})
-	GetVault(c *fiber.Ctx, uniqueId string) error
+	GetVault(c fiber.Ctx, uniqueId string) error
 
 	// (PUT /api/vaults/{uniqueId})
-	UpdateVault(c *fiber.Ctx, uniqueId string) error
+	UpdateVault(c fiber.Ctx, uniqueId string) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -598,7 +598,7 @@ type ServerInterfaceWrapper struct {
 type MiddlewareFunc fiber.Handler
 
 // GetAPIKeys operation middleware
-func (siw *ServerInterfaceWrapper) GetAPIKeys(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetAPIKeys(c fiber.Ctx) error {
 
 	var err error
 
@@ -645,13 +645,13 @@ func (siw *ServerInterfaceWrapper) GetAPIKeys(c *fiber.Ctx) error {
 }
 
 // CreateAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) CreateAPIKey(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) CreateAPIKey(c fiber.Ctx) error {
 
 	return siw.Handler.CreateAPIKey(c)
 }
 
 // DeleteAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) DeleteAPIKey(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) DeleteAPIKey(c fiber.Ctx) error {
 
 	var err error
 
@@ -667,7 +667,7 @@ func (siw *ServerInterfaceWrapper) DeleteAPIKey(c *fiber.Ctx) error {
 }
 
 // UpdateAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) UpdateAPIKey(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) UpdateAPIKey(c fiber.Ctx) error {
 
 	var err error
 
@@ -683,7 +683,7 @@ func (siw *ServerInterfaceWrapper) UpdateAPIKey(c *fiber.Ctx) error {
 }
 
 // GetAuditLogs operation middleware
-func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetAuditLogs(c fiber.Ctx) error {
 
 	var err error
 
@@ -758,31 +758,31 @@ func (siw *ServerInterfaceWrapper) GetAuditLogs(c *fiber.Ctx) error {
 }
 
 // GetAuditMetrics operation middleware
-func (siw *ServerInterfaceWrapper) GetAuditMetrics(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetAuditMetrics(c fiber.Ctx) error {
 
 	return siw.Handler.GetAuditMetrics(c)
 }
 
 // Login operation middleware
-func (siw *ServerInterfaceWrapper) Login(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) Login(c fiber.Ctx) error {
 
 	return siw.Handler.Login(c)
 }
 
 // Logout operation middleware
-func (siw *ServerInterfaceWrapper) Logout(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) Logout(c fiber.Ctx) error {
 
 	return siw.Handler.Logout(c)
 }
 
 // RequestMagicLink operation middleware
-func (siw *ServerInterfaceWrapper) RequestMagicLink(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) RequestMagicLink(c fiber.Ctx) error {
 
 	return siw.Handler.RequestMagicLink(c)
 }
 
 // ConsumeMagicLink operation middleware
-func (siw *ServerInterfaceWrapper) ConsumeMagicLink(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) ConsumeMagicLink(c fiber.Ctx) error {
 
 	var err error
 
@@ -814,31 +814,31 @@ func (siw *ServerInterfaceWrapper) ConsumeMagicLink(c *fiber.Ctx) error {
 }
 
 // ChangePassword operation middleware
-func (siw *ServerInterfaceWrapper) ChangePassword(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) ChangePassword(c fiber.Ctx) error {
 
 	return siw.Handler.ChangePassword(c)
 }
 
 // ConfirmPasswordReset operation middleware
-func (siw *ServerInterfaceWrapper) ConfirmPasswordReset(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) ConfirmPasswordReset(c fiber.Ctx) error {
 
 	return siw.Handler.ConfirmPasswordReset(c)
 }
 
 // RequestPasswordReset operation middleware
-func (siw *ServerInterfaceWrapper) RequestPasswordReset(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) RequestPasswordReset(c fiber.Ctx) error {
 
 	return siw.Handler.RequestPasswordReset(c)
 }
 
 // Signup operation middleware
-func (siw *ServerInterfaceWrapper) Signup(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) Signup(c fiber.Ctx) error {
 
 	return siw.Handler.Signup(c)
 }
 
 // GetVaultByNameAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) GetVaultByNameAPIKey(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetVaultByNameAPIKey(c fiber.Ctx) error {
 
 	var err error
 
@@ -850,13 +850,13 @@ func (siw *ServerInterfaceWrapper) GetVaultByNameAPIKey(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter name: %w", err).Error())
 	}
 
-	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
+	fiber.StoreInContext(c, ApiKeyAuthScopes, []string{})
 
 	return siw.Handler.GetVaultByNameAPIKey(c, name)
 }
 
 // UpdateVaultByNameAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) UpdateVaultByNameAPIKey(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) UpdateVaultByNameAPIKey(c fiber.Ctx) error {
 
 	var err error
 
@@ -868,13 +868,13 @@ func (siw *ServerInterfaceWrapper) UpdateVaultByNameAPIKey(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter name: %w", err).Error())
 	}
 
-	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
+	fiber.StoreInContext(c, ApiKeyAuthScopes, []string{})
 
 	return siw.Handler.UpdateVaultByNameAPIKey(c, name)
 }
 
 // GetVaultByAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) GetVaultByAPIKey(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetVaultByAPIKey(c fiber.Ctx) error {
 
 	var err error
 
@@ -886,13 +886,13 @@ func (siw *ServerInterfaceWrapper) GetVaultByAPIKey(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter uniqueId: %w", err).Error())
 	}
 
-	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
+	fiber.StoreInContext(c, ApiKeyAuthScopes, []string{})
 
 	return siw.Handler.GetVaultByAPIKey(c, uniqueId)
 }
 
 // UpdateVaultByAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) UpdateVaultByAPIKey(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) UpdateVaultByAPIKey(c fiber.Ctx) error {
 
 	var err error
 
@@ -904,45 +904,45 @@ func (siw *ServerInterfaceWrapper) UpdateVaultByAPIKey(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter uniqueId: %w", err).Error())
 	}
 
-	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
+	fiber.StoreInContext(c, ApiKeyAuthScopes, []string{})
 
 	return siw.Handler.UpdateVaultByAPIKey(c, uniqueId)
 }
 
 // GetVaultsByAPIKey operation middleware
-func (siw *ServerInterfaceWrapper) GetVaultsByAPIKey(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetVaultsByAPIKey(c fiber.Ctx) error {
 
-	c.Context().SetUserValue(ApiKeyAuthScopes, []string{})
+	fiber.StoreInContext(c, ApiKeyAuthScopes, []string{})
 
 	return siw.Handler.GetVaultsByAPIKey(c)
 }
 
 // GetConfig operation middleware
-func (siw *ServerInterfaceWrapper) GetConfig(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetConfig(c fiber.Ctx) error {
 
 	return siw.Handler.GetConfig(c)
 }
 
 // Health operation middleware
-func (siw *ServerInterfaceWrapper) Health(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) Health(c fiber.Ctx) error {
 
 	return siw.Handler.Health(c)
 }
 
 // GetStatus operation middleware
-func (siw *ServerInterfaceWrapper) GetStatus(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetStatus(c fiber.Ctx) error {
 
 	return siw.Handler.GetStatus(c)
 }
 
 // GetCurrentUser operation middleware
-func (siw *ServerInterfaceWrapper) GetCurrentUser(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetCurrentUser(c fiber.Ctx) error {
 
 	return siw.Handler.GetCurrentUser(c)
 }
 
 // GetVaults operation middleware
-func (siw *ServerInterfaceWrapper) GetVaults(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetVaults(c fiber.Ctx) error {
 
 	var err error
 
@@ -973,19 +973,19 @@ func (siw *ServerInterfaceWrapper) GetVaults(c *fiber.Ctx) error {
 }
 
 // CreateVault operation middleware
-func (siw *ServerInterfaceWrapper) CreateVault(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) CreateVault(c fiber.Ctx) error {
 
 	return siw.Handler.CreateVault(c)
 }
 
 // GetVaultFilterOptions operation middleware
-func (siw *ServerInterfaceWrapper) GetVaultFilterOptions(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetVaultFilterOptions(c fiber.Ctx) error {
 
 	return siw.Handler.GetVaultFilterOptions(c)
 }
 
 // DeleteVault operation middleware
-func (siw *ServerInterfaceWrapper) DeleteVault(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) DeleteVault(c fiber.Ctx) error {
 
 	var err error
 
@@ -1001,7 +1001,7 @@ func (siw *ServerInterfaceWrapper) DeleteVault(c *fiber.Ctx) error {
 }
 
 // GetVault operation middleware
-func (siw *ServerInterfaceWrapper) GetVault(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) GetVault(c fiber.Ctx) error {
 
 	var err error
 
@@ -1017,7 +1017,7 @@ func (siw *ServerInterfaceWrapper) GetVault(c *fiber.Ctx) error {
 }
 
 // UpdateVault operation middleware
-func (siw *ServerInterfaceWrapper) UpdateVault(c *fiber.Ctx) error {
+func (siw *ServerInterfaceWrapper) UpdateVault(c fiber.Ctx) error {
 
 	var err error
 
@@ -1118,12 +1118,12 @@ type GetAPIKeysRequestObject struct {
 }
 
 type GetAPIKeysResponseObject interface {
-	VisitGetAPIKeysResponse(ctx *fiber.Ctx) error
+	VisitGetAPIKeysResponse(ctx fiber.Ctx) error
 }
 
 type GetAPIKeys200JSONResponse APIKeysResponse
 
-func (response GetAPIKeys200JSONResponse) VisitGetAPIKeysResponse(ctx *fiber.Ctx) error {
+func (response GetAPIKeys200JSONResponse) VisitGetAPIKeysResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1135,12 +1135,12 @@ type CreateAPIKeyRequestObject struct {
 }
 
 type CreateAPIKeyResponseObject interface {
-	VisitCreateAPIKeyResponse(ctx *fiber.Ctx) error
+	VisitCreateAPIKeyResponse(ctx fiber.Ctx) error
 }
 
 type CreateAPIKey201JSONResponse CreateAPIKeyResponse
 
-func (response CreateAPIKey201JSONResponse) VisitCreateAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response CreateAPIKey201JSONResponse) VisitCreateAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(201)
 
@@ -1152,13 +1152,13 @@ type DeleteAPIKeyRequestObject struct {
 }
 
 type DeleteAPIKeyResponseObject interface {
-	VisitDeleteAPIKeyResponse(ctx *fiber.Ctx) error
+	VisitDeleteAPIKeyResponse(ctx fiber.Ctx) error
 }
 
 type DeleteAPIKey204Response struct {
 }
 
-func (response DeleteAPIKey204Response) VisitDeleteAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response DeleteAPIKey204Response) VisitDeleteAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Status(204)
 	return nil
 }
@@ -1169,12 +1169,12 @@ type UpdateAPIKeyRequestObject struct {
 }
 
 type UpdateAPIKeyResponseObject interface {
-	VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error
+	VisitUpdateAPIKeyResponse(ctx fiber.Ctx) error
 }
 
 type UpdateAPIKey200JSONResponse VaultAPIKey
 
-func (response UpdateAPIKey200JSONResponse) VisitUpdateAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response UpdateAPIKey200JSONResponse) VisitUpdateAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1186,12 +1186,12 @@ type GetAuditLogsRequestObject struct {
 }
 
 type GetAuditLogsResponseObject interface {
-	VisitGetAuditLogsResponse(ctx *fiber.Ctx) error
+	VisitGetAuditLogsResponse(ctx fiber.Ctx) error
 }
 
 type GetAuditLogs200JSONResponse AuditLogsResponse
 
-func (response GetAuditLogs200JSONResponse) VisitGetAuditLogsResponse(ctx *fiber.Ctx) error {
+func (response GetAuditLogs200JSONResponse) VisitGetAuditLogsResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1202,12 +1202,12 @@ type GetAuditMetricsRequestObject struct {
 }
 
 type GetAuditMetricsResponseObject interface {
-	VisitGetAuditMetricsResponse(ctx *fiber.Ctx) error
+	VisitGetAuditMetricsResponse(ctx fiber.Ctx) error
 }
 
 type GetAuditMetrics200JSONResponse AuditMetricsResponse
 
-func (response GetAuditMetrics200JSONResponse) VisitGetAuditMetricsResponse(ctx *fiber.Ctx) error {
+func (response GetAuditMetrics200JSONResponse) VisitGetAuditMetricsResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1219,12 +1219,12 @@ type LoginRequestObject struct {
 }
 
 type LoginResponseObject interface {
-	VisitLoginResponse(ctx *fiber.Ctx) error
+	VisitLoginResponse(ctx fiber.Ctx) error
 }
 
 type Login200JSONResponse LoginResponse
 
-func (response Login200JSONResponse) VisitLoginResponse(ctx *fiber.Ctx) error {
+func (response Login200JSONResponse) VisitLoginResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1235,13 +1235,13 @@ type LogoutRequestObject struct {
 }
 
 type LogoutResponseObject interface {
-	VisitLogoutResponse(ctx *fiber.Ctx) error
+	VisitLogoutResponse(ctx fiber.Ctx) error
 }
 
 type Logout200Response struct {
 }
 
-func (response Logout200Response) VisitLogoutResponse(ctx *fiber.Ctx) error {
+func (response Logout200Response) VisitLogoutResponse(ctx fiber.Ctx) error {
 	ctx.Status(200)
 	return nil
 }
@@ -1251,12 +1251,12 @@ type RequestMagicLinkRequestObject struct {
 }
 
 type RequestMagicLinkResponseObject interface {
-	VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error
+	VisitRequestMagicLinkResponse(ctx fiber.Ctx) error
 }
 
 type RequestMagicLink200JSONResponse EmailTokenResponse
 
-func (response RequestMagicLink200JSONResponse) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
+func (response RequestMagicLink200JSONResponse) VisitRequestMagicLinkResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1272,7 +1272,7 @@ type RequestMagicLink429JSONResponse struct {
 	Headers RequestMagicLink429ResponseHeaders
 }
 
-func (response RequestMagicLink429JSONResponse) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
+func (response RequestMagicLink429JSONResponse) VisitRequestMagicLinkResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(429)
@@ -1282,7 +1282,7 @@ func (response RequestMagicLink429JSONResponse) VisitRequestMagicLinkResponse(ct
 
 type RequestMagicLink500JSONResponse EmailTokenResponse
 
-func (response RequestMagicLink500JSONResponse) VisitRequestMagicLinkResponse(ctx *fiber.Ctx) error {
+func (response RequestMagicLink500JSONResponse) VisitRequestMagicLinkResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(500)
 
@@ -1294,13 +1294,13 @@ type ConsumeMagicLinkRequestObject struct {
 }
 
 type ConsumeMagicLinkResponseObject interface {
-	VisitConsumeMagicLinkResponse(ctx *fiber.Ctx) error
+	VisitConsumeMagicLinkResponse(ctx fiber.Ctx) error
 }
 
 type ConsumeMagicLink302Response struct {
 }
 
-func (response ConsumeMagicLink302Response) VisitConsumeMagicLinkResponse(ctx *fiber.Ctx) error {
+func (response ConsumeMagicLink302Response) VisitConsumeMagicLinkResponse(ctx fiber.Ctx) error {
 	ctx.Status(302)
 	return nil
 }
@@ -1310,13 +1310,13 @@ type ChangePasswordRequestObject struct {
 }
 
 type ChangePasswordResponseObject interface {
-	VisitChangePasswordResponse(ctx *fiber.Ctx) error
+	VisitChangePasswordResponse(ctx fiber.Ctx) error
 }
 
 type ChangePassword200Response struct {
 }
 
-func (response ChangePassword200Response) VisitChangePasswordResponse(ctx *fiber.Ctx) error {
+func (response ChangePassword200Response) VisitChangePasswordResponse(ctx fiber.Ctx) error {
 	ctx.Status(200)
 	return nil
 }
@@ -1324,7 +1324,7 @@ func (response ChangePassword200Response) VisitChangePasswordResponse(ctx *fiber
 type ChangePassword400Response struct {
 }
 
-func (response ChangePassword400Response) VisitChangePasswordResponse(ctx *fiber.Ctx) error {
+func (response ChangePassword400Response) VisitChangePasswordResponse(ctx fiber.Ctx) error {
 	ctx.Status(400)
 	return nil
 }
@@ -1332,7 +1332,7 @@ func (response ChangePassword400Response) VisitChangePasswordResponse(ctx *fiber
 type ChangePassword401Response struct {
 }
 
-func (response ChangePassword401Response) VisitChangePasswordResponse(ctx *fiber.Ctx) error {
+func (response ChangePassword401Response) VisitChangePasswordResponse(ctx fiber.Ctx) error {
 	ctx.Status(401)
 	return nil
 }
@@ -1342,13 +1342,13 @@ type ConfirmPasswordResetRequestObject struct {
 }
 
 type ConfirmPasswordResetResponseObject interface {
-	VisitConfirmPasswordResetResponse(ctx *fiber.Ctx) error
+	VisitConfirmPasswordResetResponse(ctx fiber.Ctx) error
 }
 
 type ConfirmPasswordReset200Response struct {
 }
 
-func (response ConfirmPasswordReset200Response) VisitConfirmPasswordResetResponse(ctx *fiber.Ctx) error {
+func (response ConfirmPasswordReset200Response) VisitConfirmPasswordResetResponse(ctx fiber.Ctx) error {
 	ctx.Status(200)
 	return nil
 }
@@ -1358,12 +1358,12 @@ type RequestPasswordResetRequestObject struct {
 }
 
 type RequestPasswordResetResponseObject interface {
-	VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error
+	VisitRequestPasswordResetResponse(ctx fiber.Ctx) error
 }
 
 type RequestPasswordReset200JSONResponse EmailTokenResponse
 
-func (response RequestPasswordReset200JSONResponse) VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error {
+func (response RequestPasswordReset200JSONResponse) VisitRequestPasswordResetResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1379,7 +1379,7 @@ type RequestPasswordReset429JSONResponse struct {
 	Headers RequestPasswordReset429ResponseHeaders
 }
 
-func (response RequestPasswordReset429JSONResponse) VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error {
+func (response RequestPasswordReset429JSONResponse) VisitRequestPasswordResetResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(429)
@@ -1389,7 +1389,7 @@ func (response RequestPasswordReset429JSONResponse) VisitRequestPasswordResetRes
 
 type RequestPasswordReset500JSONResponse EmailTokenResponse
 
-func (response RequestPasswordReset500JSONResponse) VisitRequestPasswordResetResponse(ctx *fiber.Ctx) error {
+func (response RequestPasswordReset500JSONResponse) VisitRequestPasswordResetResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(500)
 
@@ -1401,12 +1401,12 @@ type SignupRequestObject struct {
 }
 
 type SignupResponseObject interface {
-	VisitSignupResponse(ctx *fiber.Ctx) error
+	VisitSignupResponse(ctx fiber.Ctx) error
 }
 
 type Signup200JSONResponse SignupResponse
 
-func (response Signup200JSONResponse) VisitSignupResponse(ctx *fiber.Ctx) error {
+func (response Signup200JSONResponse) VisitSignupResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1418,12 +1418,12 @@ type GetVaultByNameAPIKeyRequestObject struct {
 }
 
 type GetVaultByNameAPIKeyResponseObject interface {
-	VisitGetVaultByNameAPIKeyResponse(ctx *fiber.Ctx) error
+	VisitGetVaultByNameAPIKeyResponse(ctx fiber.Ctx) error
 }
 
 type GetVaultByNameAPIKey200JSONResponse Vault
 
-func (response GetVaultByNameAPIKey200JSONResponse) VisitGetVaultByNameAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response GetVaultByNameAPIKey200JSONResponse) VisitGetVaultByNameAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1436,12 +1436,12 @@ type UpdateVaultByNameAPIKeyRequestObject struct {
 }
 
 type UpdateVaultByNameAPIKeyResponseObject interface {
-	VisitUpdateVaultByNameAPIKeyResponse(ctx *fiber.Ctx) error
+	VisitUpdateVaultByNameAPIKeyResponse(ctx fiber.Ctx) error
 }
 
 type UpdateVaultByNameAPIKey200JSONResponse Vault
 
-func (response UpdateVaultByNameAPIKey200JSONResponse) VisitUpdateVaultByNameAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response UpdateVaultByNameAPIKey200JSONResponse) VisitUpdateVaultByNameAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1451,7 +1451,7 @@ func (response UpdateVaultByNameAPIKey200JSONResponse) VisitUpdateVaultByNameAPI
 type UpdateVaultByNameAPIKey400Response struct {
 }
 
-func (response UpdateVaultByNameAPIKey400Response) VisitUpdateVaultByNameAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response UpdateVaultByNameAPIKey400Response) VisitUpdateVaultByNameAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Status(400)
 	return nil
 }
@@ -1459,7 +1459,7 @@ func (response UpdateVaultByNameAPIKey400Response) VisitUpdateVaultByNameAPIKeyR
 type UpdateVaultByNameAPIKey403Response struct {
 }
 
-func (response UpdateVaultByNameAPIKey403Response) VisitUpdateVaultByNameAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response UpdateVaultByNameAPIKey403Response) VisitUpdateVaultByNameAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Status(403)
 	return nil
 }
@@ -1467,7 +1467,7 @@ func (response UpdateVaultByNameAPIKey403Response) VisitUpdateVaultByNameAPIKeyR
 type UpdateVaultByNameAPIKey404Response struct {
 }
 
-func (response UpdateVaultByNameAPIKey404Response) VisitUpdateVaultByNameAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response UpdateVaultByNameAPIKey404Response) VisitUpdateVaultByNameAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Status(404)
 	return nil
 }
@@ -1477,12 +1477,12 @@ type GetVaultByAPIKeyRequestObject struct {
 }
 
 type GetVaultByAPIKeyResponseObject interface {
-	VisitGetVaultByAPIKeyResponse(ctx *fiber.Ctx) error
+	VisitGetVaultByAPIKeyResponse(ctx fiber.Ctx) error
 }
 
 type GetVaultByAPIKey200JSONResponse Vault
 
-func (response GetVaultByAPIKey200JSONResponse) VisitGetVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response GetVaultByAPIKey200JSONResponse) VisitGetVaultByAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1495,12 +1495,12 @@ type UpdateVaultByAPIKeyRequestObject struct {
 }
 
 type UpdateVaultByAPIKeyResponseObject interface {
-	VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error
+	VisitUpdateVaultByAPIKeyResponse(ctx fiber.Ctx) error
 }
 
 type UpdateVaultByAPIKey200JSONResponse Vault
 
-func (response UpdateVaultByAPIKey200JSONResponse) VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response UpdateVaultByAPIKey200JSONResponse) VisitUpdateVaultByAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1510,7 +1510,7 @@ func (response UpdateVaultByAPIKey200JSONResponse) VisitUpdateVaultByAPIKeyRespo
 type UpdateVaultByAPIKey400Response struct {
 }
 
-func (response UpdateVaultByAPIKey400Response) VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response UpdateVaultByAPIKey400Response) VisitUpdateVaultByAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Status(400)
 	return nil
 }
@@ -1518,7 +1518,7 @@ func (response UpdateVaultByAPIKey400Response) VisitUpdateVaultByAPIKeyResponse(
 type UpdateVaultByAPIKey403Response struct {
 }
 
-func (response UpdateVaultByAPIKey403Response) VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response UpdateVaultByAPIKey403Response) VisitUpdateVaultByAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Status(403)
 	return nil
 }
@@ -1526,7 +1526,7 @@ func (response UpdateVaultByAPIKey403Response) VisitUpdateVaultByAPIKeyResponse(
 type UpdateVaultByAPIKey404Response struct {
 }
 
-func (response UpdateVaultByAPIKey404Response) VisitUpdateVaultByAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response UpdateVaultByAPIKey404Response) VisitUpdateVaultByAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Status(404)
 	return nil
 }
@@ -1535,12 +1535,12 @@ type GetVaultsByAPIKeyRequestObject struct {
 }
 
 type GetVaultsByAPIKeyResponseObject interface {
-	VisitGetVaultsByAPIKeyResponse(ctx *fiber.Ctx) error
+	VisitGetVaultsByAPIKeyResponse(ctx fiber.Ctx) error
 }
 
 type GetVaultsByAPIKey200JSONResponse []VaultLite
 
-func (response GetVaultsByAPIKey200JSONResponse) VisitGetVaultsByAPIKeyResponse(ctx *fiber.Ctx) error {
+func (response GetVaultsByAPIKey200JSONResponse) VisitGetVaultsByAPIKeyResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1551,12 +1551,12 @@ type GetConfigRequestObject struct {
 }
 
 type GetConfigResponseObject interface {
-	VisitGetConfigResponse(ctx *fiber.Ctx) error
+	VisitGetConfigResponse(ctx fiber.Ctx) error
 }
 
 type GetConfig200JSONResponse ConfigResponse
 
-func (response GetConfig200JSONResponse) VisitGetConfigResponse(ctx *fiber.Ctx) error {
+func (response GetConfig200JSONResponse) VisitGetConfigResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1567,12 +1567,12 @@ type HealthRequestObject struct {
 }
 
 type HealthResponseObject interface {
-	VisitHealthResponse(ctx *fiber.Ctx) error
+	VisitHealthResponse(ctx fiber.Ctx) error
 }
 
 type Health200JSONResponse HealthCheckResponse
 
-func (response Health200JSONResponse) VisitHealthResponse(ctx *fiber.Ctx) error {
+func (response Health200JSONResponse) VisitHealthResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1583,12 +1583,12 @@ type GetStatusRequestObject struct {
 }
 
 type GetStatusResponseObject interface {
-	VisitGetStatusResponse(ctx *fiber.Ctx) error
+	VisitGetStatusResponse(ctx fiber.Ctx) error
 }
 
 type GetStatus200JSONResponse StatusResponse
 
-func (response GetStatus200JSONResponse) VisitGetStatusResponse(ctx *fiber.Ctx) error {
+func (response GetStatus200JSONResponse) VisitGetStatusResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1599,12 +1599,12 @@ type GetCurrentUserRequestObject struct {
 }
 
 type GetCurrentUserResponseObject interface {
-	VisitGetCurrentUserResponse(ctx *fiber.Ctx) error
+	VisitGetCurrentUserResponse(ctx fiber.Ctx) error
 }
 
 type GetCurrentUser200JSONResponse GetUserResponse
 
-func (response GetCurrentUser200JSONResponse) VisitGetCurrentUserResponse(ctx *fiber.Ctx) error {
+func (response GetCurrentUser200JSONResponse) VisitGetCurrentUserResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1616,12 +1616,12 @@ type GetVaultsRequestObject struct {
 }
 
 type GetVaultsResponseObject interface {
-	VisitGetVaultsResponse(ctx *fiber.Ctx) error
+	VisitGetVaultsResponse(ctx fiber.Ctx) error
 }
 
 type GetVaults200JSONResponse VaultsResponse
 
-func (response GetVaults200JSONResponse) VisitGetVaultsResponse(ctx *fiber.Ctx) error {
+func (response GetVaults200JSONResponse) VisitGetVaultsResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1633,12 +1633,12 @@ type CreateVaultRequestObject struct {
 }
 
 type CreateVaultResponseObject interface {
-	VisitCreateVaultResponse(ctx *fiber.Ctx) error
+	VisitCreateVaultResponse(ctx fiber.Ctx) error
 }
 
 type CreateVault201JSONResponse Vault
 
-func (response CreateVault201JSONResponse) VisitCreateVaultResponse(ctx *fiber.Ctx) error {
+func (response CreateVault201JSONResponse) VisitCreateVaultResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(201)
 
@@ -1649,12 +1649,12 @@ type GetVaultFilterOptionsRequestObject struct {
 }
 
 type GetVaultFilterOptionsResponseObject interface {
-	VisitGetVaultFilterOptionsResponse(ctx *fiber.Ctx) error
+	VisitGetVaultFilterOptionsResponse(ctx fiber.Ctx) error
 }
 
 type GetVaultFilterOptions200JSONResponse VaultFilterOptionsResponse
 
-func (response GetVaultFilterOptions200JSONResponse) VisitGetVaultFilterOptionsResponse(ctx *fiber.Ctx) error {
+func (response GetVaultFilterOptions200JSONResponse) VisitGetVaultFilterOptionsResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1666,13 +1666,13 @@ type DeleteVaultRequestObject struct {
 }
 
 type DeleteVaultResponseObject interface {
-	VisitDeleteVaultResponse(ctx *fiber.Ctx) error
+	VisitDeleteVaultResponse(ctx fiber.Ctx) error
 }
 
 type DeleteVault204Response struct {
 }
 
-func (response DeleteVault204Response) VisitDeleteVaultResponse(ctx *fiber.Ctx) error {
+func (response DeleteVault204Response) VisitDeleteVaultResponse(ctx fiber.Ctx) error {
 	ctx.Status(204)
 	return nil
 }
@@ -1682,12 +1682,12 @@ type GetVaultRequestObject struct {
 }
 
 type GetVaultResponseObject interface {
-	VisitGetVaultResponse(ctx *fiber.Ctx) error
+	VisitGetVaultResponse(ctx fiber.Ctx) error
 }
 
 type GetVault200JSONResponse Vault
 
-func (response GetVault200JSONResponse) VisitGetVaultResponse(ctx *fiber.Ctx) error {
+func (response GetVault200JSONResponse) VisitGetVaultResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1700,12 +1700,12 @@ type UpdateVaultRequestObject struct {
 }
 
 type UpdateVaultResponseObject interface {
-	VisitUpdateVaultResponse(ctx *fiber.Ctx) error
+	VisitUpdateVaultResponse(ctx fiber.Ctx) error
 }
 
 type UpdateVault200JSONResponse Vault
 
-func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx *fiber.Ctx) error {
+func (response UpdateVault200JSONResponse) VisitUpdateVaultResponse(ctx fiber.Ctx) error {
 	ctx.Response().Header.Set("Content-Type", "application/json")
 	ctx.Status(200)
 
@@ -1803,7 +1803,7 @@ type StrictServerInterface interface {
 	UpdateVault(ctx context.Context, request UpdateVaultRequestObject) (UpdateVaultResponseObject, error)
 }
 
-type StrictHandlerFunc func(ctx *fiber.Ctx, args interface{}) (interface{}, error)
+type StrictHandlerFunc func(ctx fiber.Ctx, args interface{}) (interface{}, error)
 
 type StrictMiddlewareFunc func(f StrictHandlerFunc, operationID string) StrictHandlerFunc
 
@@ -1817,13 +1817,13 @@ type strictHandler struct {
 }
 
 // GetAPIKeys operation middleware
-func (sh *strictHandler) GetAPIKeys(ctx *fiber.Ctx, params GetAPIKeysParams) error {
+func (sh *strictHandler) GetAPIKeys(ctx fiber.Ctx, params GetAPIKeysParams) error {
 	var request GetAPIKeysRequestObject
 
 	request.Params = params
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetAPIKeys(ctx.UserContext(), request.(GetAPIKeysRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAPIKeys(ctx.Context(), request.(GetAPIKeysRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetAPIKeys")
@@ -1844,17 +1844,17 @@ func (sh *strictHandler) GetAPIKeys(ctx *fiber.Ctx, params GetAPIKeysParams) err
 }
 
 // CreateAPIKey operation middleware
-func (sh *strictHandler) CreateAPIKey(ctx *fiber.Ctx) error {
+func (sh *strictHandler) CreateAPIKey(ctx fiber.Ctx) error {
 	var request CreateAPIKeyRequestObject
 
 	var body CreateAPIKeyJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.CreateAPIKey(ctx.UserContext(), request.(CreateAPIKeyRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateAPIKey(ctx.Context(), request.(CreateAPIKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "CreateAPIKey")
@@ -1875,13 +1875,13 @@ func (sh *strictHandler) CreateAPIKey(ctx *fiber.Ctx) error {
 }
 
 // DeleteAPIKey operation middleware
-func (sh *strictHandler) DeleteAPIKey(ctx *fiber.Ctx, id int64) error {
+func (sh *strictHandler) DeleteAPIKey(ctx fiber.Ctx, id int64) error {
 	var request DeleteAPIKeyRequestObject
 
 	request.Id = id
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.DeleteAPIKey(ctx.UserContext(), request.(DeleteAPIKeyRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteAPIKey(ctx.Context(), request.(DeleteAPIKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "DeleteAPIKey")
@@ -1902,19 +1902,19 @@ func (sh *strictHandler) DeleteAPIKey(ctx *fiber.Ctx, id int64) error {
 }
 
 // UpdateAPIKey operation middleware
-func (sh *strictHandler) UpdateAPIKey(ctx *fiber.Ctx, id int64) error {
+func (sh *strictHandler) UpdateAPIKey(ctx fiber.Ctx, id int64) error {
 	var request UpdateAPIKeyRequestObject
 
 	request.Id = id
 
 	var body UpdateAPIKeyJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.UpdateAPIKey(ctx.UserContext(), request.(UpdateAPIKeyRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateAPIKey(ctx.Context(), request.(UpdateAPIKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "UpdateAPIKey")
@@ -1935,13 +1935,13 @@ func (sh *strictHandler) UpdateAPIKey(ctx *fiber.Ctx, id int64) error {
 }
 
 // GetAuditLogs operation middleware
-func (sh *strictHandler) GetAuditLogs(ctx *fiber.Ctx, params GetAuditLogsParams) error {
+func (sh *strictHandler) GetAuditLogs(ctx fiber.Ctx, params GetAuditLogsParams) error {
 	var request GetAuditLogsRequestObject
 
 	request.Params = params
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetAuditLogs(ctx.UserContext(), request.(GetAuditLogsRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAuditLogs(ctx.Context(), request.(GetAuditLogsRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetAuditLogs")
@@ -1962,11 +1962,11 @@ func (sh *strictHandler) GetAuditLogs(ctx *fiber.Ctx, params GetAuditLogsParams)
 }
 
 // GetAuditMetrics operation middleware
-func (sh *strictHandler) GetAuditMetrics(ctx *fiber.Ctx) error {
+func (sh *strictHandler) GetAuditMetrics(ctx fiber.Ctx) error {
 	var request GetAuditMetricsRequestObject
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetAuditMetrics(ctx.UserContext(), request.(GetAuditMetricsRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAuditMetrics(ctx.Context(), request.(GetAuditMetricsRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetAuditMetrics")
@@ -1987,17 +1987,17 @@ func (sh *strictHandler) GetAuditMetrics(ctx *fiber.Ctx) error {
 }
 
 // Login operation middleware
-func (sh *strictHandler) Login(ctx *fiber.Ctx) error {
+func (sh *strictHandler) Login(ctx fiber.Ctx) error {
 	var request LoginRequestObject
 
 	var body LoginJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.Login(ctx.UserContext(), request.(LoginRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.Login(ctx.Context(), request.(LoginRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "Login")
@@ -2018,11 +2018,11 @@ func (sh *strictHandler) Login(ctx *fiber.Ctx) error {
 }
 
 // Logout operation middleware
-func (sh *strictHandler) Logout(ctx *fiber.Ctx) error {
+func (sh *strictHandler) Logout(ctx fiber.Ctx) error {
 	var request LogoutRequestObject
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.Logout(ctx.UserContext(), request.(LogoutRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.Logout(ctx.Context(), request.(LogoutRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "Logout")
@@ -2043,17 +2043,17 @@ func (sh *strictHandler) Logout(ctx *fiber.Ctx) error {
 }
 
 // RequestMagicLink operation middleware
-func (sh *strictHandler) RequestMagicLink(ctx *fiber.Ctx) error {
+func (sh *strictHandler) RequestMagicLink(ctx fiber.Ctx) error {
 	var request RequestMagicLinkRequestObject
 
 	var body RequestMagicLinkJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.RequestMagicLink(ctx.UserContext(), request.(RequestMagicLinkRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.RequestMagicLink(ctx.Context(), request.(RequestMagicLinkRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "RequestMagicLink")
@@ -2074,13 +2074,13 @@ func (sh *strictHandler) RequestMagicLink(ctx *fiber.Ctx) error {
 }
 
 // ConsumeMagicLink operation middleware
-func (sh *strictHandler) ConsumeMagicLink(ctx *fiber.Ctx, params ConsumeMagicLinkParams) error {
+func (sh *strictHandler) ConsumeMagicLink(ctx fiber.Ctx, params ConsumeMagicLinkParams) error {
 	var request ConsumeMagicLinkRequestObject
 
 	request.Params = params
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.ConsumeMagicLink(ctx.UserContext(), request.(ConsumeMagicLinkRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.ConsumeMagicLink(ctx.Context(), request.(ConsumeMagicLinkRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "ConsumeMagicLink")
@@ -2101,17 +2101,17 @@ func (sh *strictHandler) ConsumeMagicLink(ctx *fiber.Ctx, params ConsumeMagicLin
 }
 
 // ChangePassword operation middleware
-func (sh *strictHandler) ChangePassword(ctx *fiber.Ctx) error {
+func (sh *strictHandler) ChangePassword(ctx fiber.Ctx) error {
 	var request ChangePasswordRequestObject
 
 	var body ChangePasswordJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.ChangePassword(ctx.UserContext(), request.(ChangePasswordRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.ChangePassword(ctx.Context(), request.(ChangePasswordRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "ChangePassword")
@@ -2132,17 +2132,17 @@ func (sh *strictHandler) ChangePassword(ctx *fiber.Ctx) error {
 }
 
 // ConfirmPasswordReset operation middleware
-func (sh *strictHandler) ConfirmPasswordReset(ctx *fiber.Ctx) error {
+func (sh *strictHandler) ConfirmPasswordReset(ctx fiber.Ctx) error {
 	var request ConfirmPasswordResetRequestObject
 
 	var body ConfirmPasswordResetJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.ConfirmPasswordReset(ctx.UserContext(), request.(ConfirmPasswordResetRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.ConfirmPasswordReset(ctx.Context(), request.(ConfirmPasswordResetRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "ConfirmPasswordReset")
@@ -2163,17 +2163,17 @@ func (sh *strictHandler) ConfirmPasswordReset(ctx *fiber.Ctx) error {
 }
 
 // RequestPasswordReset operation middleware
-func (sh *strictHandler) RequestPasswordReset(ctx *fiber.Ctx) error {
+func (sh *strictHandler) RequestPasswordReset(ctx fiber.Ctx) error {
 	var request RequestPasswordResetRequestObject
 
 	var body RequestPasswordResetJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.RequestPasswordReset(ctx.UserContext(), request.(RequestPasswordResetRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.RequestPasswordReset(ctx.Context(), request.(RequestPasswordResetRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "RequestPasswordReset")
@@ -2194,17 +2194,17 @@ func (sh *strictHandler) RequestPasswordReset(ctx *fiber.Ctx) error {
 }
 
 // Signup operation middleware
-func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
+func (sh *strictHandler) Signup(ctx fiber.Ctx) error {
 	var request SignupRequestObject
 
 	var body SignupJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.Signup(ctx.UserContext(), request.(SignupRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.Signup(ctx.Context(), request.(SignupRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "Signup")
@@ -2225,13 +2225,13 @@ func (sh *strictHandler) Signup(ctx *fiber.Ctx) error {
 }
 
 // GetVaultByNameAPIKey operation middleware
-func (sh *strictHandler) GetVaultByNameAPIKey(ctx *fiber.Ctx, name string) error {
+func (sh *strictHandler) GetVaultByNameAPIKey(ctx fiber.Ctx, name string) error {
 	var request GetVaultByNameAPIKeyRequestObject
 
 	request.Name = name
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetVaultByNameAPIKey(ctx.UserContext(), request.(GetVaultByNameAPIKeyRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaultByNameAPIKey(ctx.Context(), request.(GetVaultByNameAPIKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetVaultByNameAPIKey")
@@ -2252,19 +2252,19 @@ func (sh *strictHandler) GetVaultByNameAPIKey(ctx *fiber.Ctx, name string) error
 }
 
 // UpdateVaultByNameAPIKey operation middleware
-func (sh *strictHandler) UpdateVaultByNameAPIKey(ctx *fiber.Ctx, name string) error {
+func (sh *strictHandler) UpdateVaultByNameAPIKey(ctx fiber.Ctx, name string) error {
 	var request UpdateVaultByNameAPIKeyRequestObject
 
 	request.Name = name
 
 	var body UpdateVaultByNameAPIKeyJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.UpdateVaultByNameAPIKey(ctx.UserContext(), request.(UpdateVaultByNameAPIKeyRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateVaultByNameAPIKey(ctx.Context(), request.(UpdateVaultByNameAPIKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "UpdateVaultByNameAPIKey")
@@ -2285,13 +2285,13 @@ func (sh *strictHandler) UpdateVaultByNameAPIKey(ctx *fiber.Ctx, name string) er
 }
 
 // GetVaultByAPIKey operation middleware
-func (sh *strictHandler) GetVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) error {
+func (sh *strictHandler) GetVaultByAPIKey(ctx fiber.Ctx, uniqueId string) error {
 	var request GetVaultByAPIKeyRequestObject
 
 	request.UniqueId = uniqueId
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetVaultByAPIKey(ctx.UserContext(), request.(GetVaultByAPIKeyRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaultByAPIKey(ctx.Context(), request.(GetVaultByAPIKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetVaultByAPIKey")
@@ -2312,19 +2312,19 @@ func (sh *strictHandler) GetVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) error
 }
 
 // UpdateVaultByAPIKey operation middleware
-func (sh *strictHandler) UpdateVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) error {
+func (sh *strictHandler) UpdateVaultByAPIKey(ctx fiber.Ctx, uniqueId string) error {
 	var request UpdateVaultByAPIKeyRequestObject
 
 	request.UniqueId = uniqueId
 
 	var body UpdateVaultByAPIKeyJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.UpdateVaultByAPIKey(ctx.UserContext(), request.(UpdateVaultByAPIKeyRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateVaultByAPIKey(ctx.Context(), request.(UpdateVaultByAPIKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "UpdateVaultByAPIKey")
@@ -2345,11 +2345,11 @@ func (sh *strictHandler) UpdateVaultByAPIKey(ctx *fiber.Ctx, uniqueId string) er
 }
 
 // GetVaultsByAPIKey operation middleware
-func (sh *strictHandler) GetVaultsByAPIKey(ctx *fiber.Ctx) error {
+func (sh *strictHandler) GetVaultsByAPIKey(ctx fiber.Ctx) error {
 	var request GetVaultsByAPIKeyRequestObject
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetVaultsByAPIKey(ctx.UserContext(), request.(GetVaultsByAPIKeyRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaultsByAPIKey(ctx.Context(), request.(GetVaultsByAPIKeyRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetVaultsByAPIKey")
@@ -2370,11 +2370,11 @@ func (sh *strictHandler) GetVaultsByAPIKey(ctx *fiber.Ctx) error {
 }
 
 // GetConfig operation middleware
-func (sh *strictHandler) GetConfig(ctx *fiber.Ctx) error {
+func (sh *strictHandler) GetConfig(ctx fiber.Ctx) error {
 	var request GetConfigRequestObject
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetConfig(ctx.UserContext(), request.(GetConfigRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetConfig(ctx.Context(), request.(GetConfigRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetConfig")
@@ -2395,11 +2395,11 @@ func (sh *strictHandler) GetConfig(ctx *fiber.Ctx) error {
 }
 
 // Health operation middleware
-func (sh *strictHandler) Health(ctx *fiber.Ctx) error {
+func (sh *strictHandler) Health(ctx fiber.Ctx) error {
 	var request HealthRequestObject
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.Health(ctx.UserContext(), request.(HealthRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.Health(ctx.Context(), request.(HealthRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "Health")
@@ -2420,11 +2420,11 @@ func (sh *strictHandler) Health(ctx *fiber.Ctx) error {
 }
 
 // GetStatus operation middleware
-func (sh *strictHandler) GetStatus(ctx *fiber.Ctx) error {
+func (sh *strictHandler) GetStatus(ctx fiber.Ctx) error {
 	var request GetStatusRequestObject
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetStatus(ctx.UserContext(), request.(GetStatusRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetStatus(ctx.Context(), request.(GetStatusRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetStatus")
@@ -2445,11 +2445,11 @@ func (sh *strictHandler) GetStatus(ctx *fiber.Ctx) error {
 }
 
 // GetCurrentUser operation middleware
-func (sh *strictHandler) GetCurrentUser(ctx *fiber.Ctx) error {
+func (sh *strictHandler) GetCurrentUser(ctx fiber.Ctx) error {
 	var request GetCurrentUserRequestObject
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetCurrentUser(ctx.UserContext(), request.(GetCurrentUserRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCurrentUser(ctx.Context(), request.(GetCurrentUserRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetCurrentUser")
@@ -2470,13 +2470,13 @@ func (sh *strictHandler) GetCurrentUser(ctx *fiber.Ctx) error {
 }
 
 // GetVaults operation middleware
-func (sh *strictHandler) GetVaults(ctx *fiber.Ctx, params GetVaultsParams) error {
+func (sh *strictHandler) GetVaults(ctx fiber.Ctx, params GetVaultsParams) error {
 	var request GetVaultsRequestObject
 
 	request.Params = params
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetVaults(ctx.UserContext(), request.(GetVaultsRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaults(ctx.Context(), request.(GetVaultsRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetVaults")
@@ -2497,17 +2497,17 @@ func (sh *strictHandler) GetVaults(ctx *fiber.Ctx, params GetVaultsParams) error
 }
 
 // CreateVault operation middleware
-func (sh *strictHandler) CreateVault(ctx *fiber.Ctx) error {
+func (sh *strictHandler) CreateVault(ctx fiber.Ctx) error {
 	var request CreateVaultRequestObject
 
 	var body CreateVaultJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.CreateVault(ctx.UserContext(), request.(CreateVaultRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.CreateVault(ctx.Context(), request.(CreateVaultRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "CreateVault")
@@ -2528,11 +2528,11 @@ func (sh *strictHandler) CreateVault(ctx *fiber.Ctx) error {
 }
 
 // GetVaultFilterOptions operation middleware
-func (sh *strictHandler) GetVaultFilterOptions(ctx *fiber.Ctx) error {
+func (sh *strictHandler) GetVaultFilterOptions(ctx fiber.Ctx) error {
 	var request GetVaultFilterOptionsRequestObject
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetVaultFilterOptions(ctx.UserContext(), request.(GetVaultFilterOptionsRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVaultFilterOptions(ctx.Context(), request.(GetVaultFilterOptionsRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetVaultFilterOptions")
@@ -2553,13 +2553,13 @@ func (sh *strictHandler) GetVaultFilterOptions(ctx *fiber.Ctx) error {
 }
 
 // DeleteVault operation middleware
-func (sh *strictHandler) DeleteVault(ctx *fiber.Ctx, uniqueId string) error {
+func (sh *strictHandler) DeleteVault(ctx fiber.Ctx, uniqueId string) error {
 	var request DeleteVaultRequestObject
 
 	request.UniqueId = uniqueId
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.DeleteVault(ctx.UserContext(), request.(DeleteVaultRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteVault(ctx.Context(), request.(DeleteVaultRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "DeleteVault")
@@ -2580,13 +2580,13 @@ func (sh *strictHandler) DeleteVault(ctx *fiber.Ctx, uniqueId string) error {
 }
 
 // GetVault operation middleware
-func (sh *strictHandler) GetVault(ctx *fiber.Ctx, uniqueId string) error {
+func (sh *strictHandler) GetVault(ctx fiber.Ctx, uniqueId string) error {
 	var request GetVaultRequestObject
 
 	request.UniqueId = uniqueId
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.GetVault(ctx.UserContext(), request.(GetVaultRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.GetVault(ctx.Context(), request.(GetVaultRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "GetVault")
@@ -2607,19 +2607,19 @@ func (sh *strictHandler) GetVault(ctx *fiber.Ctx, uniqueId string) error {
 }
 
 // UpdateVault operation middleware
-func (sh *strictHandler) UpdateVault(ctx *fiber.Ctx, uniqueId string) error {
+func (sh *strictHandler) UpdateVault(ctx fiber.Ctx, uniqueId string) error {
 	var request UpdateVaultRequestObject
 
 	request.UniqueId = uniqueId
 
 	var body UpdateVaultJSONRequestBody
-	if err := ctx.BodyParser(&body); err != nil {
+	if err := ctx.Bind().Body(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	request.Body = &body
 
-	handler := func(ctx *fiber.Ctx, request interface{}) (interface{}, error) {
-		return sh.ssi.UpdateVault(ctx.UserContext(), request.(UpdateVaultRequestObject))
+	handler := func(ctx fiber.Ctx, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateVault(ctx.Context(), request.(UpdateVaultRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
 		handler = middleware(handler, "UpdateVault")
