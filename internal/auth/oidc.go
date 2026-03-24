@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gofiber/fiber/v3"
@@ -16,10 +15,9 @@ import (
 )
 
 var (
-	provider     *oidc.Provider
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	sessionStore *session.Store
+	provider    *oidc.Provider
+	verifier    *oidc.IDTokenVerifier
+	oauthConfig *oauth2.Config
 )
 
 func init() {
@@ -35,11 +33,6 @@ func init() {
 }
 
 func SetupOIDC() error {
-	sessionStore = session.New(session.Config{
-		KeyLookup:  "cookie:auth_session",
-		Expiration: time.Hour * 1,
-	})
-
 	ctx := context.Background()
 	oidcProvider, err := oidc.NewProvider(ctx, config.OidcIssuer)
 	if err != nil {
@@ -56,12 +49,10 @@ func SetupOIDC() error {
 	return nil
 }
 
-func AuthCodeURL(ctx *fiber.Ctx, baseUrl string) (string, error) {
+func AuthCodeURL(ctx fiber.Ctx, baseUrl string) (string, error) {
 	state := generateState()
-	err := storeInSession(ctx, "oauth", state)
-	if err != nil {
-		return "", err
-	}
+	sess := session.FromContext(ctx)
+	sess.Set("oauth_state", state)
 	oauthConfig.RedirectURL = baseUrl + "/api/auth/callback/oidc"
 	return oauthConfig.AuthCodeURL(state), nil
 }
@@ -88,12 +79,10 @@ func verifyToken(ctx context.Context, token *oauth2.Token) (*oidc.IDToken, error
 	return verifier.Verify(ctx, rawIDToken)
 }
 
-func VerifyState(ctx *fiber.Ctx, state string) error {
-	storedState, err := getFromSession(ctx, "oauth")
-	if err != nil {
-		return err
-	}
-	if storedState != state {
+func VerifyState(ctx fiber.Ctx, state string) error {
+	sess := session.FromContext(ctx)
+	storedState, ok := sess.Get("oauth_state").(string)
+	if !ok || storedState != state {
 		return errors.New("cannot verify state")
 	}
 	return nil
@@ -106,25 +95,4 @@ func UserInfo(ctx context.Context, token *oauth2.Token) (*oidc.UserInfo, error) 
 
 func generateState() string {
 	return uuid.New().String()
-}
-
-func storeInSession(ctx *fiber.Ctx, key string, value string) error {
-	session, err := sessionStore.Get(ctx)
-	if err != nil {
-		return err
-	}
-	session.Set(key, value)
-	return session.Save()
-}
-
-func getFromSession(ctx *fiber.Ctx, key string) (string, error) {
-	session, err := sessionStore.Get(ctx)
-	if err != nil {
-		return "", err
-	}
-	value, ok := session.Get(key).(string)
-	if !ok {
-		return "", errors.New("session value for key " + key + " is not a string")
-	}
-	return value, nil
 }

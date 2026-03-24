@@ -14,7 +14,7 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
-func LoginOidc(c *fiber.Ctx) error {
+func LoginOidc(c fiber.Ctx) error {
 	baseUrl := c.BaseURL()
 	url, err := auth.AuthCodeURL(c, baseUrl)
 	if err != nil {
@@ -25,7 +25,7 @@ func LoginOidc(c *fiber.Ctx) error {
 	return c.Redirect(url)
 }
 
-func LoginOidcCallback(c *fiber.Ctx) error {
+func LoginOidcCallback(c fiber.Ctx) error {
 	code := c.Query("code")
 	state := c.Query("state")
 	slog.Debug("Login with OIDC callback", "uri", c.Request().URI(), "code", code, "state", state)
@@ -107,7 +107,7 @@ func LoginOidcCallback(c *fiber.Ctx) error {
 }
 
 // getClientInfo extracts IP address and User-Agent from the request
-func getClientInfo(c *fiber.Ctx) (string, string) {
+func getClientInfo(c fiber.Ctx) (string, string) {
 	// Get IP address (check for forwarded headers first)
 	ip := c.Get("X-Forwarded-For")
 	if ip == "" {

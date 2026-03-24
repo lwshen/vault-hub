@@ -9,7 +9,7 @@ type ErrorResponse struct {
 }
 
 // SendError sends a standardized error response
-func SendError(c *fiber.Ctx, code int, message string) error {
+func SendError(c fiber.Ctx, code int, message string) error {
 	return c.Status(code).JSON(fiber.Map{
 		"error": ErrorResponse{
 			Code:    code,

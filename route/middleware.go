@@ -11,7 +11,7 @@ import (
 	"github.com/lwshen/vault-hub/model"
 )
 
-func jwtMiddleware(c *fiber.Ctx) error {
+func jwtMiddleware(c fiber.Ctx) error {
 	path := c.Path()
 
 	// Public routes that don't need authentication
@@ -58,7 +58,7 @@ func isPublicRoute(path string) bool {
 }
 
 // jwtOnlyMiddleware ensures non-API-key routes only accept JWT authentication
-func jwtOnlyMiddleware(c *fiber.Ctx) error {
+func jwtOnlyMiddleware(c fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
 		return handler.SendError(c, fiber.StatusUnauthorized, "JWT token required")
@@ -80,7 +80,7 @@ func jwtOnlyMiddleware(c *fiber.Ctx) error {
 }
 
 // apiKeyOnlyMiddleware ensures API key routes only accept API key authentication
-func apiKeyOnlyMiddleware(c *fiber.Ctx) error {
+func apiKeyOnlyMiddleware(c fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
 		return handler.SendError(c, fiber.StatusUnauthorized, "API key required for this endpoint")
