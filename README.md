@@ -23,12 +23,87 @@ A comprehensive secure environment variable and API key management system with A
 ### ⌨️ Command-Line Interface
 
 - **Cross-platform binaries** (Linux, Windows, macOS)
-- **Simple commands**: `list`, `get` with name/ID support
+- **Simple commands**: `list`, `get`, `update` with name/ID support
 - **Environment file export** (.env file generation with 0600 permissions)
 - **Command execution** with injected environment variables
 - **Intelligent update detection** (timestamp and content comparison)
 - **Scheduled execution** with Docker cron support for automation
 - **Automated synchronization** for CI/CD and production environments
+
+#### 📦 Install CLI
+
+**Download pre-built binaries:**
+
+**Linux & macOS (auto-detect OS and architecture):**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lwshen/vault-hub/main/install.sh | bash
+```
+
+Or manually:
+
+```bash
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64) ARCH=amd64 ;;
+  aarch64|arm64) ARCH=arm64 ;;
+esac
+curl -L -o vault-hub-cli "https://github.com/lwshen/vault-hub/releases/latest/download/vault-hub-cli-${OS}-${ARCH}"
+chmod +x vault-hub-cli
+sudo mv vault-hub-cli /usr/local/bin/
+```
+
+**Windows (PowerShell):**
+
+```powershell
+Invoke-WebRequest -Uri "https://github.com/lwshen/vault-hub/releases/latest/download/vault-hub-cli-windows-amd64.exe" -OutFile "vault-hub-cli.exe"
+```
+
+**Install via Go:**
+
+```bash
+go install github.com/lwshen/vault-hub/apps/cli@latest
+```
+
+This installs the CLI as `vault-hub-cli` to your `$GOPATH/bin` or `$HOME/go/bin`.
+
+**Build from source:**
+
+```bash
+go build -o vault-hub-cli ./apps/cli/main.go
+```
+
+#### ⬆️ Update CLI
+
+**Check current version:**
+
+```bash
+vault-hub-cli version
+```
+
+**Update to latest version:**
+
+**If installed via `go install`:**
+
+```bash
+go install github.com/lwshen/vault-hub/apps/cli@latest
+```
+
+**If installed via binary download:**
+
+```bash
+# Download latest release (same as install)
+curl -L -o vault-hub-cli https://github.com/lwshen/vault-hub/releases/latest/download/vault-hub-cli-linux-amd64
+chmod +x vault-hub-cli
+sudo mv vault-hub-cli /usr/local/bin/
+```
+
+**Verify update:**
+
+```bash
+vault-hub-cli version
+```
 
 ### 🗄️ Database Support
 
