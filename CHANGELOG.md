@@ -1,3 +1,12 @@
+## [1.4.26] - 2026-03-24
+
+### 🚀 Features
+
+- *(cli)* Add update command for vault management (#419)
+
+### 🧪 Testing
+
+- *(e2e)* Add E2E tests for CLI update command (#420)
 ## [1.4.25] - 2026-03-22
 
 ### 🚀 Features
