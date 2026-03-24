@@ -73,11 +73,14 @@ jobs:
     needs: generate
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Set up Node for npm registry
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: '24'
           registry-url: https://registry.npmjs.org
       - name: Download artifact
         uses: actions/download-artifact@v8
@@ -87,6 +90,4 @@ jobs:
         run: |
           npm install
           npm run build
-          npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm publish --access public --provenance
