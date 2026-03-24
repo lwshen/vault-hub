@@ -90,4 +90,10 @@ jobs:
         run: |
           npm install
           npm run build
-          npm publish --access public --provenance
+          if [[ "${{ github.ref }}" =~ ^refs/tags/v ]]; then
+            # Version tag - publish as latest
+            npm publish --access public --provenance
+          else
+            # Main branch - publish as prerelease with 'next' tag
+            npm publish --access public --provenance --tag next
+          fi
