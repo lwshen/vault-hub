@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/gofiber/fiber/v2"
+import "github.com/gofiber/fiber/v3"
 
 // ErrorResponse represents a standardized error response
 type ErrorResponse struct {

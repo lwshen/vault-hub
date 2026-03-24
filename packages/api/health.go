@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func (Server) Health(ctx *fiber.Ctx) error {

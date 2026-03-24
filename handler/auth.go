@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/url"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/lwshen/vault-hub/internal/auth"
 	"github.com/lwshen/vault-hub/model"
 )
