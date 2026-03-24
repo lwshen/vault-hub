@@ -1,4 +1,10 @@
-## [1.4.26] - 2026-03-24
+## [1.4.28] - 2026-03-24
+
+### ⚙️ Miscellaneous Tasks
+
+- Use OIDC trusted publishing for npm (#428)
+- Publish prerelease on main, release on tags (#429)
+## [1.4.27] - 2026-03-24
 
 ### 🚀 Features
 
