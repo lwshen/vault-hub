@@ -1,0 +1,70 @@
+name: Test Install Script
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'install.sh'
+      - '.github/workflows/test-install-script.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'install.sh'
+      - '.github/workflows/test-install-script.yml'
+  workflow_dispatch:
+
+jobs:
+  test-install-unix:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test install script
+        run: |
+          echo "Testing install.sh on ${{ matrix.os }}"
+          bash install.sh
+
+      - name: Verify installation
+        run: |
+          if command -v vault-hub-cli &> /dev/null; then
+            echo "✅ vault-hub-cli installed successfully"
+            vault-hub-cli version
+          else
+            echo "❌ vault-hub-cli not found in PATH"
+            exit 1
+          fi
+
+      - name: Test uninstall (cleanup)
+        run: |
+          sudo rm -f /usr/local/bin/vault-hub-cli
+          echo "Cleanup complete"
+
+  test-install-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Windows binary
+        run: |
+          echo "Testing Windows binary download"
+          curl -L -o vault-hub-cli.exe "https://github.com/lwshen/vault-hub/releases/latest/download/vault-hub-cli-windows-amd64.exe"
+
+      - name: Verify binary
+        run: |
+          if (Test-Path "vault-hub-cli.exe") {
+            echo "✅ Binary downloaded successfully"
+            .\vault-hub-cli.exe version
+          } else {
+            echo "❌ Binary not found"
+            exit 1
+          }
+
+      - name: Test in PATH
+        run: |
+          # Add to PATH and test
+          $env:PATH += ";$(Get-Location)"
+          vault-hub-cli.exe version
+          echo "✅ Binary works in PATH"
