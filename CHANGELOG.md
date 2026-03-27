@@ -1,3 +1,8 @@
+## [1.4.29] - 2026-03-27
+
+### 📚 Documentation
+
+- Add CLI installation and update instructions (#431)
 ## [1.4.28] - 2026-03-24
 
 ### ⚙️ Miscellaneous Tasks
