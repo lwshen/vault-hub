@@ -18,3 +18,17 @@ jobs:
           username: ${{ secrets.GITLAB_USERNAME }}
           gitlab_pat: ${{ secrets.GITLAB_ACCESS_TOKEN }}
           force_push: true
+
+  to_gitness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: keninkujovic/gitlab-sync@2.2.0
+        with:
+          gitlab_url: https://gitness.zeabur.app/git/vault-hub/vault-hub.git
+          username: ${{ secrets.GITNESS_USERNAME }}
+          gitlab_pat: ${{ secrets.GITNESS_ACCESS_TOKEN }}
+          force_push: true
