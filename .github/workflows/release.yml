@@ -115,7 +115,7 @@ jobs:
           echo "Listing built files:"
           ls -la bin/vault-hub-cli-*
       - name: Upload Release Assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ github.ref_name }}
           files: |
@@ -153,7 +153,7 @@ jobs:
           cat CHANGELOG_RELEASE.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
       - name: Release Note
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ github.ref_name }}
           body: ${{steps.set_release_body.outputs.changelog}}
