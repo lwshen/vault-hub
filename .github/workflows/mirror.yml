@@ -12,7 +12,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: keninkujovic/gitlab-sync@2.2.0
+      - uses: keninkujovic/gitlab-sync@2.2.1
         with:
           gitlab_url: https://git.slw.app/${{ secrets.GITLAB_USERNAME }}/vault-hub.git
           username: ${{ secrets.GITLAB_USERNAME }}
@@ -26,7 +26,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: keninkujovic/gitlab-sync@2.2.0
+      - uses: keninkujovic/gitlab-sync@2.2.1
         with:
           gitlab_url: https://gitness.zeabur.app/git/vault-hub/vault-hub.git
           username: ${{ secrets.GITNESS_USERNAME }}
